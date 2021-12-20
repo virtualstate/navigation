@@ -37,7 +37,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.YARN_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
       - run: |
-          yarn add --dev @virtualstate/app-history@$(yarn version -v)
+          yarn add --dev @virtualstate/app-history@$(node scripts/log-version.js)
           yarn add --dev @virtualstate/app-history-local-build@./node_modules/@virtualstate/app-history
           export TEST_CONFIG='{"@virtualstate/app-history/test/imported/path": "@virtualstate/app-history-local-build"}'
           yarn test
@@ -59,7 +59,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - run: |
-          yarn add --dev @virtualstate/app-history@$(yarn version -v)
+          yarn add --dev @virtualstate/app-history@$(node scripts/log-version.js)
           yarn add --dev @virtualstate/app-history-local-build@./node_modules/@virtualstate/app-history
           export TEST_CONFIG='{"@virtualstate/app-history/test/imported/path": "@virtualstate/app-history-local-build"}'
           yarn test
