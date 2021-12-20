@@ -16,4 +16,4 @@ const { AppHistory } = await import(importPath)
 const input = () => new AppHistory();
 const fn: AppHistoryAssertFn = await assertAppHistory(input);
 fn(input);
-console.log("PASS assertAppHistory:import:new AppHistory");
+console.log(`PASS assertAppHistory:${importPath}:new AppHistory`);
