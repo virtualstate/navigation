@@ -43,6 +43,7 @@
     "@types/rimraf": "^3.0.2",
     "@types/uuid": "^8.3.3",
     "@types/whatwg-url": "^8.2.1",
+    "@virtualstate/app-history": "./",
     "@virtualstate/astro-renderer": "^2.46.0",
     "@virtualstate/dom": "^2.46.0",
     "@virtualstate/examples": "^2.46.0",

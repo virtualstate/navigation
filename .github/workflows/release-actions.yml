@@ -22,6 +22,9 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: yarn install
       - run: yarn build
+      - run: |
+          yarn add --dev @virtualstate/app-history@./
+          git reset --hard HEAD
       - run: yarn coverage
       - name: Package Registry Publish - npm
         run: |
@@ -36,6 +39,9 @@ jobs:
           YARN_TOKEN: ${{ secrets.YARN_TOKEN }}
           NPM_TOKEN: ${{ secrets.YARN_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
+      - run: |
+          yarn add --dev @virtualstate/app-history@${yarn version -v}
+          yarn test
       - uses: actions/setup-node@v2
         with:
           node-version: '16.x'
@@ -53,3 +59,6 @@ jobs:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
+      - run: |
+          yarn add --dev @virtualstate/app-history@${yarn version -v}
+          yarn test
