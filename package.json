@@ -1,8 +1,29 @@
 {
   "name": "@virtualstate/app-history",
   "version": "1.0.1-alpha.8",
-  "main": "index.js",
+  "main": "./esnext/index.js",
+  "module": "./esnext/index.js",
+  "types": "./esnext/index.d.ts",
   "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./esnext/index.js",
+    "./esnext/tests": "./esnext/tests/index.js",
+    "./esnext/tests/index.js": "./esnext/tests/index.js",
+    "./esnext/tests/app-history.js": "./esnext/tests/app-history.js",
+    "./tests": "./esnext/tests/index.js",
+    "./tests/index.js": "./esnext/tests/index.js",
+    "./tests/app-history.js": "./esnext/tests/app-history.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/virtualstate/app-history.git"
+  },
+  "bugs": {
+    "url": "https://github.com/virtualstate/app-history/issues"
+  },
+  "homepage": "https://github.com/virtualstate/app-history#readme",
+  "author": "Fabian Cook <hello@fabiancook.dev>",
   "license": "MIT",
   "dependencies": {
     "@opennetwork/environment": "^1.22.0",
