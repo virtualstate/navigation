@@ -1,5 +1,5 @@
 export class InvalidStateError extends Error {
-    constructor() {
-        super("InvalidStateError");
+    constructor(message?: string) {
+        super(`InvalidStateError${message ? `: ${message}` : ""}`);
     }
 }

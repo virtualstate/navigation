@@ -4,21 +4,24 @@ import {
     AppHistoryEventMap, AppHistoryNavigateEvent,
     AppHistoryNavigateOptions,
     AppHistoryNavigationOptions, AppHistoryNavigationType, AppHistoryReloadOptions,
-    AppHistoryResult,
-    AppHistoryTransition, AppHistoryUpdateCurrentOptions
+    AppHistoryResult, AppHistoryTransitionInit, AppHistoryUpdateCurrentOptions, AppHistoryTransition as AppHistoryTransitionPrototype
 } from "./app-history.prototype";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
 import {WritableProps} from "./writable";
 import {EventTargetListeners} from "@opennetwork/environment";
+import {AbortController} from "abort-controller";
+import {AppHistoryTransition} from "./app-history-transition";
 
 export * from "./app-history.prototype";
 
 export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implements AppHistoryPrototype {
 
     #entries: AppHistoryEntry[] = [];
+    #known = new Set<AppHistoryEntry>();
     #currentIndex = -1;
-    #transition?: AppHistoryTransition;
+    #activePromise?: Promise<unknown | void>;
+    #activeTransition?: AppHistoryTransition;
 
     get canGoBack() {
         if (this.#currentIndex === 0) {
@@ -46,8 +49,8 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#entries[this.#currentIndex];
     };
 
-    get transition() {
-        return this.#transition;
+    get transition(): AppHistoryTransitionPrototype | undefined {
+        return this.#activeTransition;
     };
 
     back(options?: AppHistoryNavigationOptions): AppHistoryResult {
@@ -118,12 +121,26 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         if (existingPosition > -1) {
             throw new InvalidStateError();
         }
-        const committed = Promise.resolve(entry);
-        const finished = this.#processEntry(navigationType, entry, options);
-        return { finished, committed };
+        return this.#processEntry(navigationType, entry, options);
     };
 
-    #processEntry = async (givenNavigationType: AppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+    #processEntry = (givenNavigationType: AppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+        const finished: Promise<AppHistoryEntry> = (this.#activePromise = this.#activePromise ?? Promise.resolve())
+            .catch((error) => void error) // Catch somewhere else please
+            .then(async () => {
+                const transition: AppHistoryTransitionInit = {
+                    get finished() {
+                        return finished;
+                    },
+                    from: entry,
+                    navigationType: givenNavigationType
+                };
+                return this.#transition(givenNavigationType, entry, transition, options);
+            });
+        return { committed: Promise.resolve(entry), finished };
+    }
+
+    #transition = async (givenNavigationType: AppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransitionInit, options?: AppHistoryNavigateOptions) => {
         let navigationType = givenNavigationType;
 
         const performance = await getPerformance();
@@ -132,7 +149,14 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         if (entry.sameDocument) {
             performance.mark(`same-document-navigation:${entry.id}`);
         }
+
+        let currentTransition: AppHistoryTransition;
+
         try {
+
+            const abortController = new AbortController();
+
+            const signal = abortController.signal;
 
             const { current } = this;
 
@@ -163,7 +187,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             };
 
             const navigate: AppHistoryNavigateEvent = {
-                signal: undefined,
+                signal,
                 info: undefined,
                 ...options,
                 canTransition: true,
@@ -172,6 +196,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 navigationType,
                 userInitiated: false,
                 destination,
+                preventDefault() {
+                    abortController.abort();
+                },
                 transitionWhile(newNavigationAction: Promise<unknown>): void {
                     if (movedOn) {
                         throw new Error("Event has already finished processing");
@@ -181,7 +208,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 type: "navigate"
             }
             await this.dispatchEvent(navigate);
-            await Promise.all(promises);
+            if (signal.aborted) {
+                return;
+            }
             movedOn = true;
             const currentChange: AppHistoryCurrentChangeEvent = {
                 from: this.current,
@@ -198,25 +227,39 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 }
             } else if (navigationType === "push") {
                 // Trim forward, we have reset our stack
-                if (this.#entries[destination.index + 1]) {
-                    this.#entries = this.#entries.slice(0, destination.index + 1);
+                if (this.#entries[destination.index]) {
+                    const before = [...this.#entries];
+                    this.#entries = this.#entries.slice(0, destination.index);
+                    // console.log({ before, after: [...this.#entries]})
                 }
                 this.#entries.push(entry);
             }
+            this.#known.add(entry);
+
             // console.log(this.#entries);
             this.#currentIndex = destination.index;
+
+            currentTransition = this.#activeTransition = new AppHistoryTransition({
+                ...transition,
+                history: this
+            });
+
             if (entry.sameDocument) {
                 await this.dispatchEvent(currentChange);
             }
             await entry.dispatchEvent({
                 type: "navigateto"
             });
+            await this.#dispose();
+            await Promise.all(promises);
             await entry.dispatchEvent({
                 type: "finish"
             });
+            assertNotAbortedAfterTransitioned(signal);
             await this.dispatchEvent({
                 type: "navigatesuccess"
             });
+            assertNotAbortedAfterTransitioned(signal);
             return entry;
         } catch (error) {
             await this.dispatchEvent({
@@ -226,6 +269,10 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             await Promise.reject(error);
             throw error;
         } finally {
+            if (this.#activeTransition === currentTransition) {
+                this.#activeTransition = undefined;
+            }
+
             if (entry.sameDocument) {
                 performance.mark(`same-document-navigation-finish:${entry.id}`);
                 performance.measure(
@@ -234,6 +281,27 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                     `same-document-navigation-finish:${entry.id}`
                 );
             }
+        }
+
+        function assertNotAbortedAfterTransitioned(signal: { aborted: boolean }): asserts signal is { aborted: false } {
+            if (signal.aborted) {
+                throw new InvalidStateError("Aborted after all provided transitionWhile promises complete");
+            }
+        }
+    }
+
+    #dispose = async () => {
+        for (const known of this.#known) {
+            const index = this.#entries.findIndex(entry => entry.id === known.id);
+            if (index !== -1) {
+                // Still in use
+                continue;
+            }
+            // No index, no longer known
+            this.#known.delete(known);
+            await known.dispatchEvent({
+                type: "dispose"
+            });
         }
     }
 

@@ -19,6 +19,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         homepageGoToExample,
         toggleExample,
         perEntryEventsExample,
+        disposeExample,
     ] as const
 
     try {
@@ -265,6 +266,58 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         }
         await showPhoto('1');
+    }
+
+    async function disposeExample(appHistory: AppHistory) {
+
+        await appHistory.navigate("/").finished;
+
+        const startingKey = appHistory.current.key;
+
+        const entry1 = await appHistory.navigate("/1").committed;
+
+        const values: (1 | 2 | 3)[] = [];
+
+        entry1.addEventListener("dispose", () => values.push(1));
+
+        const entry2 = await appHistory.navigate("/2").committed;
+        entry2.addEventListener("dispose", () => values.push(2));
+
+        const entry3 = await appHistory.navigate("/3").committed;
+        entry3.addEventListener("dispose", () => values.push(3));
+
+        await appHistory.goTo(startingKey).finished;
+        await appHistory.navigate("/1-b").finished;
+
+        ok(values.length === 3);
+        ok(values.includes(1));
+        ok(values.includes(2));
+        ok(values.includes(3));
+
+    }
+
+    async function currentChangeMonitoringExample(appHistory: AppHistory) {
+
+        appHistory.addEventListener("currentchange", () => {
+            appHistory.current.addEventListener("dispose", genericDisposeHandler);
+        });
+
+        let disposedCount = 0;
+
+        function genericDisposeHandler() {
+            disposedCount += 1;
+        }
+
+        const { key: initialKey } = await appHistory.navigate("/").finished;
+        ok(!disposedCount);
+        await appHistory.navigate("/1").finished;
+        ok(!disposedCount);
+        await appHistory.navigate("/2").finished;
+        ok(!disposedCount);
+
+        await appHistory.goTo(initialKey);
+
+        ok(disposedCount === 2);
     }
 
     function assertAppHistoryLike(appHistory: unknown): asserts appHistory is AppHistory {

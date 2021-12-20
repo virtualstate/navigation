@@ -40,10 +40,16 @@ export interface AppHistory extends EventTarget {
     removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 }
 
-export interface AppHistoryTransition {
+export interface AppHistoryTransitionInit {
+    navigationType: AppHistoryNavigationType;
+    from: AppHistoryEntry;
+    finished: Promise<AppHistoryEntry>;
+}
+
+export interface AppHistoryTransition extends AppHistoryTransitionInit {
     readonly navigationType: AppHistoryNavigationType;
     readonly from: AppHistoryEntry;
-    readonly finished: Promise<void>;
+    readonly finished: Promise<AppHistoryEntry>;
 
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult;
 }
@@ -115,6 +121,8 @@ export interface AppHistoryCurrentChangeEvent extends Event, AppHistoryCurrentCh
 }
 
 export interface AppHistoryNavigateEvent extends Event {
+    preventDefault(): void;
+
     readonly navigationType: AppHistoryNavigationType;
     readonly canTransition: boolean;
     readonly userInitiated: boolean;
