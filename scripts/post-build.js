@@ -5,8 +5,10 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
 
   const badges = [];
 
+  const { name } = await fs.readFile("package.json", "utf-8").then(JSON.parse);
+
   badges.push(
-    `![nycrc config on GitHub](https://img.shields.io/nycrc/virtualstate/app-state)`
+    `![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})`
   )
 
   const coverage = await fs.readFile("coverage/coverage-summary.json", "utf8").then(JSON.parse).catch(() => ({}));
