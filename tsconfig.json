@@ -18,11 +18,6 @@
         "sourceMap": true,
         "outDir": "esnext",
         "baseUrl": "./src",
-        "paths": {
-            "@virtualstate/app-history": [
-                "./src"
-            ]
-        },
         "jsx": "react",
         "jsxFactory": "h",
         "jsxFragmentFactory": "createFragment",
