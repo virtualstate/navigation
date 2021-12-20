@@ -1,6 +1,6 @@
 import {AppHistory, AppHistoryCurrentChangeEvent, AppHistoryNavigateEvent} from "../app-history.prototype";
 import {EventTarget} from "@opennetwork/environment";
-import type { Performance } from "perf_hooks";
+import {h, toString, VNode} from "@virtualstate/fringe"
 
 export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
@@ -20,6 +20,8 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         toggleExample,
         perEntryEventsExample,
         disposeExample,
+        currentChangeMonitoringExample,
+        jsxExample,
     ] as const
 
     try {
@@ -308,16 +310,69 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             disposedCount += 1;
         }
 
-        const { key: initialKey } = await appHistory.navigate("/").finished;
+        await appHistory.navigate("/").finished;
+
         ok(!disposedCount);
         await appHistory.navigate("/1").finished;
         ok(!disposedCount);
         await appHistory.navigate("/2").finished;
         ok(!disposedCount);
 
-        await appHistory.goTo(initialKey);
+        // Dispose first
+        await appHistory.navigate('/', { replace: true }).finished;
+        // Dispose Second
+        await appHistory.navigate('/', { replace: true }).finished;
+        // Should be back at start
 
         ok(disposedCount === 2);
+    }
+
+    async function jsxExample(appHistory: AppHistory) {
+        interface State {
+            dateTaken?: string;
+            caption?: string;
+        }
+
+        function Component({ caption, dateTaken }: State, input?: VNode) {
+            return h(
+                "figure",
+                {},
+                h("date", {}, dateTaken),
+                h("figcaption", {}, caption),
+                input
+            )
+        }
+
+        const body: EventTarget & { innerHTML?: string } = new EventTarget();
+
+        appHistory.addEventListener("currentchange", async () => {
+            body.innerHTML = await toString(<Component {...appHistory.current.getState<State>() } />);
+        });
+
+        ok(!body.innerHTML);
+
+        await appHistory.navigate('/', {
+            state: {
+                dateTaken: new Date().toISOString(),
+                caption: `Photo taken on the date ${new Date().toDateString()}`
+            }
+        }).finished;
+
+        ok(body.innerHTML);
+
+        const updatedCaption = `Photo ${Math.random()}`;
+
+        ok(!body.innerHTML.includes(updatedCaption));
+
+        await appHistory.updateCurrent({
+            state: {
+                ...appHistory.current.getState<State>(),
+                caption: updatedCaption
+            }
+        })?.finished;
+
+        ok(body.innerHTML.includes(updatedCaption));
+
     }
 
     function assertAppHistoryLike(appHistory: unknown): asserts appHistory is AppHistory {

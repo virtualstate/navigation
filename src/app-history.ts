@@ -74,7 +74,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     goTo(key: string, options?: AppHistoryNavigationOptions): AppHistoryResult {
         const found = this.#entries.find(entry => entry.key === key);
         if (found) {
-            return this.#pushEntry("push", this.#cloneAppHistoryEntry(found, options));
+            return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(found, options));
         }
         throw new InvalidStateError();
     }

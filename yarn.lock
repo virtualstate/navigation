@@ -2162,12 +2162,12 @@
   dependencies:
     "@types/node" "*"
 
-"@virtualstate/astro-renderer@^2.25.4":
+"@virtualstate/astro-renderer@^2.25.4", "@virtualstate/astro-renderer@^2.46.0":
   version "2.46.0"
   resolved "https://registry.npmjs.org/@virtualstate/astro-renderer/-/astro-renderer-2.46.0.tgz#e0d84e6630ca9ccdfb5a09d4b5e963ae6271a700"
   integrity sha512-d8X7IVvltm9ym0yAr/qrn2PWfxKSFrbJH9McOPL1/YWsOXcKpfd584htpvlY+vnCkO047ibw2qy1R4eKSfjQLA==
 
-"@virtualstate/dom@^2.25.4":
+"@virtualstate/dom@^2.25.4", "@virtualstate/dom@^2.46.0":
   version "2.46.0"
   resolved "https://registry.npmjs.org/@virtualstate/dom/-/dom-2.46.0.tgz#e8e4cd9f1bef09bf39dc04ccc3374275097a3336"
   integrity sha512-29HUXJXsmqYaoZuYlmPZIs0AvhtoLoh+z62dKuO3/EoF9h0aiq2gJKxq8gOvNewFVYbT34c4+H7CtQAWonj89w==
@@ -2179,7 +2179,7 @@
     iterable "^5.6.0"
     microtask-collector "^3.1.0"
 
-"@virtualstate/examples@^2.25.4":
+"@virtualstate/examples@^2.25.4", "@virtualstate/examples@^2.46.0":
   version "2.46.0"
   resolved "https://registry.npmjs.org/@virtualstate/examples/-/examples-2.46.0.tgz#41ad5b0501874a2c0c0cc390feda4d559fac2b4b"
   integrity sha512-fD3qoxYYhjS2POLv54CLr0B2IOo8OctFrf/42GpbOtOrjaUzqGrqsQz7J7tViQIFhqwoPCS0hYoOs0gSQ2Bt+A==

@@ -20,6 +20,7 @@ export interface AppHistory extends EventTarget {
     readonly transition?: AppHistoryTransition | null;
 
     entries(): AppHistoryEntry[];
+    updateCurrent(options: AppHistoryUpdateCurrentOptions): AppHistoryResult;
     updateCurrent(options: AppHistoryUpdateCurrentOptions): void;
 
     navigate(url: string, options?: AppHistoryNavigateOptions): AppHistoryResult;
