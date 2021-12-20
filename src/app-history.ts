@@ -251,7 +251,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 type: "navigateto"
             });
             await this.#dispose();
-            await Promise.all(promises);
+            if (!promises.length) {
+                await new Promise<void>(queueMicrotask);
+            }
+            if (promises.length) {
+                await Promise.all(promises);
+            }
             await entry.dispatchEvent({
                 type: "finish"
             });
