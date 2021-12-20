@@ -2162,26 +2162,6 @@
   dependencies:
     "@types/node" "*"
 
-"@virtualstate/app-history-local-build@./node_modules/@virtualstate/app-history":
-  version "1.0.1-alpha.9"
-  dependencies:
-    "@opennetwork/environment" "^1.22.0"
-    "@opennetwork/progressive-merge" "^5.5.0"
-    abort-controller "^3.0.0"
-    uuid "^8.3.2"
-    whatwg-url "^9.1.0"
-
-"@virtualstate/app-history@^1.0.1-alpha.9":
-  version "1.0.1-alpha.9"
-  resolved "https://registry.npmjs.org/@virtualstate/app-history/-/app-history-1.0.1-alpha.9.tgz#83b78be3894d20861eec340330340838ad86628c"
-  integrity sha512-9uDWhM5B14Pl5YhXHVz1hhMW3t07N+pCI6foWiism0r/r5P4vN94yVte4JiFgUXR4rRNyiI/BlEIqdct20omtw==
-  dependencies:
-    "@opennetwork/environment" "^1.22.0"
-    "@opennetwork/progressive-merge" "^5.5.0"
-    abort-controller "^3.0.0"
-    uuid "^8.3.2"
-    whatwg-url "^9.1.0"
-
 "@virtualstate/astro-renderer@^2.25.4", "@virtualstate/astro-renderer@^2.46.0":
   version "2.46.0"
   resolved "https://registry.npmjs.org/@virtualstate/astro-renderer/-/astro-renderer-2.46.0.tgz#e0d84e6630ca9ccdfb5a09d4b5e963ae6271a700"
