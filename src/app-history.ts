@@ -258,7 +258,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             // console.log(this.#entries);
             this.#currentIndex = destination.index;
 
-            if (typeof navigationType === "string") {
+            if (typeof navigationType === "string" || !this.#activeTransition) {
                 currentTransition = this.#activeTransition = new AppHistoryTransition({
                     ...transition,
                     appHistory: this
