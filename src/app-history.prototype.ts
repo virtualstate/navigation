@@ -119,6 +119,7 @@ export interface AppHistoryCurrentChangeEvent extends Event, AppHistoryCurrentCh
     readonly navigationType?: AppHistoryNavigationType | null;
     readonly from: AppHistoryEntry;
     readonly startTime?: number;
+    transitionWhile?(newNavigationAction: Promise<unknown>): void;
 }
 
 export interface AppHistoryNavigateEvent extends Event {

@@ -11,9 +11,9 @@ export class AppHistoryTransition implements AppHistoryTransitionPrototype {
     readonly from: AppHistoryEntry;
     readonly navigationType: AppHistoryNavigationType;
 
-    #options: AppHistoryTransitionInit & { history: AppHistory };
+    #options: AppHistoryTransitionInit & { appHistory: AppHistory };
 
-    constructor(init: AppHistoryTransitionInit & { history: AppHistory }) {
+    constructor(init: AppHistoryTransitionInit & { appHistory: AppHistory }) {
         this.#options = init;
         this.finished = init.finished;
         this.from = init.from;

@@ -189,16 +189,15 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         }
 
         const detailsElement: EventTarget & { open?: boolean } = new EventTarget();
-        detailsElement.addEventListener("toggle", () => {
+        detailsElement.addEventListener("toggle", async () => {
             const state = appHistory.current.getState<State>();
-            appHistory.updateCurrent({
+            await appHistory.updateCurrent({
                 state: {
                     ...state,
                     detailsOpen: detailsElement.open ?? !state?.detailsOpen
                 }
-            })
+            })?.finished;
         });
-
 
         ok(!appHistory.current.getState<State>()?.detailsOpen);
 
@@ -352,8 +351,11 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         const body: EventTarget & { innerHTML?: string } = new EventTarget();
 
-        appHistory.addEventListener("currentchange", async () => {
-            body.innerHTML = await toString(<Component {...appHistory.current.getState<State>() } />);
+        appHistory.addEventListener("currentchange", async (event) => {
+            await (event.transitionWhile ?? (promise => promise))(handler());
+            async function handler() {
+                body.innerHTML = await toString(<Component {...appHistory.current.getState<State>() } />)
+            }
         });
 
         ok(!body.innerHTML);

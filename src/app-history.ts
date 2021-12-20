@@ -15,6 +15,12 @@ import {AppHistoryTransition} from "./app-history-transition";
 
 export * from "./app-history.prototype";
 
+const UpdateCurrent = Symbol.for("@virtualstate/app-history/updateCurrent");
+
+type InternalAppHistoryNavigationType =
+    | AppHistoryNavigationType
+    | typeof UpdateCurrent;
+
 export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implements AppHistoryPrototype {
 
     #entries: AppHistoryEntry[] = [];
@@ -115,16 +121,25 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
     }
 
-    #pushEntry = (navigationType: AppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+    #pushEntry = (navigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
         if (entry === this.current) throw new InvalidStateError();
         const existingPosition = this.#entries.findIndex(existing => existing.id === entry.id);
         if (existingPosition > -1) {
             throw new InvalidStateError();
         }
-        return this.#processEntry(navigationType, entry, options);
+        return this.#commitTransition(navigationType, entry, options);
     };
 
-    #processEntry = (givenNavigationType: AppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+    #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+        const finished: Promise<AppHistoryEntry> = (this.#activePromise = this.#activePromise ?? Promise.resolve())
+            .catch((error) => void error) // Catch somewhere else please
+            .then(async () => {
+                return this.#immediateTransition(givenNavigationType, entry, options).finished;
+            });
+        return { committed: Promise.resolve(entry), finished };
+    }
+
+    #immediateTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
         const finished: Promise<AppHistoryEntry> = (this.#activePromise = this.#activePromise ?? Promise.resolve())
             .catch((error) => void error) // Catch somewhere else please
             .then(async () => {
@@ -133,20 +148,20 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                         return finished;
                     },
                     from: entry,
-                    navigationType: givenNavigationType
+                    navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace"
                 };
                 return this.#transition(givenNavigationType, entry, transition, options);
             });
         return { committed: Promise.resolve(entry), finished };
     }
 
-    #transition = async (givenNavigationType: AppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransitionInit, options?: AppHistoryNavigateOptions) => {
+    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransitionInit, options?: AppHistoryNavigateOptions) => {
         let navigationType = givenNavigationType;
 
         const performance = await getPerformance();
         const startTime = performance.now();
 
-        if (entry.sameDocument) {
+        if (entry.sameDocument && typeof navigationType === "string") {
             performance.mark(`same-document-navigation:${entry.id}`);
         }
 
@@ -163,16 +178,18 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             let resolvedNextIndex = this.#currentIndex + 1;
             if (navigationType === "traverse" || navigationType === "reload") {
                 resolvedNextIndex = entry.index;
-            } else if (navigationType === "replace" && this.#currentIndex !== -1) {
+            } else if ((navigationType === "replace" || navigationType === UpdateCurrent) && this.#currentIndex !== -1) {
                 resolvedNextIndex = this.#currentIndex;
             } else if (navigationType === "replace") {
                 navigationType = "push";
             }
 
             // console.log({ navigationType, entry, options });
-            await current?.dispatchEvent({
-                type: "navigatefrom"
-            });
+            if (typeof navigationType === "string") {
+                await current?.dispatchEvent({
+                    type: "navigatefrom"
+                });
+            }
             let promises: Promise<unknown>[] = [];
             let movedOn = false;
 
@@ -193,7 +210,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 canTransition: true,
                 formData: undefined,
                 hashChange: false,
-                navigationType,
+                navigationType: typeof navigationType === "string" ? navigationType : "replace",
                 userInitiated: false,
                 destination,
                 preventDefault() {
@@ -207,20 +224,22 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 },
                 type: "navigate"
             }
-            await this.dispatchEvent(navigate);
+            if (typeof navigationType === "string") {
+                await this.dispatchEvent(navigate);
+            }
             if (signal.aborted) {
                 return;
             }
-            movedOn = true;
             const currentChange: AppHistoryCurrentChangeEvent = {
-                from: this.current,
+                from: current,
                 type: "currentchange",
-                navigationType,
-                startTime
-            }
+                navigationType: navigate.navigationType,
+                startTime,
+                transitionWhile: navigate.transitionWhile
+            };
             // Default next index is current entries length, aka
             // console.log({ navigationType, givenNavigationType, index: this.#currentIndex, resolvedNextIndex });
-            if (navigationType === "replace" || navigationType === "traverse" || navigationType === "reload") {
+            if (navigationType === UpdateCurrent || navigationType === "replace" || navigationType === "traverse" || navigationType === "reload") {
                 this.#entries[destination.index] = entry;
                 if (navigationType === "replace") {
                     this.#entries = this.#entries.slice(0, destination.index + 1);
@@ -228,7 +247,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             } else if (navigationType === "push") {
                 // Trim forward, we have reset our stack
                 if (this.#entries[destination.index]) {
-                    const before = [...this.#entries];
+                    // const before = [...this.#entries];
                     this.#entries = this.#entries.slice(0, destination.index);
                     // console.log({ before, after: [...this.#entries]})
                 }
@@ -239,17 +258,21 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             // console.log(this.#entries);
             this.#currentIndex = destination.index;
 
-            currentTransition = this.#activeTransition = new AppHistoryTransition({
-                ...transition,
-                history: this
-            });
+            if (typeof navigationType === "string") {
+                currentTransition = this.#activeTransition = new AppHistoryTransition({
+                    ...transition,
+                    appHistory: this
+                });
+            }
 
             if (entry.sameDocument) {
                 await this.dispatchEvent(currentChange);
             }
-            await entry.dispatchEvent({
-                type: "navigateto"
-            });
+            if (typeof navigationType === "string") {
+                await entry.dispatchEvent({
+                    type: "navigateto"
+                });
+            }
             await this.#dispose();
             if (!promises.length) {
                 await new Promise<void>(queueMicrotask);
@@ -257,20 +280,27 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             if (promises.length) {
                 await Promise.all(promises);
             }
-            await entry.dispatchEvent({
-                type: "finish"
-            });
+            movedOn = true;
+            if (typeof navigationType === "string") {
+                await entry.dispatchEvent({
+                    type: "finish"
+                });
+            }
             assertNotAbortedAfterTransitioned(signal);
-            await this.dispatchEvent({
-                type: "navigatesuccess"
-            });
+            if (typeof navigationType === "string") {
+                await this.dispatchEvent({
+                    type: "navigatesuccess"
+                });
+            }
             assertNotAbortedAfterTransitioned(signal);
             return entry;
         } catch (error) {
-            await this.dispatchEvent({
-                type: "navigateerror",
-                error
-            });
+            if (typeof navigationType === "string") {
+                await this.dispatchEvent({
+                    type: "navigateerror",
+                    error
+                });
+            }
             await Promise.reject(error);
             throw error;
         } finally {
@@ -278,7 +308,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 this.#activeTransition = undefined;
             }
 
-            if (entry.sameDocument) {
+            if (entry.sameDocument && typeof navigationType === "string") {
                 performance.mark(`same-document-navigation-finish:${entry.id}`);
                 performance.measure(
                     `same-document-navigation:${entry.url}`,
@@ -322,15 +352,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     updateCurrent(options: AppHistoryUpdateCurrentOptions): AppHistoryResult {
         const { current } = this;
         const entry = this.#cloneAppHistoryEntry(current, options);
-        this.#entries[current.index] = entry;
-        const currentChange: AppHistoryCurrentChangeEvent = {
-            from: current,
-            type: "currentchange",
-            navigationType: undefined,
-            startTime: undefined
-        }
-        const finished = Promise.resolve(this.dispatchEvent(currentChange)).then(() => entry);
-        return { committed: Promise.resolve(entry), finished }
+        return this.#pushEntry(UpdateCurrent, entry, options);
     }
 
 }
