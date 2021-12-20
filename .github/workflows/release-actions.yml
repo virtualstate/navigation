@@ -1,0 +1,64 @@
+name: release-actions
+on:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - created
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      NO_COVERAGE_BADGE_UPDATE: 1
+      FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: yarn install
+      - run: yarn build:all
+      - run: yarn coverage
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - run: |
+          yarn deno:example
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Package Registry Publish - npm
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor}}@users.noreply.github.com"
+          npm set "registry=https://registry.npmjs.org/"
+          npm set "@virtualstate:registry=https://registry.npmjs.org/"
+          npm set "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}"
+          npm publish --access=public
+        continue-on-error: true
+        env:
+          YARN_TOKEN: ${{ secrets.YARN_TOKEN }}
+          NPM_TOKEN: ${{ secrets.YARN_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Package Registry Publish - GitHub
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor}}@users.noreply.github.com"
+          npm set "registry=https://npm.pkg.github.com/"
+          npm set "@virtualstate:registry=https://npm.pkg.github.com/virtualstate"
+          npm set "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}"
+          npm publish --access=public
+        env:
+          YARN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

@@ -1,0 +1,40 @@
+{
+    "compilerOptions": {
+        "module": "esnext",
+        "lib": [
+            "es2018",
+            "esnext",
+            "dom",
+        ],
+        "types": [
+          "jest",
+            "node"
+        ],
+        "esModuleInterop": true,
+        "target": "esnext",
+        "noImplicitAny": true,
+        "downlevelIteration": true,
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "outDir": "esnext",
+        "baseUrl": "./src",
+        "paths": {
+            "*": [
+                "node_modules/*",
+                "src/types/*"
+            ]
+        },
+        "jsx": "react",
+        "jsxFactory": "h",
+        "allowJs": true
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "typeRoots": [
+        "./node_modules/@types"
+    ],
+    "exclude": [
+        "node_modules/@opennetwork/vdom"
+    ]
+}

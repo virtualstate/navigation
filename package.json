@@ -1,0 +1,46 @@
+{
+  "name": "@virtualstate/app-history",
+  "version": "1.0.1-alpha.0",
+  "main": "index.js",
+  "type": "module",
+  "license": "MIT",
+  "dependencies": {
+    "@opennetwork/environment": "^1.22.0",
+    "@opennetwork/progressive-merge": "^5.5.0",
+    "uuid": "^8.3.2",
+    "whatwg-url": "^9.1.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.15.4",
+    "@babel/core": "^7.15.4",
+    "@babel/preset-env": "^7.15.4",
+    "@types/chance": "^1.1.3",
+    "@types/jest": "^27.0.1",
+    "@types/mkdirp": "^1.0.2",
+    "@types/node": "^17.0.1",
+    "@types/rimraf": "^3.0.2",
+    "@types/uuid": "^8.3.3",
+    "@types/whatwg-url": "^8.2.1",
+    "c8": "^7.10.0",
+    "chance": "^1.1.8",
+    "core-js": "^3.17.2",
+    "filehound": "^1.17.4",
+    "jest": "^27.1.0",
+    "jest-playwright-preset": "^1.7.0",
+    "mkdirp": "^1.0.4",
+    "playwright": "^1.14.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "build": "rm -rf esnext && tsc --declaration",
+    "postbuild": "node scripts/post-build.js",
+    "generate": "yarn build && node esnext/generate.js",
+    "start": "yarn build && node esnext/example.js",
+    "prepublishOnly": "npm run build",
+    "test": "yarn build && node esnext/tests/index.js",
+    "coverage": "yarn build && c8 node esnext/tests/index.js && yarn postbuild"
+  }
+}
