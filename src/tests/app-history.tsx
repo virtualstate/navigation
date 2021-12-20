@@ -341,6 +341,13 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
                 h("figcaption", {}, caption),
                 input
             )
+            // return (
+            //     <figure>
+            //         <date>{dateTaken}</date>
+            //         <figcaption>{caption}</figcaption>
+            //         {input}
+            //     </figure>
+            // )
         }
 
         const body: EventTarget & { innerHTML?: string } = new EventTarget();
@@ -369,8 +376,11 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
                 ...appHistory.current.getState<State>(),
                 caption: updatedCaption
             }
-        })?.finished;
+        })
+            // Not all implementations have support for async resolution
+            ?.finished;
 
+        // This test will fail if async resolution is not supported.
         ok(body.innerHTML.includes(updatedCaption));
 
     }
