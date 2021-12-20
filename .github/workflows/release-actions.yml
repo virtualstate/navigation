@@ -36,7 +36,8 @@ jobs:
           YARN_TOKEN: ${{ secrets.YARN_TOKEN }}
           NPM_TOKEN: ${{ secrets.YARN_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
-      - run: |
+      - name: Package Registry Test - npm
+        run: |
           yarn add --dev @virtualstate/app-history@$(node scripts/log-version.js)
           yarn add --dev @virtualstate/app-history-local-build@./node_modules/@virtualstate/app-history
           export TEST_CONFIG='{"@virtualstate/app-history/test/imported/path": "@virtualstate/app-history-local-build"}'
@@ -58,7 +59,8 @@ jobs:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
-      - run: |
+      - name: Package Registry Test - GitHub
+        run: |
           yarn add --dev @virtualstate/app-history@$(node scripts/log-version.js)
           yarn add --dev @virtualstate/app-history-local-build@./node_modules/@virtualstate/app-history
           export TEST_CONFIG='{"@virtualstate/app-history/test/imported/path": "@virtualstate/app-history-local-build"}'
