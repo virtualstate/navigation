@@ -1,9 +1,6 @@
 {
   "exclude": [
-    "**/dom",
-    "**/*.spec.*",
-    "**/experiments",
-    "**/compile-transform"
+
   ],
   "reporter": [
     "clover",
