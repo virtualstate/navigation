@@ -202,11 +202,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return (options) => {
             // console.trace("Rollback !", { current, previousEntries, previousIndex, fn });
             const entry = current ? this.#cloneAppHistoryEntry(current, options) : undefined;
-            if (!entry) {
-                if (!this.current) {
-                    return;
-                }
-            }
             const result = fn(Rollback, entry, transition, {
                 ...options,
                 index: previousIndex,
@@ -374,6 +369,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             }
             // console.log("Error for", entry, error);
             throw await Promise.reject(error);
+
         } finally {
             await this.#dispose();
 
@@ -440,6 +436,18 @@ async function getPerformance(): Promise<{
     if (typeof performance !== "undefined") {
         return performance;
     }
-    const { performance: nodePerformance } = await import("perf_hooks");
-    return nodePerformance;
+    /* c8 ignore start */
+    return {
+        now() {
+            return Date.now()
+        },
+        mark() {
+
+        },
+        measure(name: string, start: string, finish: string) {
+        }
+    }
+    // const { performance: nodePerformance } = await import("perf_hooks");
+    // return nodePerformance;
+    /* c8 ignore end */
 }

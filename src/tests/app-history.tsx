@@ -1,3 +1,4 @@
+/* c8 ignore start */
 import {
     AppHistory
 } from "../app-history.prototype";

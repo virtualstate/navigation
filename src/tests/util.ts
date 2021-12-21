@@ -1,3 +1,4 @@
+/* c8 ignore start */
 export function ok(value: unknown) {
     assert(value);
 }

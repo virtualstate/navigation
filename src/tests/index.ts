@@ -1,4 +1,5 @@
-import {run, dispatchEvent, addEventListener} from "@opennetwork/environment";
+/* c8 ignore start */
+// import {run, dispatchEvent, addEventListener} from "@opennetwork/environment";
 
 process.on("uncaughtException", (...args) => {
     console.log("process uncaught exception", ...args);
