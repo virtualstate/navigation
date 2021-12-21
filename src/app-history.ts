@@ -198,6 +198,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const { current } = this;
         const previousEntries = [...this.#entries];
         const previousIndex = this.#currentIndex;
+        const known = this.#known;
         return (options) => {
             // console.trace("Rollback !", { current, previousEntries, previousIndex, fn });
             const entry = current ? this.#cloneAppHistoryEntry(current, options) : undefined;
@@ -205,12 +206,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 if (!this.current) {
                     return;
                 }
-                throw new InvalidStateError("Unable to rollback");
             }
             const result = fn(Rollback, entry, transition, {
                 ...options,
                 index: previousIndex,
-                navigationType: entry[AppHistoryEntryNavigationType],
+                known,
+                navigationType: entry?.[AppHistoryEntryNavigationType] ?? "replace",
                 entries: previousEntries,
             });
             if ("then" in result) {
@@ -255,6 +256,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         });
 
         try {
+            if (!entry && givenNavigationType === Rollback && typeof options.index === "number") {
+                this.#entries = options.entries;
+                this.#currentIndex = options.index;
+                this.#known = options.known ?? this.#known;
+                return;
+            }
+
             const microtask = new Promise<void>(queueMicrotask);
             const transitionResult = await createAppHistoryTransition({
                 current,

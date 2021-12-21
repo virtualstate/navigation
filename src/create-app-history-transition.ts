@@ -23,6 +23,7 @@ export type InternalAppHistoryNavigationType =
 export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
     entries?: AppHistoryEntry[];
     index?: number;
+    known?: Set<AppHistoryEntry>;
     navigationType?: AppHistoryNavigationType;
 }
 

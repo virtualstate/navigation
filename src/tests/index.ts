@@ -1,4 +1,4 @@
-
+import {run, dispatchEvent, addEventListener} from "@opennetwork/environment";
 
 process.on("uncaughtException", (...args) => {
     console.log("process uncaught exception", ...args);
@@ -12,6 +12,7 @@ process.on("error", (...args) => {
     console.log("process error", ...args);
     process.exit(1);
 });
+
 
 await import("./app-history.class");
 await import("./app-history.imported");

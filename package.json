@@ -26,7 +26,7 @@
   "author": "Fabian Cook <hello@fabiancook.dev>",
   "license": "MIT",
   "dependencies": {
-    "@opennetwork/environment": "^1.22.0",
+    "@opennetwork/environment": "^1.23.0",
     "@opennetwork/progressive-merge": "^5.5.0",
     "abort-controller": "^3.0.0",
     "uuid": "^8.3.2",
@@ -36,6 +36,7 @@
     "@babel/cli": "^7.15.4",
     "@babel/core": "^7.15.4",
     "@babel/preset-env": "^7.15.4",
+    "@opennetwork/http-representation": "^3.0.0",
     "@types/chance": "^1.1.3",
     "@types/jest": "^27.0.1",
     "@types/mkdirp": "^1.0.2",

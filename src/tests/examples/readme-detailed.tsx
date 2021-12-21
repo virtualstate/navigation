@@ -5,8 +5,9 @@ import {
     AppHistoryEntry,
     AppHistoryNavigateEvent
 } from "../../app-history.prototype";
-import {EventTarget, Event} from "@opennetwork/environment";
+import {EventTarget, Event, FetchEvent, fetch, addEventListener, removeEventListener} from "@opennetwork/environment";
 import {h, toString, VNode} from "@virtualstate/fringe";
+import {Response} from "@opennetwork/http-representation";
 
 export async function initialNavigateThenBack(appHistory: AppHistory) {
     appHistory.addEventListener("navigate", (event) => {
@@ -756,4 +757,196 @@ export async function usingInfoExample(appHistory: AppHistory) {
     ok(zoomies.length);
     ok(photoTargets.get(appHistory.current.url))
     ok(zoomies.includes(photoTargets.get(appHistory.current.url)));
+}
+
+export async function nextPreviousButtons(appHistory: AppHistory) {
+    const appState = {
+        currentPhoto: 0,
+        totalPhotos: 10
+    };
+    const photos: Record<string, string> = {};
+    const next: EventTarget & { disabled?: boolean } = new EventTarget();
+    const previous: EventTarget & { disabled?: boolean } = new EventTarget();
+    const permalink: EventTarget & { disabled?: boolean, textContent?: string } = new EventTarget();
+    const currentPhoto: EventTarget & { src?: string | URL } = new EventTarget();
+
+    next.addEventListener("click", async () => {
+        const nextPhotoInHistory = photoNumberFromURL(appHistory.entries()[appHistory.current.index + 1]?.url);
+        if (nextPhotoInHistory === appState.currentPhoto + 1) {
+            await appHistory.forward().finished;
+        } else {
+            await appHistory.navigate(`/photos/${appState.currentPhoto + 1}`).finished;
+        }
+    });
+
+    previous.addEventListener("click", async () => {
+        const prevPhotoInHistory = photoNumberFromURL(appHistory.entries()[appHistory.current.index - 1]?.url);
+        // console.log({ prevPhotoInHistory, matching: appState.currentPhoto - 1, nav: `/photos/${appState.currentPhoto - 1}` });
+        if (prevPhotoInHistory === appState.currentPhoto - 1) {
+            // console.log("BACK!");
+            await appHistory.back().finished;
+        } else {
+            // console.log({ navigate: `/photos/${appState.currentPhoto - 1}` })
+            await appHistory.navigate(`/photos/${appState.currentPhoto - 1}`).finished;
+        }
+    })
+
+    const photosPrefix = "/raw-photos"
+    const contentPhotosPrefix = `/photo/content${photosPrefix}`
+
+    const localCache = new Map<string, string>();
+
+    let fetchCount = 0;
+
+    const fetchHandler = (event: FetchEvent) => {
+        const { pathname } = new URL(event.request.url, "https://example.com");
+        const [, photoNumber] = pathname.match(/^\/raw-photos\/(\d+)\.[a-z]+$/i) ?? [];
+        if (!photoNumber) return;
+        fetchCount += 1;
+        photos[photoNumber] = photos[photoNumber] || `https://example.com${contentPhotosPrefix}/${photoNumber}`;
+        return event.respondWith(
+            new Response(photos[photoNumber], {
+                status: 200
+            })
+        );
+    };
+
+    addEventListener("fetch", fetchHandler);
+
+    appHistory.addEventListener("navigate", event => {
+        const photoNumber = photoNumberFromURL(event.destination.url);
+        if (!(typeof photoNumber === "number" && event.canTransition)) return;
+        event.transitionWhile(handler());
+        async function handler() {
+
+
+            // Synchronously update app state and next/previous/permalink UI:
+            appState.currentPhoto = photoNumber;
+            previous.disabled = appState.currentPhoto === 0;
+            next.disabled = appState.currentPhoto === appState.totalPhotos - 1;
+            permalink.textContent = event.destination.url;
+
+            const existingSrc = localCache.get(event.destination.key);
+            if (typeof existingSrc === "string") {
+                currentPhoto.src = existingSrc;
+                return;
+            }
+
+            // Asynchronously update the photo, passing along the signal so that
+            // it all gets aborted if another navigation interrupts us:
+            const response = await fetch(`${photosPrefix}/${photoNumber}.jpg`, { signal: event.signal });
+            // const blob = await response.blob();
+            // currentPhoto.src = URL.createObjectURL(blob);
+            currentPhoto.src = await response.text();
+            localCache.set(event.destination.key, currentPhoto.src);
+        }
+    });
+
+    // Is not a photo should not load
+    await appHistory.navigate("/").finished;
+
+    ok(!currentPhoto.src);
+
+    await appHistory.navigate("/photos/0").finished;
+
+    assert(typeof currentPhoto.src === "string");
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/0`);
+    ok(!next.disabled);
+    ok(previous.disabled);
+
+    await appHistory.navigate("/photos/1").finished;
+
+    assert(typeof currentPhoto.src === "string");
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/1`);
+    ok(!next.disabled);
+    ok(!previous.disabled);
+
+    await next.dispatchEvent({
+        type: "click"
+    });
+    // Utilised navigate
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/2`);
+
+    await appHistory.navigate("/photos/9").finished;
+
+    assert(typeof currentPhoto.src === "string");
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
+
+    ok(next.disabled);
+    ok(!previous.disabled);
+
+    await previous.dispatchEvent({
+        type: "click"
+    });
+
+    assert(typeof currentPhoto.src === "string");
+    // console.log(currentPhoto);
+    // Utilised navigate
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
+
+    await previous.dispatchEvent({
+        type: "click"
+    });
+
+    assert(typeof currentPhoto.src === "string");
+    // Utilised navigate
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
+
+    await next.dispatchEvent({
+        type: "click"
+    });
+    await next.dispatchEvent({
+        type: "click"
+    });
+
+    // Utilised navigation!
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
+
+    const finalFetchCount = fetchCount;
+
+    await previous.dispatchEvent({
+        type: "click"
+    });
+
+    // Utilised back!
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
+
+    await previous.dispatchEvent({
+        type: "click"
+    });
+
+    // Utilised back!
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
+
+    ok(finalFetchCount === fetchCount);
+
+    await next.dispatchEvent({
+        type: "click"
+    });
+
+    // Utilised forward!
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
+    ok(finalFetchCount === fetchCount);
+
+    await next.dispatchEvent({
+        type: "click"
+    });
+
+    // Utilised forward!
+    ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
+    ok(finalFetchCount === fetchCount);
+
+    removeEventListener("fetch", fetchHandler);
+
+    function photoNumberFromURL(url: string) {
+        if (!url) {
+            return undefined;
+        }
+        const [,photoNumber] = /\/photos\/(\d+)/.exec((new URL(url, "https://example.com")).pathname) ?? [];
+        if (photoNumber) {
+            return +photoNumber;
+        }
+        return undefined;
+    }
+
 }

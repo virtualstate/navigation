@@ -1197,10 +1197,10 @@
     lit-html "^1.2.1"
     uuid "^8.3.2"
 
-"@opennetwork/environment@^1.22.0":
-  version "1.22.0"
-  resolved "https://registry.npmjs.org/@opennetwork/environment/-/environment-1.22.0.tgz#5ca50f3ea1ddab315ee3224de6a5a876e8db2985"
-  integrity sha512-N3kAgJdxtjRbk2ogb0Nzy40ZHRRZxRkQZ1YOkH0GxqxOygZOJXy+iV/UTmB1/DpAm/yPeERgMpY/5IJmXp1o0w==
+"@opennetwork/environment@^1.23.0":
+  version "1.23.0"
+  resolved "https://registry.npmjs.org/@opennetwork/environment/-/environment-1.23.0.tgz#845c697114563b83305b908f5b3e23b67ef4d42c"
+  integrity sha512-U1lLxOYGW0AiUShMn+nAuqhbEDa0gdwqhZPlCcaAt45q3RqwbKzJu37VxDXT0YEYJ+7ZLpA1dJu03uZBzCH7cw==
   dependencies:
     "@edwardmx/noop" "^1.0.1"
     "@grpc/grpc-js" "^1.4.3"
