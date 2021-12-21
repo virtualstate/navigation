@@ -29,22 +29,34 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         jsxExample,
         rollbackExample,
         singlePageAppRedirectsAndGuards,
+        throwError,
     ] as const
+
+    const expectedError = new Error();
 
     try {
         for (const test of tests) {
             const appHistory = createAppHistory();
             assertAppHistoryLike(appHistory);
             try {
+                console.log("START ", test);
                 await test(appHistory);
-                console.log("PASS", test);
+                console.log("PASS  ", test);
             } catch (error) {
-                caught = caught || error;
-                console.error("Error for", test, error)
+                if (error !== expectedError) {
+                    caught = caught || error;
+                    console.error("ERROR", test, error)
+                } else {
+                    console.log("PASS  ", test);
+                }
             }
         }
     } catch (error) {
         caught = error;
+    }
+
+    async function throwError() {
+        throw expectedError;
     }
 
     async function initialNavigateThenBack(appHistory: AppHistory) {
