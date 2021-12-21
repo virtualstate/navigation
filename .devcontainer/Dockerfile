@@ -1,5 +1,10 @@
 ARG VARIANT="16-buster"
 FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
+
+USER root
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && npm i -D @playwright/test
+
 USER node
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN npx -q playwright install \
