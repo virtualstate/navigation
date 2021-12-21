@@ -1,5 +1,5 @@
 ARG VARIANT="16-buster"
-FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:next
+FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
 # @see https://github.com/microsoft/playwright/blob/8f9eaf7cba53584436703bc7e35f27933c1a8c94/utils/docker/Dockerfile.focal#L6
 
