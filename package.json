@@ -60,7 +60,7 @@
     "jest": "^27.1.0",
     "jest-playwright-preset": "^1.7.0",
     "mkdirp": "^1.0.4",
-    "playwright": "^1.14.1",
+    "playwright": "^1.17.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",

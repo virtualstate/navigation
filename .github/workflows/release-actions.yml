@@ -20,7 +20,9 @@ jobs:
         with:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
-      - run: yarn install
+      - run: |
+          yarn install
+          npx playwright install-deps chromium
       - run: yarn build
       - run: yarn coverage
       - name: Package Registry Publish - npm
