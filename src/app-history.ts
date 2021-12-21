@@ -174,7 +174,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
     #queueTransition = (transition: AppHistoryTransition) => {
         // TODO consume errors that are not abort errors
-        transition.finished.catch(error => void error);
+        // transition.finished.catch(error => void error);
     }
 
     #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, finished: Promise<AppHistoryEntry>, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
