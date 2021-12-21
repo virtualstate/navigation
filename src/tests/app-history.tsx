@@ -560,6 +560,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         targetUrl.searchParams.set("target", redirectTargetUrl);
 
         const { committed: redirectCommitted, finished: redirectFinishedErrored } = appHistory.navigate(targetUrl.toString());
+        redirectFinishedErrored.catch(error => void error);
         await redirectCommitted;
 
         const redirectError = await redirectFinishedErrored.catch(error => error);

@@ -174,7 +174,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
     #queueTransition = (transition: AppHistoryTransition) => {
         // TODO consume errors that are not abort errors
-        // transition.finished.catch(error => void error);
+        transition.finished.catch(error => void error);
     }
 
     #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, finished: Promise<AppHistoryEntry>, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
@@ -208,6 +208,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 entries: previousEntries,
             });
             if ("then" in result) {
+                result.catch(error => void error);
                 return { committed: Promise.resolve(entry), finished: result };
             }
             return result;
@@ -358,6 +359,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                     }
                 });
             }
+            // console.log("Error for", entry, error);
             throw await Promise.reject(error);
         } finally {
             await this.#dispose();
