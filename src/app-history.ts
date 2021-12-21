@@ -69,9 +69,8 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     };
 
     back(options?: AppHistoryNavigationOptions): AppHistoryResult {
-        if (this.#currentIndex === -1) throw new Error("Cannot go back");
+        if (!this.canGoBack) throw new InvalidStateError("Cannot go back");
         const entry = this.#entries[this.#currentIndex - 1];
-        if (!entry) throw new Error("Cannot go back");
         return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(entry, {
             ...options,
             navigationType: "traverse"
@@ -83,9 +82,8 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     }
 
     forward(options?: AppHistoryNavigationOptions): AppHistoryResult {
-        if (this.#currentIndex === -1) throw new InvalidStateError();
+        if (!this.canGoForward) throw new InvalidStateError();
         const entry = this.#entries[this.#currentIndex + 1];
-        if (!entry) throw new InvalidStateError();
         return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(entry, {
             ...options,
             navigationType: "traverse"
@@ -246,7 +244,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 },
                 transitionWhile(newNavigationAction: Promise<unknown>): void {
                     if (movedOn) {
-                        throw new Error("Event has already finished processing");
+                        throw new InvalidStateError("Event has already finished processing");
                     }
                     promises.push(newNavigationAction);
                 },
@@ -353,8 +351,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                     }
                 });
             }
-            await Promise.reject(error);
-            throw error;
+            throw await Promise.reject(error);
         } finally {
             if (this.#activeTransition === currentTransition) {
                 this.#activeTransition = undefined;
