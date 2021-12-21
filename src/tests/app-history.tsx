@@ -6,6 +6,8 @@ import {
 } from "../app-history.prototype";
 import {EventTarget} from "@opennetwork/environment";
 import {h, toString, VNode} from "@virtualstate/fringe"
+import {v4} from "uuid";
+import {AppHistoryAbortError} from "../app-history-errors";
 
 export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
@@ -29,6 +31,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         jsxExample,
         rollbackExample,
         singlePageAppRedirectsAndGuards,
+        crossOriginAffiliateLinks,
     ] as const
 
     try {
@@ -199,12 +202,14 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         const detailsElement: EventTarget & { open?: boolean } = new EventTarget();
         detailsElement.addEventListener("toggle", async () => {
             const state = appHistory.current.getState<State>();
+            console.log(appHistory.current.getState(), { state });
             await appHistory.updateCurrent({
                 state: {
                     ...state,
                     detailsOpen: detailsElement.open ?? !state?.detailsOpen
                 }
             })?.finished;
+            console.log({ set: appHistory.current.getState() });
         });
 
         ok(!appHistory.current.getState<State>()?.detailsOpen);
@@ -236,13 +241,14 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const entry = await committed;
 
             // When we navigate away from this photo, save any changes the user made.
-            entry.addEventListener("navigatefrom", () => {
-                appHistory.updateCurrent({
+            entry.addEventListener("navigatefrom", async () => {
+                console.log("navigatefrom");
+                await appHistory.updateCurrent({
                     state: {
                         dateTaken: new Date().toISOString(),
                         caption: `Photo taken on the date ${new Date().toDateString()}`
                     }
-                });
+                })?.committed;
             });
 
             let navigateBackToState: State
@@ -250,20 +256,23 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             // If we ever navigate back to this photo, e.g. using the browser back button or
             // appHistory.goTo(), restore the input values.
             entry.addEventListener("navigateto", () => {
+                console.log("navigateto");
                 navigateBackToState = appHistory.current.getState<State>();
             });
 
             await finished;
 
             // Trigger navigatefrom
+            console.log("navigatefrom following");
             await appHistory.navigate("/").finished;
 
             // Trigger naviagateto
+            console.log("naviagateto following");
             await appHistory.goTo(entry.key).finished;
 
             const finalState = appHistory.current.getState<State>();
 
-            // console.log({ finalState, navigateBackToState });
+            console.log({ finalState, navigateBackToState, entries: [...appHistory.entries()] });
 
             ok(navigateBackToState);
             ok(navigateBackToState.dateTaken);
@@ -274,6 +283,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             ok(finalState.caption === navigateBackToState.caption);
 
         }
+        console.log("----============== START ")
         await showPhoto('1');
     }
 
@@ -524,6 +534,76 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         ok(allowCount === 2);
         ok(disallowCount === 1);
+
+    }
+
+    async function crossOriginAffiliateLinks(appHistory: AppHistory) {
+
+        const affiliateHostname = "store.example.com";
+        const affiliateId = v4();
+
+        appHistory.addEventListener("navigate", async ({ preventDefault, destination, transitionWhile }) => {
+            const url = new URL(destination.url, "https://example.com");
+            if (url.hostname !== affiliateHostname || url.searchParams.has("affiliateId")) {
+                // No change if exists or not an affiliate
+                return;
+            }
+            url.searchParams.set("affiliateId", affiliateId);
+            const existingTransition = appHistory.transition;
+
+            assert(existingTransition);
+
+            return transitionWhile(handler());
+
+            async function handler() {
+                console.log("affiliate transitioning with id", url.toString());
+                const { committed, finished } = await appHistory.navigate(url.toString(), {
+                    state: destination.getState(),
+                });
+                await committed;
+                await existingTransition.rollback();
+                // Resolve finished within this promise resolution
+                await finished;
+            }
+        });
+
+        const { committed, finished } = appHistory.navigate("/"); // Results in no change
+        const entry = await committed;
+
+        // This should not throw an error
+        await finished;
+
+        ok(appHistory.current.url === entry.url);
+
+        const {
+            committed: affiliateCommitted,
+            finished: affiliateFinished
+        } = appHistory.navigate(new URL("/1", `https://${affiliateHostname}`).toString());
+
+        // commit should always resolve
+        const affiliateCommittedEntry = await affiliateCommitted;
+        ok(affiliateCommittedEntry);
+        // console.log(affiliateCommittedEntry)
+        ok(new URL(affiliateCommittedEntry.url).hostname === affiliateHostname);
+
+        const affiliateFinishedError = await affiliateFinished.catch(error => error);
+
+        console.log({ affiliateFinishedError });
+
+        ok(affiliateFinishedError);
+        ok(affiliateFinishedError instanceof AppHistoryAbortError);
+
+        await appHistory.transition;
+
+        ok(appHistory.current);
+
+        console.log(appHistory.current);
+
+        const { hostname, searchParams } = new URL(appHistory.current.url);
+
+        ok(hostname === affiliateHostname);
+        ok(searchParams.has("affiliateId"));
+        ok(searchParams.get("affiliateId") === affiliateId);
 
     }
 

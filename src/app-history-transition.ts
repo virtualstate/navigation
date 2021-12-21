@@ -9,6 +9,7 @@ import {
 
 export interface AppHistoryTransitionInit extends AppHistoryTransitionInitPrototype {
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult;
+    then: PromiseLike<AppHistoryEntry>["then"];
 }
 
 export class AppHistoryTransition implements AppHistoryTransitionPrototype {
@@ -27,6 +28,10 @@ export class AppHistoryTransition implements AppHistoryTransitionPrototype {
 
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult {
         return this.#options.rollback(options);
+    }
+
+    then(resolve: (entry: AppHistoryEntry) => void, reject: (reason: unknown) => void) {
+        return this.#options.then(resolve, reject);
     }
 
 }

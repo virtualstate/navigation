@@ -9,10 +9,18 @@ import {AppHistoryEventTarget} from "./app-history-event-target";
 import {v4} from "uuid";
 import {EventTargetListeners} from "@opennetwork/environment";
 
+/**
+ * @internal
+ */
 export const AppHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
+/**
+ * @experimental
+ */
+export const AppHistoryEntryKeyedState = Symbol.for("@virtualstate/app-history/entry/keyedState");
 
 export interface AppHistoryEntryInit<S = unknown> extends AppHistoryEntryInitPrototype<S> {
     navigationType: AppHistoryNavigationType
+    [AppHistoryEntryKeyedState]: Map<string, S>
 }
 
 export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHistoryEntryEventMap> implements AppHistoryEntryPrototype<S> {
@@ -51,6 +59,7 @@ export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHisto
     getState<ST extends S>(): ST
     getState(): S
     getState(): S {
+        // const keyed = this.#options[AppHistoryEntryKeyedState]?.get(this.key);
         return this.#options.state;
     }
 
