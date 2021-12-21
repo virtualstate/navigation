@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.192.0/containers/typescript-node
 {
 	"name": "Node.js & Playwright",
-	"image": "mcr.microsoft.com/playwright:next",
+	"build": { "dockerfile": "Dockerfile", "args": { "VARIANT": "16" } },
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": {},
