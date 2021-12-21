@@ -106,6 +106,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#pushEntry(
             navigationType,
             entry,
+            undefined,
             options
         );
     }
@@ -137,47 +138,90 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
     }
 
-    #pushEntry = (navigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions) => {
+    #pushEntry = (navigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         if (entry === this.current) throw new InvalidStateError();
         const existingPosition = this.#entries.findIndex(existing => existing.id === entry.id);
         if (existingPosition > -1) {
             throw new InvalidStateError();
         }
-        return this.#commitTransition(navigationType, entry, options);
+        return this.#commitTransition(navigationType, entry, transition, options);
     };
 
-    #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions) => {
+    #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry,  transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
+        let nextTransition: AppHistoryTransition = transition;
         const finished: Promise<AppHistoryEntry> = (this.#activePromise ?? Promise.resolve())
             .catch((error) => void error) // Catch somewhere else please
             .then(async () => {
-                return this.#immediateTransition(givenNavigationType, entry, finished, options);
+                return this.#immediateTransition(givenNavigationType, entry, finished, nextTransition, options);
             });
+        // finished.catch(error => void error);
         this.#activePromise = finished;
+        nextTransition = new AppHistoryTransition({
+            get finished() {
+                return finished;
+            },
+            from: entry,
+            navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
+            rollback: this.#createRollback(),
+            then: this.#createActiveThen(),
+        });
+        this.#queueTransition(nextTransition);
         if (givenNavigationType !== UpdateCurrent) {
             this.#inProgressAbortController?.abort();
         }
         return { committed: Promise.resolve(entry), finished };
     }
 
-    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, finished: Promise<AppHistoryEntry>, options?: InternalAppHistoryNavigateOptions) => {
+    #queueTransition = (transition: AppHistoryTransition) => {
+        // TODO consume errors that are not abort errors
+        // transition.finished.catch(error => void error);
+    }
+
+    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, finished: Promise<AppHistoryEntry>, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         try {
             this.#transitionInProgressCount += 1;
             if (this.#transitionInProgressCount > 1) {
                 throw new InvalidStateError("Unexpected multiple transitions");
             }
-            const transition: AppHistoryTransitionInit = {
-                get finished() {
-                    return finished;
-                },
-                from: entry,
-                navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace"
-            };
             return await this.#transition(givenNavigationType, entry, transition, options);
         } finally {
             this.#transitionInProgressCount -= 1;
         }
+    }
 
+    #createRollback = (
+        fn: (...args: unknown[]) => (AppHistoryResult | Promise<AppHistoryEntry>) = this.#pushEntry,
+        transition?: AppHistoryTransitionInit
+    ): (
+        (options?: AppHistoryNavigationOptions) => AppHistoryResult
+    ) => {
+        const { current } = this;
+        const previousEntries = [...this.#entries];
+        const previousIndex = this.#currentIndex;
+        return (options) => {
+            // console.trace("Rollback !", { current, previousEntries, previousIndex, fn });
+            const entry = this.#cloneAppHistoryEntry(current, options);
+            const result = fn(Rollback, entry, transition, {
+                ...options,
+                index: previousIndex,
+                navigationType: entry[AppHistoryEntryNavigationType],
+                entries: previousEntries,
+            });
+            if ("then" in result) {
+                return { committed: Promise.resolve(entry), finished: result };
+            }
+            return result;
+        }
+    }
 
+    #createActiveThen = (): PromiseLike<AppHistoryEntry>["then"] => {
+        return async (resolve, reject) => {
+            const handler = async () => this.current;
+            while (this.#activePromise) {
+                await this.#activePromise;
+            }
+            return handler().then(resolve, reject);
+        }
     }
 
     #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransitionInit, options?: InternalAppHistoryNavigateOptions) => {
@@ -191,45 +235,16 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         }
 
         const { current } = this;
-        const previousEntries = [...this.#entries];
         const abortController = new AbortController();
         this.#inProgressAbortController = abortController;
-        const previousIndex = this.#currentIndex;
         let promises: Promise<unknown>[] = [];
 
-        const rollbackImmediately = async () => {
-            const entry = this.#cloneAppHistoryEntry(current, options);
-            return this.#transition(
-                Rollback,
-                entry,
-                transition,
-                {
-                    ...options,
-                    index: previousIndex,
-                    navigationType: entry[AppHistoryEntryNavigationType],
-                    entries: previousEntries,
-                }
-            )
-        }
+        const rollbackImmediately = this.#createRollback(this.#transition);
 
         const currentTransition: AppHistoryTransition | undefined = new AppHistoryTransition({
             ...transition,
-            rollback: (options?: AppHistoryNavigationOptions) => {
-                const entry = this.#cloneAppHistoryEntry(current, options);
-                return this.#pushEntry(Rollback, entry, {
-                    ...options,
-                    index: previousIndex,
-                    navigationType: entry[AppHistoryEntryNavigationType],
-                    entries: previousEntries,
-                });
-            },
-            then: async (resolve, reject) => {
-                const handler = async () => this.current;
-                while (this.#activePromise) {
-                    await this.#activePromise;
-                }
-                return handler().then(resolve, reject);
-            }
+            rollback: this.#createRollback(),
+            then: this.#createActiveThen()
         });
 
         try {
@@ -389,7 +404,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const { current } = this;
         if (!current) throw new InvalidStateError();
         const entry = this.#cloneAppHistoryEntry(current, options);
-        return this.#pushEntry("reload", entry, options);
+        return this.#pushEntry("reload", entry, undefined, options);
     }
 
     updateCurrent(options: AppHistoryUpdateCurrentOptions): AppHistoryResult
@@ -397,7 +412,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     updateCurrent(options: AppHistoryUpdateCurrentOptions): AppHistoryResult {
         const { current } = this;
         const entry = this.#cloneAppHistoryEntry(current, options);
-        return this.#pushEntry(UpdateCurrent, entry, options);
+        return this.#pushEntry(UpdateCurrent, entry, undefined, options);
     }
 
 }

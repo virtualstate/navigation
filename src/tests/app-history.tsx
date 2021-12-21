@@ -35,7 +35,13 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         for (const test of tests) {
             const appHistory = createAppHistory();
             assertAppHistoryLike(appHistory);
-            await test(appHistory);
+            try {
+                await test(appHistory);
+                console.log("PASS", test);
+            } catch (error) {
+                caught = caught || error;
+                console.error("Error for", test, error)
+            }
         }
     } catch (error) {
         caught = error;
@@ -422,10 +428,15 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             toasts.push(message);
         }
 
+        let navigateErrorTransitionFinished;
+
         appHistory.addEventListener("navigateerror", async e => {
             const attemptedURL = appHistory.transition.from.url;
 
-            await appHistory.transition.rollback().committed;
+            const { committed, finished } = appHistory.transition.rollback();
+            navigateErrorTransitionFinished = finished;
+            await committed;
+
             showErrorToast(`Could not load ${attemptedURL}: ${e.message}`);
         });
 
@@ -455,7 +466,10 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         ok(appHistory.current);
 
-        // console.log({ current: appHistory.current, expectedRollbackState });
+        ok(navigateErrorTransitionFinished);
+        await navigateErrorTransitionFinished;
+
+        // console.log({ current: appHistory.current, expectedRollbackState, toasts });
 
         ok(appHistory.current.url === expectedRollbackState.url);
 
