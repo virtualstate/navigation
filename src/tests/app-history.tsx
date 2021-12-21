@@ -1,6 +1,7 @@
 import {AppHistory, AppHistoryCurrentChangeEvent, AppHistoryNavigateEvent} from "../app-history.prototype";
 import {EventTarget} from "@opennetwork/environment";
 import {h, toString, VNode} from "@virtualstate/fringe"
+import exp from "constants";
 
 export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
@@ -22,6 +23,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         disposeExample,
         currentChangeMonitoringExample,
         jsxExample,
+        rollbackExample,
     ] as const
 
     try {
@@ -93,6 +95,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const previous = appHistory.entries()[appHistory.current?.index - 1];
             // console.log({ previous });
             if (previous?.url === "/product-listing") {
+                // console.log("Back");
                 const { finished } = appHistory.back();
                 await finished;
             } else {
@@ -385,6 +388,48 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         // This test will fail if async resolution is not supported.
         ok(body.innerHTML.includes(updatedCaption));
 
+    }
+
+    async function rollbackExample(appHistory: AppHistory) {
+
+        const expectedError = `Error.${Math.random()}`;
+        const toasts: string[] = [];
+
+        function showErrorToast(message: string) {
+            toasts.push(message);
+        }
+
+        appHistory.addEventListener("navigateerror", async e => {
+            const attemptedURL = appHistory.transition.from.url;
+
+            await appHistory.transition.rollback().committed;
+            showErrorToast(`Could not load ${attemptedURL}: ${e.message}`);
+        });
+
+        // Should be successful, no failing navigator yet
+        await appHistory.navigate("/").finished;
+
+        ok(!toasts.length);
+
+        const expectedRollbackState = await appHistory.navigate(`/${Math.random()}`).finished;
+
+        ok(!toasts.length);
+
+        appHistory.addEventListener("navigate",  (event) => {
+            event.transitionWhile(Promise.reject(new Error(expectedError)));
+        }, { once: true });
+
+        // This should fail
+        const error = await appHistory.navigate('/').finished.catch((error) => error);
+        assert(error);
+        assert(error instanceof Error);
+        assert(error.message === expectedError);
+
+        ok(appHistory.current);
+
+        // console.log({ current: appHistory.current, expectedRollbackState });
+
+        ok(appHistory.current.url === expectedRollbackState.url);
     }
 
     function assertAppHistoryLike(appHistory: unknown): asserts appHistory is AppHistory {

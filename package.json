@@ -69,9 +69,10 @@
     "build": "rm -rf esnext && tsc --declaration",
     "postbuild": "node scripts/post-build.js",
     "generate": "yarn build && node esnext/generate.js",
-    "start": "yarn build && node esnext/example.js",
+    "start": "yarn build && node --enable-source-maps esnext/example.js",
     "prepublishOnly": "npm run build",
-    "test": "yarn build && node esnext/tests/index.js",
+    "test": "yarn build && node --enable-source-maps esnext/tests/index.js",
+    "test:inspect": "yarn build && node --enable-source-maps --inspect-brk esnext/tests/index.js",
     "coverage": "yarn build && c8 node esnext/tests/index.js && yarn postbuild"
   }
 }

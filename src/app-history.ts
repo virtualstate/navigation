@@ -1,6 +1,6 @@
-import { AppHistoryEntry } from "./app-history-entry";
+import {AppHistoryEntry, AppHistoryEntryInit, AppHistoryEntryNavigationType} from "./app-history-entry";
 import {
-    AppHistory as AppHistoryPrototype, AppHistoryCurrentChangeEvent, AppHistoryDestination, AppHistoryEntryInit,
+    AppHistory as AppHistoryPrototype, AppHistoryCurrentChangeEvent, AppHistoryDestination,
     AppHistoryEventMap, AppHistoryNavigateEvent,
     AppHistoryNavigateOptions,
     AppHistoryNavigationOptions, AppHistoryNavigationType, AppHistoryReloadOptions,
@@ -12,14 +12,23 @@ import {WritableProps} from "./writable";
 import {EventTargetListeners} from "@opennetwork/environment";
 import {AbortController} from "abort-controller";
 import {AppHistoryTransition} from "./app-history-transition";
+import exp from "constants";
 
 export * from "./app-history.prototype";
 
 const UpdateCurrent = Symbol.for("@virtualstate/app-history/updateCurrent");
+const Rollback = Symbol.for("@virtualstate/app-history/rollback");
 
 type InternalAppHistoryNavigationType =
     | AppHistoryNavigationType
+    | typeof Rollback
     | typeof UpdateCurrent;
+
+export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
+    entries?: AppHistoryEntry[];
+    index?: number;
+    navigationType?: AppHistoryNavigationType;
+}
 
 export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implements AppHistoryPrototype {
 
@@ -63,7 +72,10 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         if (this.#currentIndex === -1) throw new Error("Cannot go back");
         const entry = this.#entries[this.#currentIndex - 1];
         if (!entry) throw new Error("Cannot go back");
-        return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(entry, options));
+        return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(entry, {
+            ...options,
+            navigationType: "traverse"
+        }));
     }
 
     entries(): AppHistoryEntry[] {
@@ -74,34 +86,43 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         if (this.#currentIndex === -1) throw new InvalidStateError();
         const entry = this.#entries[this.#currentIndex + 1];
         if (!entry) throw new InvalidStateError();
-        return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(entry, options));
+        return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(entry, {
+            ...options,
+            navigationType: "traverse"
+        }));
     }
 
     goTo(key: string, options?: AppHistoryNavigationOptions): AppHistoryResult {
         const found = this.#entries.find(entry => entry.key === key);
         if (found) {
-            return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(found, options));
+            return this.#pushEntry("traverse", this.#cloneAppHistoryEntry(found, {
+                ...options,
+                navigationType: "traverse"
+            }));
         }
         throw new InvalidStateError();
     }
 
     navigate(url: string, options?: AppHistoryNavigateOptions): AppHistoryResult {
+        const navigationType = options?.replace ? "replace" : "push";
         const entry = this.#createAppHistoryEntry({
             url,
-            ...options
+            ...options,
+            navigationType
         });
         return this.#pushEntry(
-            options?.replace ? "replace" : "push",
+            navigationType,
             entry,
             options
         );
     }
 
-    #cloneAppHistoryEntry = (entry: AppHistoryEntry, options?: AppHistoryNavigateOptions): AppHistoryEntry => {
+    #cloneAppHistoryEntry = (entry: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions): AppHistoryEntry => {
         return this.#createAppHistoryEntry({
             ...entry,
             index: entry.index,
             state: entry.getState(),
+            navigationType: entry[AppHistoryEntryNavigationType],
             ...options,
             get [EventTargetListeners]() {
                 return entry[EventTargetListeners]
@@ -110,18 +131,17 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     }
 
     #createAppHistoryEntry = (options: Partial<AppHistoryEntryInit> & Omit<AppHistoryEntryInit, "index">) => {
-        const entries = this.#entries;
         const entry: AppHistoryEntry = new AppHistoryEntry({
-            index() {
-                return entries.indexOf(entry);
-            },
             ...options,
+            index: options.index ?? (() => {
+                return this.#entries.indexOf(entry);
+            }),
         });
         return entry;
 
     }
 
-    #pushEntry = (navigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+    #pushEntry = (navigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions) => {
         if (entry === this.current) throw new InvalidStateError();
         const existingPosition = this.#entries.findIndex(existing => existing.id === entry.id);
         if (existingPosition > -1) {
@@ -130,7 +150,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#commitTransition(navigationType, entry, options);
     };
 
-    #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+    #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions) => {
         const finished: Promise<AppHistoryEntry> = (this.#activePromise = this.#activePromise ?? Promise.resolve())
             .catch((error) => void error) // Catch somewhere else please
             .then(async () => {
@@ -139,7 +159,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return { committed: Promise.resolve(entry), finished };
     }
 
-    #immediateTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: AppHistoryNavigateOptions) => {
+    #immediateTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions) => {
         const finished: Promise<AppHistoryEntry> = (this.#activePromise = this.#activePromise ?? Promise.resolve())
             .catch((error) => void error) // Catch somewhere else please
             .then(async () => {
@@ -155,7 +175,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return { committed: Promise.resolve(entry), finished };
     }
 
-    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransitionInit, options?: AppHistoryNavigateOptions) => {
+    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransitionInit, options?: InternalAppHistoryNavigateOptions) => {
         let navigationType = givenNavigationType;
 
         const performance = await getPerformance();
@@ -176,7 +196,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             const { current } = this;
 
             let resolvedNextIndex = this.#currentIndex + 1;
-            if (navigationType === "traverse" || navigationType === "reload") {
+            if (navigationType === Rollback) {
+                resolvedNextIndex = options.index;
+            } else if (navigationType === "traverse" || navigationType === "reload") {
                 resolvedNextIndex = entry.index;
             } else if ((navigationType === "replace" || navigationType === UpdateCurrent) && this.#currentIndex !== -1) {
                 resolvedNextIndex = this.#currentIndex;
@@ -184,8 +206,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 navigationType = "push";
             }
 
+            if (typeof resolvedNextIndex !== "number") {
+                throw new InvalidStateError("Could not resolve next index");
+            }
+
             // console.log({ navigationType, entry, options });
-            if (typeof navigationType === "string") {
+            if (typeof navigationType === "string" || navigationType === Rollback) {
                 await current?.dispatchEvent({
                     type: "navigatefrom"
                 });
@@ -210,7 +236,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 canTransition: true,
                 formData: undefined,
                 hashChange: false,
-                navigationType: typeof navigationType === "string" ? navigationType : "replace",
+                navigationType: options?.navigationType ?? (
+                    typeof navigationType === "string" ? navigationType : "replace"
+                ),
                 userInitiated: false,
                 destination,
                 preventDefault() {
@@ -237,6 +265,15 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 startTime,
                 transitionWhile: navigate.transitionWhile
             };
+            const previousEntries = [...this.#entries];
+            if (navigationType === Rollback) {
+                const { entries, index: expectedIndex } = options;
+                if (!entries) throw new InvalidStateError("Expected entries to be provided for rollback");
+                if (typeof expectedIndex !== "number") throw new InvalidStateError("Expected index to be provided for rollback");
+                this.#entries = entries;
+                entries.forEach(entry => this.#known.add(entry));
+                this.#currentIndex = expectedIndex;
+            } else
             // Default next index is current entries length, aka
             // console.log({ navigationType, givenNavigationType, index: this.#currentIndex, resolvedNextIndex });
             if (navigationType === UpdateCurrent || navigationType === "replace" || navigationType === "traverse" || navigationType === "reload") {
@@ -256,12 +293,21 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             this.#known.add(entry);
 
             // console.log(this.#entries);
+            const previousIndex = this.#currentIndex;
             this.#currentIndex = destination.index;
 
             if (typeof navigationType === "string" || !this.#activeTransition) {
                 currentTransition = this.#activeTransition = new AppHistoryTransition({
                     ...transition,
-                    appHistory: this
+                    rollback: (options?: AppHistoryNavigationOptions) => {
+                        const entry = this.#cloneAppHistoryEntry(current, options);
+                        return this.#pushEntry(Rollback, entry, {
+                            ...options,
+                            index: previousIndex,
+                            navigationType: entry[AppHistoryEntryNavigationType],
+                            entries: previousEntries,
+                        });
+                    }
                 });
             }
 
@@ -295,7 +341,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             assertNotAbortedAfterTransitioned(signal);
             return entry;
         } catch (error) {
-            if (typeof navigationType === "string") {
+            if (!(error instanceof InvalidStateError) && (typeof navigationType === "string" || navigationType === Rollback)) {
                 await this.dispatchEvent({
                     type: "navigateerror",
                     error

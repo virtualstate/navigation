@@ -3,17 +3,22 @@ import {
     AppHistoryEntry,
     AppHistoryNavigationOptions,
     AppHistoryNavigationType, AppHistoryResult,
-    AppHistoryTransition as AppHistoryTransitionPrototype, AppHistoryTransitionInit
+    AppHistoryTransition as AppHistoryTransitionPrototype,
+    AppHistoryTransitionInit as AppHistoryTransitionInitPrototype
 } from "./app-history.prototype";
+
+export interface AppHistoryTransitionInit extends AppHistoryTransitionInitPrototype {
+    rollback(options?: AppHistoryNavigationOptions): AppHistoryResult;
+}
 
 export class AppHistoryTransition implements AppHistoryTransitionPrototype {
     readonly finished: Promise<AppHistoryEntry>;
     readonly from: AppHistoryEntry;
     readonly navigationType: AppHistoryNavigationType;
 
-    #options: AppHistoryTransitionInit & { appHistory: AppHistory };
+    #options: AppHistoryTransitionInit;
 
-    constructor(init: AppHistoryTransitionInit & { appHistory: AppHistory }) {
+    constructor(init: AppHistoryTransitionInit) {
         this.#options = init;
         this.finished = init.finished;
         this.from = init.from;
@@ -21,7 +26,7 @@ export class AppHistoryTransition implements AppHistoryTransitionPrototype {
     }
 
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult {
-        return undefined;
+        return this.#options.rollback(options);
     }
 
 }
