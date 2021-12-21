@@ -162,5 +162,6 @@ export interface AppHistoryDestination {
     readonly id?: string | null;
     readonly index: number;
     readonly sameDocument: boolean;
+    getState<S>(): S;
     getState(): unknown;
 }

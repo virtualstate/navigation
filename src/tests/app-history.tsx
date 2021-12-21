@@ -1,4 +1,9 @@
-import {AppHistory, AppHistoryCurrentChangeEvent, AppHistoryNavigateEvent} from "../app-history.prototype";
+import {
+    AppHistory,
+    AppHistoryCurrentChangeEvent,
+    AppHistoryDestination,
+    AppHistoryNavigateEvent
+} from "../app-history.prototype";
 import {EventTarget} from "@opennetwork/environment";
 import {h, toString, VNode} from "@virtualstate/fringe"
 
@@ -23,6 +28,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         currentChangeMonitoringExample,
         jsxExample,
         rollbackExample,
+        singlePageAppRedirectsAndGuards,
     ] as const
 
     try {
@@ -437,6 +443,88 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         ok(toasts.length);
         ok(toasts[0].includes(expectedError));
         ok(toasts[0].includes(errorUrl));
+    }
+
+    async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
+
+        function determineAction(destination: AppHistoryDestination): {
+            type: string;
+            destinationURL: string;
+            destinationState: unknown;
+            disallowReason?: string;
+        } {
+            const { pathname, searchParams } = new URL(destination.url, "https://example.com");
+            const destinationState: Record<string, unknown> = {
+                ...destination.getState<{}>()
+            };
+            searchParams.forEach(([key, value]) => destinationState[key] = destinationState[key] ?? value);
+            const type = ({
+                "/redirect": "redirect",
+                "/disallow": "disallow"
+            } as const)[pathname];
+            // console.log({ type, destination });
+            return {
+                type,
+                destinationURL: (type === "redirect" && searchParams.get("target")) || destination.url,
+                destinationState,
+                disallowReason: type === "disallow" ? (searchParams.get("reason") ?? undefined) : undefined
+            }
+        }
+
+        let allowCount = 0;
+        let disallowCount = 0;
+
+        appHistory.addEventListener("navigate", e => {
+            e.transitionWhile((async () => {
+                const result = await determineAction(e.destination);
+
+                if (result.type === "redirect") {
+                    await appHistory.transition?.rollback().finished;
+                    await appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished;
+                } else if (result.type === "disallow") {
+                    disallowCount += 1;
+                    throw new Error(result.disallowReason);
+                } else {
+                    // ...
+                    // Allow the transition
+                    allowCount += 1;
+                    return;
+                }
+            })());
+        });
+
+        ok(!appHistory.current);
+
+        await appHistory.navigate("/").finished;
+
+        ok(appHistory.current);
+        ok(appHistory.current.url === "/");
+        ok(allowCount === 1);
+
+        const redirectTargetUrl = `/redirected/${Math.random()}`;
+
+        const targetUrl = new URL("/redirect", "https://example.com");
+        targetUrl.searchParams.set("target", redirectTargetUrl);
+        await appHistory.navigate(targetUrl.toString()).finished;
+
+        ok(appHistory.current.url === redirectTargetUrl);
+        ok(allowCount === 2);
+
+        const expectedInitialError = `${Math.random()}`;
+        const errorTargetUrl = new URL("/disallow", "https://example.com");
+        errorTargetUrl.searchParams.set("reason", expectedInitialError);
+
+        ok(disallowCount === 0);
+
+        const initialError = await appHistory.navigate(errorTargetUrl.toString()).finished.catch(error => error);
+
+        assert(initialError);
+        assert(initialError instanceof Error);
+        assert(initialError.message === expectedInitialError);
+
+        ok(allowCount === 2);
+        ok(disallowCount === 1);
+
     }
 
     function assertAppHistoryLike(appHistory: unknown): asserts appHistory is AppHistory {
