@@ -344,7 +344,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             if (!(error instanceof InvalidStateError) && (typeof navigationType === "string" || navigationType === Rollback)) {
                 await this.dispatchEvent({
                     type: "navigateerror",
-                    error
+                    error,
+                    get message() {
+                        if (error instanceof Error) {
+                            return error.message;
+                        }
+                        return `${error}`;
+                    }
                 });
             }
             await Promise.reject(error);

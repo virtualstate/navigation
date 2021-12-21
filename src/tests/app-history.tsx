@@ -1,7 +1,6 @@
 import {AppHistory, AppHistoryCurrentChangeEvent, AppHistoryNavigateEvent} from "../app-history.prototype";
 import {EventTarget} from "@opennetwork/environment";
 import {h, toString, VNode} from "@virtualstate/fringe"
-import exp from "constants";
 
 export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
@@ -420,7 +419,9 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         }, { once: true });
 
         // This should fail
-        const error = await appHistory.navigate('/').finished.catch((error) => error);
+
+        const errorUrl = `/thisWillError/${Math.random()}`
+        const error = await appHistory.navigate(errorUrl).finished.catch((error) => error);
         assert(error);
         assert(error instanceof Error);
         assert(error.message === expectedError);
@@ -430,6 +431,12 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         // console.log({ current: appHistory.current, expectedRollbackState });
 
         ok(appHistory.current.url === expectedRollbackState.url);
+
+        // console.log({ toasts });
+
+        ok(toasts.length);
+        ok(toasts[0].includes(expectedError));
+        ok(toasts[0].includes(errorUrl));
     }
 
     function assertAppHistoryLike(appHistory: unknown): asserts appHistory is AppHistory {
