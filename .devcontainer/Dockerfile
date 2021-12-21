@@ -1,42 +1,5 @@
 ARG VARIANT="16-buster"
 FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
-# @see https://github.com/microsoft/playwright/blob/8f9eaf7cba53584436703bc7e35f27933c1a8c94/utils/docker/Dockerfile.focal#L6
-
-RUN apt-get update && \
-
-    # Feature-parity with node.js base images.
-    apt-get install -y --no-install-recommends git openssh-client && \
-
-    # Install Python 3.8
-    apt-get install -y python3.8 python3-pip && \
-    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1 && \
-
-    # clean apt cache
-    rm -rf /var/lib/apt/lists/* && \
-
-    # Create the pwuser
-    adduser pwuser
-
-# === BAKE BROWSERS INTO IMAGE ===
-
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-
-# 1. Add tip-of-tree Playwright package to install its browsers.
-#    The package should be built beforehand from tip-of-tree Playwright.
-COPY ./playwright-core.tar.gz /tmp/playwright-core.tar.gz
-
-# 2. Bake in browsers & deps.
-#    Browsers will be downloaded in `/ms-playwright`.
-#    Note: make sure to set 777 to the registry so that any user can access
-#    registry.
-RUN mkdir /ms-playwright && \
-    mkdir /ms-playwright-agent && \
-    cd /ms-playwright-agent && npm init -y && \
-    npm i /tmp/playwright-core.tar.gz && \
-    npx playwright install --with-deps && rm -rf /var/lib/apt/lists/* && \
-    rm /tmp/playwright-core.tar.gz && \
-    rm -rf /ms-playwright-agent && \
-    chmod -R 777 /ms-playwright
+RUN npx playwright install-deps
