@@ -9,12 +9,17 @@ import {
 
 export interface AppHistoryTransitionInit extends AppHistoryTransitionInitPrototype {
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult;
+    then: PromiseLike<AppHistoryEntry>["then"];
 }
 
 export class AppHistoryTransition implements AppHistoryTransitionPrototype {
     readonly finished: Promise<AppHistoryEntry>;
     readonly from: AppHistoryEntry;
     readonly navigationType: AppHistoryNavigationType;
+
+    get then() {
+        return this.#options.then;
+    }
 
     #options: AppHistoryTransitionInit;
 

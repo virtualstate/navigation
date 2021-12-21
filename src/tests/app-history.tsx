@@ -1,7 +1,7 @@
 import {
     AppHistory,
     AppHistoryCurrentChangeEvent,
-    AppHistoryDestination,
+    AppHistoryDestination, AppHistoryEntry,
     AppHistoryNavigateEvent
 } from "../app-history.prototype";
 import {EventTarget} from "@opennetwork/environment";
@@ -235,18 +235,22 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             // In our app, the `navigate` handler will take care of actually showing the photo and updating the content area.
             const entry = await committed;
 
+            let updateCurrentEntry: AppHistoryEntry;
+            let updateCurrentEntryFinished: Promise<AppHistoryEntry>;
+
             // When we navigate away from this photo, save any changes the user made.
             entry.addEventListener("navigatefrom", async () => {
-                await appHistory.updateCurrent({
+                const result = appHistory.updateCurrent({
                     state: {
                         dateTaken: new Date().toISOString(),
                         caption: `Photo taken on the date ${new Date().toDateString()}`
                     }
-                })
-                    // Just ensure committed before we move on
-                    // We know that this will be applied at a minimum
-                    ?.committed;
-            });
+                });
+                // Just ensure committed before we move on
+                // We know that this will be applied at a minimum
+                updateCurrentEntry = await result?.committed;
+                updateCurrentEntryFinished = result?.finished;
+            }, { once: true });
 
             let navigateBackToState: State
 
@@ -261,12 +265,22 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             // Trigger navigatefrom
             await appHistory.navigate("/").finished;
 
+            assert(updateCurrentEntry);
+            ok(updateCurrentEntry.getState());
+            assert(updateCurrentEntry.key === entry.key);
+
+            ok(updateCurrentEntryFinished);
+            await updateCurrentEntryFinished;
+
             // Trigger naviagateto
             await appHistory.goTo(entry.key).finished;
 
+            assert(appHistory.current.key === entry.key);
+            assert(appHistory.current.key === updateCurrentEntry.key);
+
             const finalState = appHistory.current.getState<State>();
 
-            // console.log({ finalState, navigateBackToState });
+            // console.log({ finalState, navigateBackToState, current: appHistory.current });
 
             ok(navigateBackToState);
             ok(navigateBackToState.dateTaken);
@@ -277,6 +291,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             ok(finalState.caption === navigateBackToState.caption);
 
         }
+        // console.log("-----");
         await showPhoto('1');
     }
 
@@ -286,22 +301,22 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         const startingKey = appHistory.current.key;
 
-        const entry1 = await appHistory.navigate("/1").committed;
 
         const values: (1 | 2 | 3)[] = [];
 
-        entry1.addEventListener("dispose", () => values.push(1));
-
+        const entry1 = await appHistory.navigate("/1").committed;
         const entry2 = await appHistory.navigate("/2").committed;
-        entry2.addEventListener("dispose", () => values.push(2));
+        const entry3 = await appHistory.navigate("/3").finished;
 
-        const entry3 = await appHistory.navigate("/3").committed;
+        entry1.addEventListener("dispose", () => values.push(1));
+        entry2.addEventListener("dispose", () => values.push(2));
         entry3.addEventListener("dispose", () => values.push(3));
 
         await appHistory.goTo(startingKey).finished;
         await appHistory.navigate("/1-b").finished;
 
-        ok(values.length === 3);
+        // console.log({ values });
+
         ok(values.includes(1));
         ok(values.includes(2));
         ok(values.includes(3));
@@ -431,6 +446,9 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         const errorUrl = `/thisWillError/${Math.random()}`
         const error = await appHistory.navigate(errorUrl).finished.catch((error) => error);
+
+        // console.log(error);
+
         assert(error);
         assert(error instanceof Error);
         assert(error.message === expectedError);
@@ -477,13 +495,19 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         let allowCount = 0;
         let disallowCount = 0;
 
+        // TODO replace with transition usage
+        let redirectFinished: Promise<AppHistoryEntry>;
+
         appHistory.addEventListener("navigate", e => {
             e.transitionWhile((async () => {
                 const result = await determineAction(e.destination);
 
                 if (result.type === "redirect") {
-                    await appHistory.transition?.rollback().finished;
-                    await appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished;
+                    redirectFinished = appHistory.transition?.rollback().finished
+                        .then(() => appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished);
+                    await redirectFinished;
+                    // await appHistory.transition?.rollback().finished;
+                    // await appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished;
                 } else if (result.type === "disallow") {
                     disallowCount += 1;
                     throw new Error(result.disallowReason);
@@ -508,7 +532,20 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         const targetUrl = new URL("/redirect", "https://example.com");
         targetUrl.searchParams.set("target", redirectTargetUrl);
-        await appHistory.navigate(targetUrl.toString()).finished;
+
+        const { committed: redirectCommitted, finished: redirectFinishedErrored } = appHistory.navigate(targetUrl.toString());
+        await redirectCommitted;
+
+        const redirectError = await redirectFinishedErrored.catch(error => error);
+        assert(redirectError);
+        assert(redirectError instanceof Error);
+
+        // TODO pending transition here would allow us to see the new navigation changes
+        // const pendingTransition = appHistory.transition;
+        // ok(pendingTransition);
+        // await pendingTransition;
+        assert(redirectFinished);
+        await redirectFinished;
 
         ok(appHistory.current.url === redirectTargetUrl);
         ok(allowCount === 2);
@@ -523,6 +560,9 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         assert(initialError);
         assert(initialError instanceof Error);
+
+        // console.log(initialError);
+
         assert(initialError.message === expectedInitialError);
 
         ok(allowCount === 2);

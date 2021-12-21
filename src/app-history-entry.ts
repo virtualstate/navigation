@@ -1,5 +1,4 @@
 import {
-    AppHistory,
     AppHistoryEntry as AppHistoryEntryPrototype,
     AppHistoryEntryEventMap,
     AppHistoryEntryInit as AppHistoryEntryInitPrototype,
@@ -10,9 +9,11 @@ import {v4} from "uuid";
 import {EventTargetListeners} from "@opennetwork/environment";
 
 export const AppHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
+export const AppHistoryEntryKnownAs = Symbol.for("@virtualstate/app-history/entry/knownAs");
 
 export interface AppHistoryEntryInit<S = unknown> extends AppHistoryEntryInitPrototype<S> {
-    navigationType: AppHistoryNavigationType
+    navigationType: AppHistoryNavigationType;
+    [AppHistoryEntryKnownAs]?: Set<string>;
 }
 
 export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHistoryEntryEventMap> implements AppHistoryEntryPrototype<S> {
@@ -30,6 +31,12 @@ export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHisto
 
     get [AppHistoryEntryNavigationType]() {
         return this.#options.navigationType;
+    }
+
+    get [AppHistoryEntryKnownAs]() {
+        const set = new Set(this.#options[AppHistoryEntryKnownAs]);
+        set.add(this.id);
+        return set;
     }
 
     #options: AppHistoryEntryInit<S>;
