@@ -236,13 +236,16 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const entry = await committed;
 
             // When we navigate away from this photo, save any changes the user made.
-            entry.addEventListener("navigatefrom", () => {
-                appHistory.updateCurrent({
+            entry.addEventListener("navigatefrom", async () => {
+                await appHistory.updateCurrent({
                     state: {
                         dateTaken: new Date().toISOString(),
                         caption: `Photo taken on the date ${new Date().toDateString()}`
                     }
-                });
+                })
+                    // Just ensure committed before we move on
+                    // We know that this will be applied at a minimum
+                    ?.committed;
             });
 
             let navigateBackToState: State
