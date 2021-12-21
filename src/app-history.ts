@@ -200,7 +200,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const previousIndex = this.#currentIndex;
         return (options) => {
             // console.trace("Rollback !", { current, previousEntries, previousIndex, fn });
-            const entry = this.#cloneAppHistoryEntry(current, options);
+            const entry = current ? this.#cloneAppHistoryEntry(current, options) : undefined;
+            if (!entry) {
+                if (!this.current) {
+                    return;
+                }
+                throw new InvalidStateError("Unable to rollback");
+            }
             const result = fn(Rollback, entry, transition, {
                 ...options,
                 index: previousIndex,
@@ -342,12 +348,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
             return entry;
         } catch (error) {
-            if (navigationType !== Rollback) {
-                // console.warn("Rolling back immediately due to internal error");
-                await rollbackImmediately();
-            }
-
             if (!(error instanceof InvalidStateError) && (typeof navigationType === "string" || navigationType === Rollback)) {
+                if (navigationType !== Rollback) {
+                    // console.warn("Rolling back immediately due to internal error", error);
+                    await rollbackImmediately();
+                }
                 await this.dispatchEvent({
                     type: "navigateerror",
                     error,
