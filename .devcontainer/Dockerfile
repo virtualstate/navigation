@@ -8,6 +8,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && npm i -D @playwright/test
 
 USER node
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PLAYWRIGHT_BROWSERS_PATH=/usr/app/.ms-playwright
 RUN npx -q playwright install \
      && npx playwright install-deps
