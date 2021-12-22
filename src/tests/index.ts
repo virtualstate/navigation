@@ -24,26 +24,19 @@ async function runTests() {
     }
 }
 
-if (typeof window !== "undefined" && typeof window.testsComplete === "function" && typeof window.testsFailed === "function") {
-    console.log("Running tests within window");
-    try {
-        await runTests();
-        await window.testsComplete();
-    } catch (error) {
-        await window.testsFailed(error instanceof Error ? error.message : `${error}`);
-        throw error;
-    }
-} else {
+if (typeof window === "undefined") {
     console.log("Running tests within shell");
-    await runTests()
+} else {
+    console.log("Running tests within window");
 }
+await runTests();
 
 // Settle tests, allow for the above handlers to fire if they need to
 await new Promise(resolve => setTimeout(resolve, 200));
 
 // TODO add checks to ensure everything is closed
 if (typeof process !== "undefined") {
-    process.exit(0);
+    // process.exit(0);
 }
 
 export default 1;

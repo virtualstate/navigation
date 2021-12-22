@@ -23,7 +23,15 @@ const pageContent = await toString(
                 }}
             />)
         ),
-        h("body", {}, h("script", { type: "module", src }, "\n"))
+        h("body", {}, h("script", { type: "module" }, `
+        try {
+            await import(${JSON.stringify(src)});
+            console.log("DONE!!!");
+            await window.testsComplete();
+        } catch (error) {
+            await window.testsFailed(error instanceof Error ? error.message : \`\${error}\`);
+        }
+        `))
     )
 )
 
@@ -36,12 +44,26 @@ declare global {
     }
 }
 
-await page.exposeFunction("testsComplete", resolve);
-await page.exposeFunction("testsFailed", reject);
+await page.exposeFunction("testsComplete", () => {
+    console.log("Tests complete");
+    return resolve();
+});
+await page.exposeFunction("testsFailed", (reason: unknown) => {
+    console.log("Tests failed");
+    return reject(reason);
+});
 
 page.on('console', console.log);
 
-await page.goto(`data:text/html,${encodeURIComponent(pageContent)}`, {
+await page.route('**/*', (route, request) => {
+    const { pathname } = new URL(request.url());
+    if (pathname !== "/test-page-entrypoint") return route.continue();
+    return route.fulfill({
+        body: pageContent
+    })
+})
+
+await page.goto("https://example.com/test-page-entrypoint", {
 
 });
 
