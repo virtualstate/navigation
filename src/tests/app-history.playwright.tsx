@@ -71,7 +71,7 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
 
     await page.route('**/*', (route, request) => {
         const { pathname, hostname } = new URL(request.url());
-        console.log({ pathname, hostname });
+        // console.log({ pathname, hostname });
         // if (pathname !== "/test-page-entrypoint") return route.continue();
         if (hostname !== "example.com") return route.continue();
         if (pathname.includes(".ico")) return route.fulfill({
