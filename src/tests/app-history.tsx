@@ -20,13 +20,16 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
     try {
         for (const test of tests) {
-            const appHistory = createAppHistory();
-            assertAppHistoryLike(appHistory);
+            const localAppHistory = createAppHistory();
+            assertAppHistoryLike(localAppHistory);
 
-            if (typeof window !== "undefined" && typeof window.history !== "undefined") {
+            if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
+                typeof appHistory === "undefined" ||
+                appHistory !== localAppHistory
+            )) {
                 // Add as very first currentchange listener, to allow location change to happen
-                appHistory.addEventListener("currentchange", () => {
-                    const { current } = appHistory;
+                localAppHistory.addEventListener("currentchange", () => {
+                    const { current } = localAppHistory;
                     if (!current) return;
                     const state = current.getState<{ title?: string }>() ?? {};
                     const { pathname } = new URL(current.url, "https://example.com");
@@ -37,7 +40,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
             try {
                 console.log("START ", test.name);
-                await test(appHistory);
+                await test(localAppHistory);
                 console.log("PASS  ", test.name);
             } catch (error) {
                 if (error !== expectedError) {

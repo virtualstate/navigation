@@ -1,3 +1,4 @@
+/* c8 ignore start */
 export function getConfig(): Record<string, unknown> {
     return {
         ...getNodeConfig(),

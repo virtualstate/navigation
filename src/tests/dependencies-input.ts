@@ -1,3 +1,4 @@
+/* c8 ignore start */
 export default [
   "@opennetwork/http-representation",
   "@virtualstate/astro-renderer",

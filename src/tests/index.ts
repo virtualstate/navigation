@@ -24,6 +24,9 @@ async function runTests() {
             await import("./app-history.playwright");
         }
     }
+    // else {
+    //     await import("./app-history.scope");
+    // }
 }
 
 if (typeof window === "undefined") {

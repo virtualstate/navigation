@@ -1,4 +1,4 @@
-
+/* c8 ignore start */
 
 export interface DependenciesContentOptions {
     imports?: Record<string, string>

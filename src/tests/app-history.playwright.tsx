@@ -19,7 +19,9 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
     const browser = await browserLauncher.launch({
         headless: !DEBUG,
         devtools: DEBUG,
-
+        args: [
+            "--enable-experimental-web-platform-features"
+        ]
     });
     const context = await browser.newContext({});
     const page = await context.newPage();
@@ -41,6 +43,13 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
                 />)
             ),
             h("body", {}, h("script", { type: "module" }, `
+            
+        if (typeof appHistory !== "undefined") {
+          console.log("Global AppHistory exists");
+        } else {
+          console.log("Global AppHistory does not exist");
+        }
+            
         console.log("Waiting for window to load");
         await new Promise(resolve => window.addEventListener("load", resolve));
         console.log("Load event fired");
@@ -73,6 +82,7 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
     });
 
     page.on('console', console.log);
+    page.on('pageerror', reject);
 
     await page.route('**/*', async (route, request) => {
         const { pathname, hostname } = new URL(request.url());
