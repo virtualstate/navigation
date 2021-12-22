@@ -25,6 +25,7 @@ async function runTests() {
 }
 
 if (typeof window !== "undefined" && typeof window.testsComplete === "function" && typeof window.testsFailed === "function") {
+    console.log("Running tests within window");
     try {
         await runTests();
         await window.testsComplete();
@@ -33,6 +34,7 @@ if (typeof window !== "undefined" && typeof window.testsComplete === "function" 
         throw error;
     }
 } else {
+    console.log("Running tests within shell");
     await runTests()
 }
 

@@ -22,6 +22,25 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         for (const test of tests) {
             const appHistory = createAppHistory();
             assertAppHistoryLike(appHistory);
+
+            if (typeof window !== "undefined" && typeof window.history !== "undefined") {
+                // Add as very first currentchange listener, to allow location change to happen
+                appHistory.addEventListener("currentchange", () => {
+                    const { current } = appHistory;
+                    if (!current) return;
+                    const state = current.getState<{ title?: string }>() ?? {};
+                    const { hostname, pathname } = new URL(current.url);
+                    const { hostname: locationHostname } = new URL(location.href);
+                    if (hostname === locationHostname) {
+                        // One to one update url, we're using app history 100% to keep track of state
+                        window.history.pushState(state, state.title ?? "", current.url);
+                    } else {
+                        // Transition out, but we actually don't want to for testing
+                        window.history.pushState(state, state.title ?? "", pathname);
+                    }
+                });
+            }
+
             try {
                 console.log("START ", test.name);
                 await test(appHistory);
