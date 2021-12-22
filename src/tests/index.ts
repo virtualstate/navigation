@@ -27,9 +27,9 @@ async function runTests() {
 if (typeof window !== "undefined" && typeof window.testsComplete && typeof window.testsFailed) {
     try {
         await runTests();
-        window.testsComplete();
+        await window.testsComplete();
     } catch (error) {
-        window.testsFailed(error instanceof Error ? error.message : `${error}`);
+        await window.testsFailed(error instanceof Error ? error.message : `${error}`);
         throw error;
     }
 } else {

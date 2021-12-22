@@ -56,3 +56,8 @@ await page.waitForLoadState("networkidle");
 console.log("Network idle");
 
 await promise;
+
+console.log("Playwright tests complete");
+
+await page.close();
+await browser.close();

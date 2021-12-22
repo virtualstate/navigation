@@ -23,15 +23,15 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const appHistory = createAppHistory();
             assertAppHistoryLike(appHistory);
             try {
-                console.log("START ", test);
+                console.log("START ", test.name);
                 await test(appHistory);
-                console.log("PASS  ", test);
+                console.log("PASS  ", test.name);
             } catch (error) {
                 if (error !== expectedError) {
                     caught = caught || error;
-                    console.error("ERROR", test, error)
+                    console.error("ERROR", test.name, error)
                 } else {
-                    console.log("PASS  ", test);
+                    console.log("PASS  ", test.name);
                 }
             }
         }
