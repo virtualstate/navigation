@@ -82,15 +82,15 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
             const { pathname: file } = new URL(import.meta.url);
             let importTarget = pathResolve(join(dirname(file), '..', pathname.replace(namespacePath, "")));
             if (!/\.[a-z]+$/.test(importTarget)) {
-                console.log({ importTarget });
+                // console.log({ importTarget });
                 if (!importTarget.endsWith("/")) {
                     importTarget += "/";
                 }
                 importTarget += "index.js";
             }
-            console.log({ importTarget });
+            // console.log({ importTarget });
             const contents = await fs.readFile(importTarget, "utf-8");
-            console.log({ importTarget, contents: !!contents });
+            // console.log({ importTarget, contents: !!contents });
             return route.fulfill({
                 body: contents,
                 headers: {
