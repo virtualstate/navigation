@@ -8,6 +8,38 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
 [//]: # (badges)
 
+## Install 
+
+### Snowpack
+
+- [Package Registry Link - Snowpack](https://www.skypack.dev/view/@virtualstate/app-history)
+
+```typescript
+const { AppHistory } = await import("https://cdn.skypack.dev/@virtualstate/app-history");
+```
+
+### npm / yarn / GitHub
+
+
+- [Package Registry Link - GitHub](https://github.com/virtualstate/app-history/packages)
+- [Package Registry Link - npm](https://www.npmjs.com/package/@virtualstate/app-history)
+
+```
+npm i --save @virtualstate/app-history
+```
+
+_Or_
+
+```
+yarn add @virtualstate/app-history
+```
+
+Then
+
+```typescript
+import { AppHistory } from "@virtualstate/app-history";
+```
+
 ## Navigation
 
 ```typescript
