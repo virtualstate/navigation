@@ -5,9 +5,6 @@ WORKDIR /usr/app
 
 USER root
 
-ENV PLAYWRIGHT_BROWSERS_PATH=/usr/app/.ms-playwright
-RUN mkdir -p /usr/app/.ms-playwright
-
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && npm i -D @playwright/test
 
