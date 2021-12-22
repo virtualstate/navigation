@@ -1,8 +1,8 @@
 import {
-    AppHistory,
     AppHistoryEntry,
     AppHistoryNavigationOptions,
-    AppHistoryNavigationType, AppHistoryResult,
+    AppHistoryNavigationType,
+    AppHistoryResult,
     AppHistoryTransition as AppHistoryTransitionPrototype,
     AppHistoryTransitionInit as AppHistoryTransitionInitPrototype
 } from "./app-history.prototype";

@@ -4,11 +4,11 @@ import {deferred} from "../../deferred";
 import { dispatchEvent } from "../../event-target/global";
 
 export interface FetchEvent extends RespondEvent<"fetch", Response> {
-
+    request: Request
 }
 
 export async function fetch(url: string, init?: RequestInit & { signal?: AbortSignal }) {
-    const request = new Request(url, init);
+    const request = new Request(new URL(url, "https://example.com").toString(), init);
     const { resolve, reject, promise } = deferred<Response>();
     const event: FetchEvent = {
         type: "fetch",

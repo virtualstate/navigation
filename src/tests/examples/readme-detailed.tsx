@@ -5,7 +5,9 @@ import {
     AppHistoryEntry,
     AppHistoryNavigateEvent
 } from "../../app-history.prototype";
-import {EventTarget, Event, FetchEvent, fetch, addEventListener, removeEventListener} from "@opennetwork/environment";
+import {EventTarget, Event} from "../../event-target"
+import {FetchEvent, fetch} from "./fetch"
+import {addEventListener, removeEventListener} from "../../event-target/global";
 import {h, toString, VNode} from "@virtualstate/fringe";
 import {Response} from "@opennetwork/http-representation";
 
@@ -573,8 +575,8 @@ export async function usingInfoExample(appHistory: AppHistory) {
         }
     });
 
-    photoGallery.addEventListener("click", ({ target }: Event & { target?: unknown }) => {
-        appHistory.navigate(getPhotoURL(target), { info: { via: "gallery", thumbnail: target } });
+    photoGallery.addEventListener("click", async ({ target }: Event & { target?: unknown }) => {
+        await appHistory.navigate(getPhotoURL(target), { info: { via: "gallery", thumbnail: target } }).finished;
     });
 
     let lefts = 0,

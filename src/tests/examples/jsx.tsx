@@ -1,6 +1,6 @@
 import {AppHistory} from "../../app-history.prototype";
 import {h, toString, VNode} from "@virtualstate/fringe";
-import {EventTarget} from "@opennetwork/environment";
+import {EventTarget} from "../../event-target";
 import {ok} from "../util";
 
 export async function jsxExample(appHistory: AppHistory) {

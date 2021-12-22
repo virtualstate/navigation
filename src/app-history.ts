@@ -5,18 +5,28 @@ import {
     AppHistoryEntryNavigationType
 } from "./app-history-entry";
 import {
-    AppHistory as AppHistoryPrototype, AppHistoryCurrentChangeEvent, AppHistoryDestination,
-    AppHistoryEventMap, AppHistoryNavigateEvent,
+    AppHistory as AppHistoryPrototype,
+    AppHistoryEventMap,
     AppHistoryNavigateOptions,
-    AppHistoryNavigationOptions, AppHistoryNavigationType, AppHistoryReloadOptions,
-    AppHistoryResult, AppHistoryTransitionInit, AppHistoryUpdateCurrentOptions, AppHistoryTransition as AppHistoryTransitionPrototype
+    AppHistoryNavigationOptions,
+    AppHistoryReloadOptions,
+    AppHistoryResult,
+    AppHistoryTransitionInit,
+    AppHistoryUpdateCurrentOptions,
+    AppHistoryTransition as AppHistoryTransitionPrototype
 } from "./app-history.prototype";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
 import {EventTargetListeners} from "./event-target";
 import {AbortController} from "abort-controller";
 import {AppHistoryTransition} from "./app-history-transition";
-import {createAppHistoryTransition, InternalAppHistoryNavigationType, InternalAppHistoryNavigateOptions, Rollback, UpdateCurrent} from "./create-app-history-transition";
+import {
+    createAppHistoryTransition,
+    InternalAppHistoryNavigationType,
+    InternalAppHistoryNavigateOptions,
+    Rollback,
+    UpdateCurrent
+} from "./create-app-history-transition";
 
 export * from "./app-history.prototype";
 
@@ -32,6 +42,8 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     #activeTransition?: AppHistoryTransition;
 
     #inProgressAbortController?: AbortController;
+
+    #knownTransitions = new WeakSet();
 
     get canGoBack() {
         if (this.#currentIndex === 0) {
@@ -175,6 +187,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     #queueTransition = (transition: AppHistoryTransition) => {
         // TODO consume errors that are not abort errors
         // transition.finished.catch(error => void error);
+        this.#knownTransitions.add(transition);
     }
 
     #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, finished: Promise<AppHistoryEntry>, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
@@ -250,7 +263,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             then: this.#createActiveThen()
         });
 
-        try {
+        const completeTransition = async () => {
             if (!entry && givenNavigationType === Rollback && typeof options.index === "number") {
                 this.#entries = options.entries;
                 this.#currentIndex = options.index;
@@ -350,6 +363,10 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             }
 
             return entry;
+        }
+
+        try {
+            return await completeTransition();
         } catch (error) {
             if (!(error instanceof InvalidStateError) && (typeof navigationType === "string" || navigationType === Rollback)) {
                 if (navigationType !== Rollback) {
@@ -444,7 +461,7 @@ async function getPerformance(): Promise<{
         mark() {
 
         },
-        measure(name: string, start: string, finish: string) {
+        measure() {
         }
     }
     // const { performance: nodePerformance } = await import("perf_hooks");
