@@ -24,7 +24,7 @@ async function runTests() {
     }
 }
 
-if (typeof window !== "undefined" && typeof window.testsComplete && typeof window.testsFailed) {
+if (typeof window !== "undefined" && typeof window.testsComplete === "function" && typeof window.testsFailed === "function") {
     try {
         await runTests();
         await window.testsComplete();
