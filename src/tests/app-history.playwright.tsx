@@ -1,4 +1,4 @@
-import { chromium, webkit, firefox } from "playwright";
+import { chromium } from "playwright";
 import { h, toString } from "@virtualstate/fringe";
 import {deferred} from "../deferred";
 import { DependenciesContent } from "./dependencies";
@@ -10,11 +10,13 @@ declare global {
     }
 }
 
+const DEBUG = false;
+
 // webkit and firefox do not support importmap
 for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
     const browser = await browserLauncher.launch({
-        headless: false,
-        devtools: true,
+        headless: !DEBUG,
+        devtools: DEBUG,
 
     });
     const context = await browser.newContext({});
