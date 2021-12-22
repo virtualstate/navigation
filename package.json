@@ -1,6 +1,6 @@
 {
   "name": "@virtualstate/app-history",
-  "version": "1.0.1-alpha.40",
+  "version": "1.0.1-alpha.41",
   "main": "./esnext/index.js",
   "module": "./esnext/index.js",
   "types": "./esnext/index.d.ts",
