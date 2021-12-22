@@ -1,9 +1,5 @@
 export default [
-  "@opennetwork/environment",
-  "@opennetwork/environments-schema-org-logistics",
   "@opennetwork/http-representation",
-  "@opennetwork/progressive-merge",
-  "@opennetwork/vnode",
   "@virtualstate/astro-renderer",
   "@virtualstate/dom",
   "@virtualstate/examples",
