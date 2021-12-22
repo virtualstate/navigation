@@ -5,7 +5,8 @@ import { DependenciesContent } from "./dependencies";
 
 const browser = await chromium.launch({
     headless: false,
-    devtools: true
+    devtools: true,
+
 });
 const context = await browser.newContext({});
 const page = await context.newPage();

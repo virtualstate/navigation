@@ -18,7 +18,7 @@ import {
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
 import {EventTargetListeners} from "./event-target";
-import {AbortController} from "abort-controller";
+import AbortController from "abort-controller";
 import {AppHistoryTransition} from "./app-history-transition";
 import {
     createAppHistoryTransition,

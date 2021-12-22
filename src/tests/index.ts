@@ -19,8 +19,8 @@ if (typeof process !== "undefined") {
 async function runTests() {
     await import("./app-history.class");
     await import("./app-history.imported");
-    if (typeof window === "undefined") {
-        // await import("./app-history.playwright");
+    if (typeof window === "undefined" && typeof process !== "undefined" && process.env.FLAGS?.includes("PLAYWRIGHT")) {
+        await import("./app-history.playwright");
     }
 }
 

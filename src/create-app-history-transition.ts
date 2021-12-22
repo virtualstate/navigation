@@ -1,5 +1,5 @@
 import type {AppHistoryTransitionInit} from "./app-history.prototype";
-import {AbortController} from "abort-controller";
+import AbortController from "abort-controller";
 import {InvalidStateError} from "./app-history-errors";
 import {WritableProps} from "./writable";
 import {
