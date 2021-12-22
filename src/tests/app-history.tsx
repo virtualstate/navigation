@@ -23,20 +23,21 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const localAppHistory = createAppHistory();
             assertAppHistoryLike(localAppHistory);
 
-            if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
-                typeof appHistory === "undefined" ||
-                appHistory !== localAppHistory
-            )) {
-                // Add as very first currentchange listener, to allow location change to happen
-                localAppHistory.addEventListener("currentchange", () => {
-                    const { current } = localAppHistory;
-                    if (!current) return;
-                    const state = current.getState<{ title?: string }>() ?? {};
-                    const { pathname } = new URL(current.url, "https://example.com");
+            // Add as very first currentchange listener, to allow location change to happen
+            localAppHistory.addEventListener("currentchange", () => {
+                const { current } = localAppHistory;
+                if (!current) return;
+                const state = current.getState<{ title?: string }>() ?? {};
+                const { pathname } = new URL(current.url, "https://example.com");
+                if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
+                    typeof appHistory === "undefined" ||
+                    appHistory !== localAppHistory
+                )) {
                     window.history.pushState(state, state.title ?? "", pathname);
-                    console.log(`Updated window pathname to ${pathname}`);
-                });
-            }
+                }
+                console.log(`Updated window pathname to ${pathname}`);
+            });
+
 
             try {
                 console.log("START ", test.name);
