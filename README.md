@@ -18,6 +18,13 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 const { AppHistory } = await import("https://cdn.skypack.dev/@virtualstate/app-history");
 ```
 
+_Or_
+
+```typescript
+import { AppHistory } from "https://cdn.skypack.dev/@virtualstate/app-history";
+```
+
+
 ### npm / yarn / GitHub
 
 
