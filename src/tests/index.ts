@@ -1,16 +1,17 @@
 /* c8 ignore start */
 // import {run, dispatchEvent, addEventListener} from "@opennetwork/environment";
+import process from "./node-process";
 
 if (typeof process !== "undefined") {
-    process.on("uncaughtException", (...args) => {
+    process.on("uncaughtException", (...args: unknown[]) => {
         console.log("process uncaught exception", ...args);
         process.exit(1);
     });
-    process.on("unhandledRejection", (...args) => {
+    process.on("unhandledRejection", (...args: unknown[]) => {
         console.log("process unhandled rejection", ...args);
         process.exit(1);
     });
-    process.on("error", (...args) => {
+    process.on("error", (...args: unknown[]) => {
         console.log("process error", ...args);
         process.exit(1);
     });

@@ -13,11 +13,13 @@ import {AppHistoryEntry} from "./app-history-entry";
 
 export const UpdateCurrent = Symbol.for("@virtualstate/app-history/updateCurrent");
 export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
+export const Unset = Symbol.for("@virtualstate/app-history/unset");
 
 export type InternalAppHistoryNavigationType =
     | AppHistoryNavigationType
     | typeof Rollback
-    | typeof UpdateCurrent;
+    | typeof UpdateCurrent
+    | typeof Unset;
 
 export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
     entries?: AppHistoryEntry[];
@@ -85,7 +87,7 @@ export async function createAppHistoryTransition(context: AppHistoryTransitionCo
     if ( navigationType === UpdateCurrent) {
         destinationIndex = getEntryIndex(previousEntries, entry);
     } else if (navigationType === Rollback) {
-        const { index } = options;
+        const { index } = options ?? { index: undefined };
         if (typeof index !== "number") throw new InvalidStateError("Expected index to be provided for rollback");
         destinationIndex = index;
         nextIndex = index;
@@ -109,6 +111,10 @@ export async function createAppHistoryTransition(context: AppHistoryTransitionCo
     }
 
     // console.log({ navigationType, entry, options });
+
+    if (!entry.url) {
+        throw new InvalidStateError("Expected entry url");
+    }
 
     const destination: WritableProps<AppHistoryDestination> = {
         url: entry.url,
@@ -148,7 +154,7 @@ export async function createAppHistoryTransition(context: AppHistoryTransitionCo
     if (navigationType === UpdateCurrent) {
         resolvedEntries[destination.index] = entry;
     } else if (navigationType === Rollback) {
-        const { entries } = options;
+        const { entries } = options ?? { entries: undefined };
         if (!entries) throw new InvalidStateError("Expected entries to be provided for rollback");
         resolvedEntries = entries;
         resolvedEntries.forEach(entry => known.add(entry));

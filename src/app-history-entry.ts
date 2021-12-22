@@ -57,7 +57,7 @@ export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHisto
 
     getState<ST extends S>(): ST
     getState(): S
-    getState(): S {
+    getState(): unknown {
         return this.#options.state;
     }
 

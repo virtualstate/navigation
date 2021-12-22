@@ -1,8 +1,8 @@
 /* c8 ignore start */
 export function ok(value: unknown) {
-    assert(value);
+    assert<unknown>(value);
 }
 
-export function assert(value: unknown, message?: string): asserts value {
+export function assert<T>(value: unknown, message?: string): asserts value is T {
     if (!value) throw new Error(message);
 }

@@ -1409,6 +1409,11 @@
   resolved "https://registry.npmjs.org/@virtualstate/fringe/-/fringe-2.46.0.tgz#f8efe290f5f98ea9a1da6d2de8264435583af9c3"
   integrity sha512-kSwiiSTv0i2ht3MtM+RtOzDUJTLDW1RJpYSnRQTY56g5zvCdn+kFhEyPiE1ryvh99Jme9BXiCo6uzzB/8zihCw==
 
+"@virtualstate/fringe@^2.46.1":
+  version "2.46.1"
+  resolved "https://registry.npmjs.org/@virtualstate/fringe/-/fringe-2.46.1.tgz#27d1034f355a260aaa6d536d7f27626faf3c1847"
+  integrity sha512-s2GSeCN7w5LDSXhUqQR9pGasSuyDHbkIt5ECUcFb563f++BjC6nvE0RPpQ1VxCSWvTuOATIhawRZ9JUWAB0PyA==
+
 "@virtualstate/hooks-extended@^2.46.0":
   version "2.46.0"
   resolved "https://registry.npmjs.org/@virtualstate/hooks-extended/-/hooks-extended-2.46.0.tgz#57958b038b82dcd3e52f26f1fc6589de4a3d14ad"

@@ -55,7 +55,7 @@
     "@virtualstate/astro-renderer": "^2.46.0",
     "@virtualstate/dom": "^2.46.0",
     "@virtualstate/examples": "^2.46.0",
-    "@virtualstate/fringe": "^2.46.0",
+    "@virtualstate/fringe": "^2.46.1",
     "@virtualstate/hooks": "^2.46.0",
     "@virtualstate/hooks-extended": "^2.46.0",
     "@virtualstate/union": "^2.46.0",
@@ -75,7 +75,7 @@
     "typescript": "^4.4.3"
   },
   "scripts": {
-    "build": "rm -rf esnext && tsc --declaration",
+    "build": "rm -rf esnext && tsc",
     "postbuild": "node scripts/post-build.js",
     "generate": "yarn build && node esnext/generate.js",
     "prepublishOnly": "npm run build",

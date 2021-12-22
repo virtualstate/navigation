@@ -8,11 +8,24 @@ export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
 }
 
+declare global {
+    interface History {
+        pushState(data: unknown, unused: string, url?: string | URL): void;
+    }
+    interface AppHistory {
+    }
+    interface Window {
+        readonly history: History;
+        readonly appHistory: AppHistory;
+    }
+}
+
 export async function assertAppHistory(createAppHistory: () => unknown): Promise<AppHistoryAssertFn> {
     let caught: unknown;
 
     const tests = [
-            ...Object.values(Examples),
+            ...Object.values(Examples)
+                .filter<typeof throwError>((value): value is typeof throwError => typeof value === "function"),
         throwError,
     ] as const
 
@@ -28,10 +41,10 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
                 const { current } = localAppHistory;
                 if (!current) return;
                 const state = current.getState<{ title?: string }>() ?? {};
-                const { pathname } = new URL(current.url, "https://example.com");
+                const { pathname } = new URL(current.url ?? "/", "https://example.com");
                 if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
-                    typeof appHistory === "undefined" ||
-                    appHistory !== localAppHistory
+                    typeof window.appHistory === "undefined" ||
+                    window.appHistory !== localAppHistory
                 )) {
                     window.history.pushState(state, state.title ?? "", pathname);
                 }
@@ -61,7 +74,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         if (caught) throw caught;
     }
 
-    async function throwError() {
+    async function throwError(appHistory: AppHistory): Promise<void> {
         throw expectedError;
     }
 }

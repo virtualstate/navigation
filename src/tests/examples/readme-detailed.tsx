@@ -8,7 +8,7 @@ import {
 import {EventTarget, Event} from "../../event-target"
 import {FetchEvent, fetch} from "./fetch"
 import {addEventListener, removeEventListener} from "../../event-target/global";
-import {h, toString, VNode} from "@virtualstate/fringe";
+import {h} from "@virtualstate/fringe";
 import {Response} from "@opennetwork/http-representation";
 
 export async function initialNavigateThenBack(appHistory: AppHistory) {
@@ -41,6 +41,7 @@ export async function routeHandlerExample(appHistory: AppHistory) {
         }
         if (routesTable.has(event.destination.url)) {
             const routeHandler = routesTable.get(event.destination.url);
+            if (!routeHandler) return;
             event.transitionWhile(routeHandler());
         }
     }
@@ -67,7 +68,7 @@ export async function productBackButtonClicked(appHistory: AppHistory) {
     const backButtonEl = new EventTarget();
 
     backButtonEl.addEventListener("click", async () => {
-        const previous = appHistory.entries()[appHistory.current?.index - 1];
+        const previous = appHistory.entries()[appHistory.current?.index ?? -2 - 1];
         // console.log({ previous });
         if (previous?.url === "/product-listing") {
             // console.log("Back");
@@ -85,13 +86,13 @@ export async function productBackButtonClicked(appHistory: AppHistory) {
         type: "click"
     });
 
-    ok(appHistory.current.url === "/product-listing");
+    ok(appHistory.current?.url === "/product-listing");
     ok(appHistory.entries().length === 1);
 
     const { finished } = await appHistory.navigate("/product-listing/product");
     await finished;
 
-    ok(appHistory.current.url === "/product-listing/product");
+    ok(appHistory.current?.url === "/product-listing/product");
     ok(appHistory.entries().length === 2);
 
     await backButtonEl.dispatchEvent({
@@ -100,7 +101,7 @@ export async function productBackButtonClicked(appHistory: AppHistory) {
 
     // console.log(appHistory.entries());
 
-    ok(appHistory.current.url === "/product-listing");
+    ok(appHistory.current?.url === "/product-listing");
     ok(appHistory.entries().length === 2);
 
 }
@@ -115,26 +116,26 @@ export async function performanceExample(appHistory: AppHistory) {
 
 export async function currentReloadExample(appHistory: AppHistory) {
     await appHistory.navigate('/').finished;
-    await appHistory.reload({ state: { ...appHistory.current.getState<{}>(), test: 3 } }).finished;
-    ok(appHistory.current.getState<{ test: number }>().test === 3);
+    await appHistory.reload({ state: { ...appHistory.current?.getState<{}>(), test: 3 } }).finished;
+    ok(appHistory.current?.getState<{ test: number }>().test === 3);
 }
 
 export async function currentChangeExample(appHistory: AppHistory) {
-    let changedEvent: AppHistoryCurrentChangeEvent;
+    let changedEvent!: AppHistoryCurrentChangeEvent;
     appHistory.addEventListener("currentchange", event => {
         changedEvent = event;
     });
     ok(!appHistory.current);
     await appHistory.navigate('/').finished;
-    assert(changedEvent);
+    assert<AppHistoryCurrentChangeEvent>(changedEvent);
     ok(changedEvent.navigationType);
     ok(!changedEvent.from);
     const initial = appHistory.current;
-    assert(initial);
+    assert<AppHistoryEntry>(initial);
     await appHistory.navigate('/1').finished;
-    assert(changedEvent);
+    assert<AppHistoryCurrentChangeEvent>(changedEvent);
     ok(changedEvent.navigationType);
-    ok(changedEvent.from);
+    assert<AppHistoryEntry>(changedEvent.from);
     ok(changedEvent.from.id === initial.id);
 }
 
@@ -142,21 +143,21 @@ export async function homepageGoToExample(appHistory: AppHistory) {
     const homeButton = new EventTarget();
 
     await appHistory.navigate('/home').finished;
-    const homepageKey = appHistory.current.key;
-    assert(homepageKey);
+    const homepageKey = appHistory.current?.key;
+    assert<string>(homepageKey);
 
     homeButton.addEventListener("click", async () => {
         await appHistory.goTo(homepageKey).finished;
     });
 
     await appHistory.navigate('/other').finished;
-    ok(appHistory.current.url === '/other');
+    ok(appHistory.current?.url === '/other');
 
     await homeButton.dispatchEvent({
         type: "click"
     });
 
-    ok(appHistory.current.url === '/home');
+    ok(appHistory.current?.url === '/home');
 }
 
 export async function toggleExample(appHistory: AppHistory) {
@@ -168,7 +169,7 @@ export async function toggleExample(appHistory: AppHistory) {
 
     const detailsElement: EventTarget & { open?: boolean } = new EventTarget();
     detailsElement.addEventListener("toggle", async () => {
-        const state = appHistory.current.getState<State>();
+        const state = appHistory.current?.getState<State>();
         await appHistory.updateCurrent({
             state: {
                 ...state,
@@ -177,19 +178,19 @@ export async function toggleExample(appHistory: AppHistory) {
         })?.finished;
     });
 
-    ok(!appHistory.current.getState<State>()?.detailsOpen);
+    ok(!appHistory.current?.getState<State>()?.detailsOpen);
 
     await detailsElement.dispatchEvent({
         type: "toggle"
     });
 
-    ok(appHistory.current.getState<State>().detailsOpen === true);
+    ok(appHistory.current?.getState<State>().detailsOpen === true);
 
     await detailsElement.dispatchEvent({
         type: "toggle"
     });
 
-    ok(appHistory.current.getState<State>().detailsOpen === false);
+    ok(appHistory.current?.getState<State>().detailsOpen === false);
 
 }
 
@@ -205,8 +206,8 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         // In our app, the `navigate` handler will take care of actually showing the photo and updating the content area.
         const entry = await committed;
 
-        let updateCurrentEntry: AppHistoryEntry;
-        let updateCurrentEntryFinished: Promise<AppHistoryEntry>;
+        let updateCurrentEntry!: AppHistoryEntry;
+        let updateCurrentEntryFinished!: Promise<AppHistoryEntry>;
 
         // When we navigate away from this photo, save any changes the user made.
         entry.addEventListener("navigatefrom", async () => {
@@ -222,12 +223,15 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
             updateCurrentEntryFinished = result?.finished;
         }, { once: true });
 
-        let navigateBackToState: State
+        let navigateBackToState!: State;
 
         // If we ever navigate back to this photo, e.g. using the browser back button or
         // appHistory.goTo(), restore the input values.
         entry.addEventListener("navigateto", () => {
-            navigateBackToState = appHistory.current.getState<State>();
+            const next = appHistory.current?.getState<State>();
+            if (next) {
+                navigateBackToState = next;
+            }
         });
 
         await finished;
@@ -245,18 +249,20 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         // Trigger naviagateto
         await appHistory.goTo(entry.key).finished;
 
-        assert(appHistory.current.key === entry.key);
-        assert(appHistory.current.key === updateCurrentEntry.key);
+        assert(appHistory.current?.key === entry.key);
+        assert<AppHistoryEntry>(updateCurrentEntry);
+        assert(appHistory.current?.key === updateCurrentEntry.key);
 
-        const finalState = appHistory.current.getState<State>();
+        const finalState = appHistory.current?.getState<State>();
 
         // console.log({ finalState, navigateBackToState, current: appHistory.current });
 
-        ok(navigateBackToState);
+        assert<State>(navigateBackToState);
         ok(navigateBackToState.dateTaken);
         ok(navigateBackToState.caption);
 
-        ok(finalState);
+        assert<State>(finalState);
+        assert<State>(navigateBackToState);
         ok(finalState.dateTaken === navigateBackToState.dateTaken);
         ok(finalState.caption === navigateBackToState.caption);
 
@@ -269,8 +275,9 @@ export async function disposeExample(appHistory: AppHistory) {
 
     await appHistory.navigate("/").finished;
 
-    const startingKey = appHistory.current.key;
+    const startingKey = appHistory.current?.key;
 
+    assert<string>(startingKey);
 
     const values: (1 | 2 | 3)[] = [];
 
@@ -296,7 +303,7 @@ export async function disposeExample(appHistory: AppHistory) {
 export async function currentChangeMonitoringExample(appHistory: AppHistory) {
 
     appHistory.addEventListener("currentchange", () => {
-        appHistory.current.addEventListener("dispose", genericDisposeHandler);
+        appHistory.current?.addEventListener("dispose", genericDisposeHandler);
     });
 
     let disposedCount = 0;
@@ -334,9 +341,12 @@ export async function rollbackExample(appHistory: AppHistory) {
     let navigateErrorTransitionFinished;
 
     appHistory.addEventListener("navigateerror", async e => {
-        const attemptedURL = appHistory.transition.from.url;
+        const transition = appHistory.transition;
+        if (!transition) return;
 
-        const { committed, finished } = appHistory.transition.rollback();
+        const attemptedURL = transition.from.url;
+
+        const { committed, finished } = transition.rollback();
         navigateErrorTransitionFinished = finished;
         await committed;
 
@@ -363,7 +373,7 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     // console.log(error);
 
-    assert(error);
+    assert<Error>(error);
     assert(error instanceof Error);
     assert(error.message === expectedError);
 
@@ -374,7 +384,7 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     // console.log({ current: appHistory.current, expectedRollbackState, toasts });
 
-    ok(appHistory.current.url === expectedRollbackState.url);
+    ok(appHistory.current?.url === expectedRollbackState.url);
 
     // console.log({ toasts });
 
@@ -399,7 +409,8 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
         const type = ({
             "/redirect": "redirect",
             "/disallow": "disallow"
-        } as const)[pathname];
+        } as const)[pathname] ?? "pass";
+
         // console.log({ type, destination });
         return {
             type,
@@ -413,7 +424,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
     let disallowCount = 0;
 
     // TODO replace with transition usage
-    let redirectFinished: Promise<AppHistoryEntry>;
+    let redirectFinished: Promise<AppHistoryEntry> | undefined = undefined;
 
     appHistory.addEventListener("navigate", e => {
         e.transitionWhile((async () => {
@@ -442,7 +453,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
     await appHistory.navigate("/").finished;
 
     ok(appHistory.current);
-    ok(appHistory.current.url === "/");
+    ok(appHistory.current?.url === "/");
     ok(allowCount === 1);
 
     const redirectTargetUrl = `/redirected/${Math.random()}`;
@@ -465,7 +476,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
     assert(redirectFinished);
     await redirectFinished;
 
-    ok(appHistory.current.url === redirectTargetUrl);
+    ok(appHistory.current?.url === redirectTargetUrl);
     ok(allowCount === 2);
 
     const expectedInitialError = `${Math.random()}`;
@@ -476,7 +487,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     const initialError = await appHistory.navigate(errorTargetUrl.toString()).finished.catch(error => error);
 
-    assert(initialError);
+    assert<Error>(initialError);
     assert(initialError instanceof Error);
 
     // console.log(initialError);
@@ -532,7 +543,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
     const photoUrls = [...photos.values()];
 
     function getPhotoSiblings() {
-        const index = photoUrls.indexOf(appHistory.current?.url);
+        const index = photoUrls.indexOf(appHistory.current?.url ?? "/unknown");
         if (index === -1) return [];
         return [photoUrls[index - 1], photoUrls[index + 1]];
     }
@@ -549,7 +560,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
         return getPhotoSiblings()[1];
     }
     function getPhotoURL(target: unknown) {
-        if (typeof target !== "object") throw new Error("Expected object target");
+        if (!target || typeof target !== "object") throw new Error("Expected object target");
         return photos.get(target);
     }
     function isPhotoNavigation<T>(event: T): event is T & { info: { via: string, thumbnail: object } } {
@@ -576,7 +587,9 @@ export async function usingInfoExample(appHistory: AppHistory) {
     });
 
     photoGallery.addEventListener("click", async ({ target }: Event & { target?: unknown }) => {
-        await appHistory.navigate(getPhotoURL(target), { info: { via: "gallery", thumbnail: target } }).finished;
+        const url = getPhotoURL(target);
+        if (!url) return;
+        await appHistory.navigate(url, { info: { via: "gallery", thumbnail: target } }).finished;
     });
 
     let lefts = 0,
@@ -753,12 +766,12 @@ export async function usingInfoExample(appHistory: AppHistory) {
 
     await photoGallery.dispatchEvent({
         type: "click",
-        target: photoTargets.get(appHistory.current.url)
+        target: photoTargets.get(appHistory.current?.url ?? "/unknown")
     });
 
     ok(zoomies.length);
-    ok(photoTargets.get(appHistory.current.url))
-    ok(zoomies.includes(photoTargets.get(appHistory.current.url)));
+    ok(photoTargets.get(appHistory.current?.url ?? "/unknown"))
+    ok(zoomies.includes(photoTargets.get(appHistory.current?.url ?? "/unknown") ?? {}));
 }
 
 export async function nextPreviousButtons(appHistory: AppHistory) {
@@ -770,10 +783,10 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     const next: EventTarget & { disabled?: boolean } = new EventTarget();
     const previous: EventTarget & { disabled?: boolean } = new EventTarget();
     const permalink: EventTarget & { disabled?: boolean, textContent?: string } = new EventTarget();
-    const currentPhoto: EventTarget & { src?: string | URL } = new EventTarget();
+    const currentPhoto: EventTarget & { src?: string } = new EventTarget();
 
     next.addEventListener("click", async () => {
-        const nextPhotoInHistory = photoNumberFromURL(appHistory.entries()[appHistory.current.index + 1]?.url);
+        const nextPhotoInHistory = photoNumberFromURL(appHistory.entries()[(appHistory.current?.index ?? -2) + 1]?.url);
         if (nextPhotoInHistory === appState.currentPhoto + 1) {
             await appHistory.forward().finished;
         } else {
@@ -782,7 +795,8 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     });
 
     previous.addEventListener("click", async () => {
-        const prevPhotoInHistory = photoNumberFromURL(appHistory.entries()[appHistory.current.index - 1]?.url);
+        const prevPhotoInHistory = photoNumberFromURL(appHistory.entries()[(appHistory.current?.index ?? -2) - 1]?.url);
+        console.log(prevPhotoInHistory)
         // console.log({ prevPhotoInHistory, matching: appState.currentPhoto - 1, nav: `/photos/${appState.currentPhoto - 1}` });
         if (prevPhotoInHistory === appState.currentPhoto - 1) {
             // console.log("BACK!");
@@ -816,8 +830,9 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     addEventListener("fetch", fetchHandler);
 
     appHistory.addEventListener("navigate", event => {
-        const photoNumber = photoNumberFromURL(event.destination.url);
-        if (!(typeof photoNumber === "number" && event.canTransition)) return;
+        const photoNumberMaybe = photoNumberFromURL(event.destination.url);
+        if (!(typeof photoNumberMaybe === "number" && event.canTransition)) return;
+        const photoNumber: number = photoNumberMaybe;
         event.transitionWhile(handler());
         async function handler() {
 
@@ -839,8 +854,9 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
             const response = await fetch(`${photosPrefix}/${photoNumber}.jpg`, { signal: event.signal });
             // const blob = await response.blob();
             // currentPhoto.src = URL.createObjectURL(blob);
-            currentPhoto.src = await response.text();
-            localCache.set(event.destination.key, currentPhoto.src);
+            const src = await response.text();
+            currentPhoto.src = src;
+            localCache.set(event.destination.key, src);
         }
     });
 
@@ -851,14 +867,14 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
 
     await appHistory.navigate("/photos/0").finished;
 
-    assert(typeof currentPhoto.src === "string");
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/0`);
     ok(!next.disabled);
     ok(previous.disabled);
 
     await appHistory.navigate("/photos/1").finished;
 
-    assert(typeof currentPhoto.src === "string");
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/1`);
     ok(!next.disabled);
     ok(!previous.disabled);
@@ -867,11 +883,12 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
         type: "click"
     });
     // Utilised navigate
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/2`);
 
     await appHistory.navigate("/photos/9").finished;
 
-    assert(typeof currentPhoto.src === "string");
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
 
     ok(next.disabled);
@@ -881,7 +898,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
         type: "click"
     });
 
-    assert(typeof currentPhoto.src === "string");
+    assert<string>(currentPhoto.src);
     // console.log(currentPhoto);
     // Utilised navigate
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
@@ -890,7 +907,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
         type: "click"
     });
 
-    assert(typeof currentPhoto.src === "string");
+    assert<string>(currentPhoto.src);
     // Utilised navigate
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
 
@@ -902,6 +919,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     });
 
     // Utilised navigation!
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
 
     const finalFetchCount = fetchCount;
@@ -911,6 +929,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     });
 
     // Utilised back!
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
 
     await previous.dispatchEvent({
@@ -918,7 +937,10 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     });
 
     // Utilised back!
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
+
+    console.log({ finalFetchCount, fetchCount });
 
     ok(finalFetchCount === fetchCount);
 
@@ -927,6 +949,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     });
 
     // Utilised forward!
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
     ok(finalFetchCount === fetchCount);
 
@@ -935,12 +958,13 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     });
 
     // Utilised forward!
+    assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
     ok(finalFetchCount === fetchCount);
 
     removeEventListener("fetch", fetchHandler);
 
-    function photoNumberFromURL(url: string) {
+    function photoNumberFromURL(url?: string) {
         if (!url) {
             return undefined;
         }

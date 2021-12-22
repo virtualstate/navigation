@@ -81,7 +81,7 @@ export interface AppHistoryEntryInit<S = unknown> extends AppHistoryNavigateOpti
 export interface AppHistoryEntry<S = unknown> extends EventTarget {
     readonly key: string;
     readonly id: string;
-    readonly url?: string | null;
+    readonly url?: string;
     readonly index: number;
     readonly sameDocument: boolean;
 
@@ -118,14 +118,14 @@ export interface AppHistoryReloadOptions<S = unknown> extends AppHistoryNavigati
 }
 
 export interface AppHistoryCurrentChangeEventInit extends EventInit {
-    navigationType?: AppHistoryNavigationType | null;
-    from: AppHistoryEntry;
+    navigationType?: AppHistoryNavigationType ;
+    from?: AppHistoryEntry;
     startTime?: number;
 }
 
 export interface AppHistoryCurrentChangeEvent extends Event, AppHistoryCurrentChangeEventInit {
-    readonly navigationType?: AppHistoryNavigationType | null;
-    readonly from: AppHistoryEntry;
+    readonly navigationType?: AppHistoryNavigationType ;
+    readonly from?: AppHistoryEntry;
     readonly startTime?: number;
     transitionWhile?(newNavigationAction: Promise<unknown>): void;
 }
@@ -139,7 +139,7 @@ export interface AppHistoryNavigateEvent extends Event {
     readonly hashChange: boolean;
     readonly destination: AppHistoryDestination;
     readonly signal: AbortSignal;
-    readonly formData?: FormData | null;
+    readonly formData?: FormData ;
     readonly info: unknown;
 
     transitionWhile(newNavigationAction: Promise<unknown>): void;
@@ -152,14 +152,14 @@ export interface AppHistoryNavigateEventInit extends EventInit {
     hashChange?: boolean;
     destination: AppHistoryDestination;
     signal: AbortSignal;
-    formData?: FormData | null;
+    formData?: FormData ;
     info?: unknown;
 }
 
 export interface AppHistoryDestination {
     readonly url: string;
-    readonly key?: string | null;
-    readonly id?: string | null;
+    readonly key: string;
+    readonly id?: string ;
     readonly index: number;
     readonly sameDocument: boolean;
     getState<S>(): S;

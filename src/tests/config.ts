@@ -1,4 +1,6 @@
 /* c8 ignore start */
+import process from "./node-process";
+
 export function getConfig(): Record<string, unknown> {
     return {
         ...getNodeConfig(),

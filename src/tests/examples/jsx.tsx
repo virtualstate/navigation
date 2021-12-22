@@ -1,7 +1,11 @@
 import {AppHistory} from "../../app-history.prototype";
-import {h, toString, VNode} from "@virtualstate/fringe";
+import {h, toString} from "@virtualstate/fringe";
 import {EventTarget} from "../../event-target";
 import {ok} from "../util";
+
+const React = {
+    createElement: h
+}
 
 export async function jsxExample(appHistory: AppHistory) {
     interface State {
@@ -9,7 +13,7 @@ export async function jsxExample(appHistory: AppHistory) {
         caption?: string;
     }
 
-    function Component({ caption, dateTaken }: State, input?: VNode) {
+    function Component({ caption, dateTaken }: State, input: unknown) {
         return h(
             "figure",
             {},
@@ -31,7 +35,14 @@ export async function jsxExample(appHistory: AppHistory) {
     appHistory.addEventListener("currentchange", async (event) => {
         await (event.transitionWhile ?? (promise => promise))(handler());
         async function handler() {
-            body.innerHTML = await toString(<Component {...appHistory.current.getState<State>() } />)
+            body.innerHTML = await new Promise(
+                (resolve, reject) => (
+                    toString(<Component {...appHistory.current?.getState<State>() } />).then(
+                        resolve,
+                        reject
+                    )
+                )
+            );
         }
     });
 
@@ -48,11 +59,11 @@ export async function jsxExample(appHistory: AppHistory) {
 
     const updatedCaption = `Photo ${Math.random()}`;
 
-    ok(!body.innerHTML.includes(updatedCaption));
+    ok(!body.innerHTML?.includes(updatedCaption));
 
     await appHistory.updateCurrent({
         state: {
-            ...appHistory.current.getState<State>(),
+            ...appHistory.current?.getState<State>(),
             caption: updatedCaption
         }
     })
@@ -60,6 +71,6 @@ export async function jsxExample(appHistory: AppHistory) {
         ?.finished;
 
     // This test will fail if async resolution is not supported.
-    ok(body.innerHTML.includes(updatedCaption));
+    ok(body.innerHTML?.includes(updatedCaption));
 
 }

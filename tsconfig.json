@@ -23,7 +23,6 @@
         "jsxFragmentFactory": "createFragment",
         "allowJs": true,
         "paths": {
-
         }
     },
     "include": [

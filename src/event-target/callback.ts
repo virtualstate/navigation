@@ -6,7 +6,8 @@ export interface SyncEventCallback<TargetEvent = unknown, This = unknown> {
 }
 
 export interface EventCallback<TargetEvent extends Event = Event, This = unknown> {
-    (this: This, event: TargetEvent): Promise<void> | void
+    <E extends TargetEvent>(this: This, event: E): Promise<void> | void
+    <E extends TargetEvent>(event: E): Promise<void> | void
 }
 
 export function matchEventCallback(type: string, callback?: EventCallback | Function, options?: unknown): (descriptor: EventDescriptor) => boolean {

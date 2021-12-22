@@ -7,7 +7,7 @@ import { isParallelEvent } from "./parallel-event"
 import { isSignalEvent } from "./signal-event"
 import { AbortError, isAbortError } from "../app-history-errors"
 
-export {
+export type {
     EventCallback
 }
 

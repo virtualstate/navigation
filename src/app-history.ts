@@ -25,7 +25,7 @@ import {
     InternalAppHistoryNavigationType,
     InternalAppHistoryNavigateOptions,
     Rollback,
-    UpdateCurrent
+    UpdateCurrent, Unset
 } from "./create-app-history-transition";
 
 export * from "./app-history.prototype";
@@ -38,7 +38,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     #entries: AppHistoryEntry[] = [];
     #known = new Set<AppHistoryEntry>();
     #currentIndex = -1;
-    #activePromise?: Promise<unknown | void>;
+    #activePromise?: Promise<AppHistoryEntry>;
     #activeTransition?: AppHistoryTransition;
 
     #inProgressAbortController?: AbortController;
@@ -123,18 +123,18 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         );
     }
 
-    #cloneAppHistoryEntry = (entry: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions): AppHistoryEntry => {
+    #cloneAppHistoryEntry = (entry?: AppHistoryEntry, options?: InternalAppHistoryNavigateOptions): AppHistoryEntry => {
         return this.#createAppHistoryEntry({
             ...entry,
-            index: entry.index,
-            state: options?.state ?? entry.getState(),
-            navigationType: entry[AppHistoryEntryNavigationType],
+            index: entry?.index ?? undefined,
+            state: options?.state ?? entry?.getState(),
+            navigationType: entry?.[AppHistoryEntryNavigationType] ?? (typeof options?.navigationType === "string" ? options.navigationType : "replace"),
             ...options,
             get [AppHistoryEntryKnownAs]() {
-              return entry[AppHistoryEntryKnownAs];
+              return entry?.[AppHistoryEntryKnownAs];
             },
             get [EventTargetListeners]() {
-                return entry[EventTargetListeners];
+                return entry?.[EventTargetListeners];
             }
         });
     }
@@ -160,10 +160,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     };
 
     #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry,  transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
-        let nextTransition: AppHistoryTransition = transition;
-        const finished: Promise<AppHistoryEntry> = (this.#activePromise ?? Promise.resolve())
+        let nextTransition: AppHistoryTransition | undefined = transition;
+        const finished: Promise<AppHistoryEntry> = (this.#activePromise ?? Promise.resolve(entry))
             .catch((error) => void error) // Catch somewhere else please
-            .then(async () => {
+            .then(async (): Promise<AppHistoryEntry> => {
+                if (!nextTransition) {
+                    throw new InvalidStateError("Expected transition to be available");
+                }
                 return this.#immediateTransition(givenNavigationType, entry, finished, nextTransition, options);
             });
         // finished.catch(error => void error);
@@ -174,8 +177,8 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             },
             from: entry,
             navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
-            rollback: this.#createRollback(),
-            then: this.#createActiveThen(),
+            rollback: this.#createRollback(this.#pushEntry),
+            then: this.#createActiveThen(entry),
         });
         this.#queueTransition(nextTransition);
         if (givenNavigationType !== UpdateCurrent) {
@@ -190,7 +193,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         this.#knownTransitions.add(transition);
     }
 
-    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, finished: Promise<AppHistoryEntry>, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
+    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, finished: Promise<AppHistoryEntry>, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions): Promise<AppHistoryEntry> => {
         try {
             this.#transitionInProgressCount += 1;
             if (this.#transitionInProgressCount > 1) {
@@ -203,8 +206,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     }
 
     #createRollback = (
-        fn: (...args: unknown[]) => (AppHistoryResult | Promise<AppHistoryEntry>) = this.#pushEntry,
-        transition?: AppHistoryTransitionInit
+        fn: (
+            navigationType: InternalAppHistoryNavigationType,
+            entry: AppHistoryEntry,
+            transition?: AppHistoryTransition | undefined,
+            options?: InternalAppHistoryNavigateOptions
+        ) => (AppHistoryResult | Promise<AppHistoryEntry>),
+        transition?: AppHistoryTransition
     ): (
         (options?: AppHistoryNavigationOptions) => AppHistoryResult
     ) => {
@@ -212,27 +220,35 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const previousEntries = [...this.#entries];
         const previousIndex = this.#currentIndex;
         const known = this.#known;
-        return (options) => {
+        return (options): AppHistoryResult => {
             // console.trace("Rollback !", { current, previousEntries, previousIndex, fn });
             const entry = current ? this.#cloneAppHistoryEntry(current, options) : undefined;
-            const result = fn(Rollback, entry, transition, {
+            const nextOptions: InternalAppHistoryNavigateOptions = {
                 ...options,
                 index: previousIndex,
                 known,
                 navigationType: entry?.[AppHistoryEntryNavigationType] ?? "replace",
                 entries: previousEntries,
+            } as const;
+            const resolvedNavigationType = entry ? Rollback : Unset
+            const resolvedEntry = entry ?? this.#createAppHistoryEntry({
+                navigationType: "replace",
+                index: nextOptions.index,
+                sameDocument: true,
+                ...options,
             });
+            const result = fn(resolvedNavigationType, resolvedEntry, transition, nextOptions);
             if ("then" in result) {
                 result.catch(error => void error);
-                return { committed: Promise.resolve(entry), finished: result };
+                return { committed: Promise.resolve(resolvedEntry), finished: result };
             }
             return result;
         }
     }
 
-    #createActiveThen = (): PromiseLike<AppHistoryEntry>["then"] => {
+    #createActiveThen = (entry: AppHistoryEntry): PromiseLike<AppHistoryEntry>["then"] => {
         return async (resolve, reject) => {
-            const handler = async () => this.current;
+            const handler = async () => entry;
             while (this.#activePromise) {
                 await this.#activePromise;
             }
@@ -240,7 +256,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         }
     }
 
-    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransitionInit, options?: InternalAppHistoryNavigateOptions) => {
+    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions): Promise<AppHistoryEntry> => {
+        if (!transition) {
+            throw new InvalidStateError("Expected transition");
+        }
+
         let navigationType = givenNavigationType;
 
         const performance = await getPerformance();
@@ -259,16 +279,18 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
         const currentTransition: AppHistoryTransition | undefined = new AppHistoryTransition({
             ...transition,
-            rollback: this.#createRollback(),
-            then: this.#createActiveThen()
+            rollback: this.#createRollback(this.#pushEntry),
+            then: this.#createActiveThen(entry)
         });
 
-        const completeTransition = async () => {
-            if (!entry && givenNavigationType === Rollback && typeof options.index === "number") {
+        const completeTransition = async (): Promise<AppHistoryEntry> => {
+            if (givenNavigationType === Unset && typeof options?.index === "number" && options.entries) {
                 this.#entries = options.entries;
                 this.#currentIndex = options.index;
                 this.#known = options.known ?? this.#known;
-                return;
+                return entry;
+            } else if (!entry) {
+                throw new InvalidStateError();
             }
 
             const microtask = new Promise<void>(queueMicrotask);
