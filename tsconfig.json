@@ -22,12 +22,16 @@
         "jsxFactory": "h",
         "jsxFragmentFactory": "createFragment",
         "allowJs": true,
+        "paths": {
+
+        }
     },
     "include": [
         "src/**/*"
     ],
     "typeRoots": [
-        "./node_modules/@types"
+        "./node_modules/@types",
+        "src/types"
     ],
     "exclude": [
         "node_modules/@opennetwork/vdom"

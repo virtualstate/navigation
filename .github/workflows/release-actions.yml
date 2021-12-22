@@ -20,11 +20,16 @@ jobs:
         with:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 'v1.x'
       - run: |
           yarn install
           npx playwright install-deps chromium
       - run: yarn build
+      # yarn coverage === c8 + yarn test
       - run: yarn coverage
+      - run: yarn test:deno
       - name: Package Registry Publish - npm
         run: |
           git config user.name "${{ github.actor }}"

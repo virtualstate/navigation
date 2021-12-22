@@ -1,0 +1,21 @@
+{
+  "imports": {
+    "@opennetwork/http-representation":  "https://cdn.skypack.dev/@opennetwork/http-representation",
+    "@virtualstate/astro-renderer":  "https://cdn.skypack.dev/@virtualstate/astro-renderer",
+    "@virtualstate/dom": "https://cdn.skypack.dev/@virtualstate/dom",
+    "@virtualstate/examples": "https://cdn.skypack.dev/@virtualstate/examples",
+    "@virtualstate/fringe": "https://cdn.skypack.dev/@virtualstate/fringe",
+    "@virtualstate/hooks": "https://cdn.skypack.dev/@virtualstate/hooks",
+    "@virtualstate/hooks-extended": "https://cdn.skypack.dev/@virtualstate/hooks-extended",
+    "@virtualstate/union": "https://cdn.skypack.dev/@virtualstate/union",
+    "@virtualstate/x": "https://cdn.skypack.dev/@virtualstate/x",
+    "@virtualstate/app-history": "https://cdn.skypack.dev/@virtualstate/app-history",
+    "dom-lite":  "https://cdn.skypack.dev/dom-lite",
+    "iterable": "https://cdn.skypack.dev/iterable",
+    "uuid": "./src/deno-uuid.ts",
+    "whatwg-url": "https://cdn.skypack.dev/whatwg-url",
+    "abort-controller": "https://cdn.skypack.dev/abort-controller",
+    "deno:std/uuid/mod": "https://deno.land/std@0.113.0/uuid/mod.ts",
+    "deno:std/uuid/v4": "https://deno.land/std@0.113.0/uuid/v4.ts"
+  }
+}
