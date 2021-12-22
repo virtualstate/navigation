@@ -8,6 +8,7 @@ export default [
   "@virtualstate/hooks-extended",
   "@virtualstate/union",
   "@virtualstate/x",
+  "@virtualstate/app-history",
   "dom-lite",
   "iterable",
   "uuid",

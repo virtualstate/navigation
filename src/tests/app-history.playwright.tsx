@@ -24,6 +24,16 @@ const pageContent = await toString(
             />)
         ),
         h("body", {}, h("script", { type: "module" }, `
+        console.log("Waiting for window to load");
+        await new Promise(resolve => window.addEventListener("load", resolve));
+        console.log("Load event fired");
+        
+        // while (!window.testsComplete) {
+        //   console.log("testsComplete not available, waiting for definition");
+        //   // await new Promise(resolve => setTimeout(resolve, 1000));
+        // }
+        console.log(!!window.testsComplete, !!window.testsFailed);
+        
         try {
             await import(${JSON.stringify(src)});
             console.log("DONE!!!");
@@ -56,8 +66,13 @@ await page.exposeFunction("testsFailed", (reason: unknown) => {
 page.on('console', console.log);
 
 await page.route('**/*', (route, request) => {
-    const { pathname } = new URL(request.url());
-    if (pathname !== "/test-page-entrypoint") return route.continue();
+    const { pathname, hostname } = new URL(request.url());
+    console.log({ pathname, hostname });
+    // if (pathname !== "/test-page-entrypoint") return route.continue();
+    if (hostname !== "example.com") return route.continue();
+    if (pathname.includes(".ico")) return route.fulfill({
+        status: 200
+    })
     return route.fulfill({
         body: pageContent
     })

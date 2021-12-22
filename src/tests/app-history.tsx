@@ -31,6 +31,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
                     const state = current.getState<{ title?: string }>() ?? {};
                     const { pathname } = new URL(current.url, "https://example.com");
                     window.history.pushState(state, state.title ?? "", pathname);
+                    console.log(`Updated window pathname to ${pathname}`);
                 });
             }
 
