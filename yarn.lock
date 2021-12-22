@@ -1160,44 +1160,7 @@
     readdirp "^2.2.1"
     upath "^1.1.1"
 
-"@opennetwork/environment@^1.20.1":
-  version "1.21.0"
-  resolved "https://registry.npmjs.org/@opennetwork/environment/-/environment-1.21.0.tgz#21583a63839bdb3ffe734fe918014003e85dfe65"
-  integrity sha512-3lKLKw1cCv39yahNak7/NtSVLW9mrAOtxDAHkYkYwLe/tGckKj7e3SRSbEHinY8dTyLoCWtjCzZW3lObzJezsA==
-  dependencies:
-    "@edwardmx/noop" "^1.0.1"
-    "@grpc/grpc-js" "^1.4.3"
-    "@opennetwork/environment" "^1.20.1"
-    "@opennetwork/http-representation" "^3.0.0"
-    "@opennetwork/http-representation-node" "^3.0.0"
-    "@opennetwork/rdf-data-model" "^5.3.1"
-    "@opennetwork/rdf-dataset" "^10.1.4"
-    "@opentelemetry/api" "^1.0.3"
-    "@opentelemetry/auto-instrumentations-node" "^0.26.0"
-    "@opentelemetry/exporter-collector-grpc" "^0.25.0"
-    "@opentelemetry/exporter-jaeger" "^1.0.0"
-    "@opentelemetry/exporter-prometheus" "^0.26.0"
-    "@opentelemetry/metrics" "^0.24.0"
-    "@opentelemetry/sdk-node" "^0.26.0"
-    "@opentelemetry/tracing" "^0.24.0"
-    "@types/aws-lambda" "^8.10.85"
-    "@virtualstate/astro-renderer" "^2.25.4"
-    "@virtualstate/dom" "^2.25.4"
-    "@virtualstate/examples" "^2.25.4"
-    "@virtualstate/fringe" "^2.25.4"
-    "@virtualstate/hooks" "^2.25.4"
-    "@virtualstate/hooks-extended" "^2.25.4"
-    "@virtualstate/union" "^2.25.4"
-    "@virtualstate/x" "^2.25.4"
-    abort-controller "^3.0.0"
-    dependency-graph "^0.9.0"
-    dom-lite "^20.2.0"
-    iterable "^5.7.0"
-    jsdom "^18.0.1"
-    lit-html "^1.2.1"
-    uuid "^8.3.2"
-
-"@opennetwork/environment@^1.23.0":
+"@opennetwork/environment@^1.20.1", "@opennetwork/environment@^1.23.0":
   version "1.23.0"
   resolved "https://registry.npmjs.org/@opennetwork/environment/-/environment-1.23.0.tgz#845c697114563b83305b908f5b3e23b67ef4d42c"
   integrity sha512-U1lLxOYGW0AiUShMn+nAuqhbEDa0gdwqhZPlCcaAt45q3RqwbKzJu37VxDXT0YEYJ+7ZLpA1dJu03uZBzCH7cw==
@@ -1248,11 +1211,6 @@
   version "4.0.0"
   resolved "https://registry.npmjs.org/@opennetwork/linked-list/-/linked-list-4.0.0.tgz#69e25d0b00387f00da91faea2a5b77897d920712"
   integrity sha512-aMEXPA0y3FZd5IlPPNVLHf5jxwNE9bo6d+5OgCsqZhRilftUuaytEnAS+7ggjiPekAtVDFl2okYROqtL3f02+g==
-
-"@opennetwork/progressive-merge@^5.5.0":
-  version "5.5.0"
-  resolved "https://registry.npmjs.org/@opennetwork/progressive-merge/-/progressive-merge-5.5.0.tgz#82e6c596d2181d7c2c4b4d8fce13d9b3c7d863ee"
-  integrity sha512-Zzqb3ZYEInlbfuPqsuOBdV3jPegFxef3QEnbkak8pIgZPYQpfiQgNrmtsz2qB9n+xDSvSUChbtmf2GFW86V/tg==
 
 "@opennetwork/rdf-data-model@^5.3.1":
   version "5.3.1"
@@ -2045,7 +2003,12 @@
   resolved "https://registry.npmjs.org/@types/node/-/node-16.7.10.tgz#7aa732cc47341c12a16b7d562f519c2383b6d4fc"
   integrity sha512-S63Dlv4zIPb8x6MMTgDq5WWRJQe56iBEY0O3SOFA9JrRienkOVDXSXBjjJw6HTNQYSE2JI6GMCR6LVbIMHJVvA==
 
-"@types/node@>=12.12.47", "@types/node@>=13.7.0", "@types/node@^17.0.1":
+"@types/node@>=12.12.47", "@types/node@>=13.7.0":
+  version "17.0.2"
+  resolved "https://registry.npmjs.org/@types/node/-/node-17.0.2.tgz#a4c07d47ff737e8ee7e586fe636ff0e1ddff070a"
+  integrity sha512-JepeIUPFDARgIs0zD/SKPgFsJEAF0X5/qO80llx59gOxFTboS9Amv3S+QfB7lqBId5sFXJ99BN0J6zFRvL9dDA==
+
+"@types/node@^17.0.1":
   version "17.0.1"
   resolved "https://registry.npmjs.org/@types/node/-/node-17.0.1.tgz#88d501e84b6185f6489ecee4ba9e8fcec7f29bb2"
   integrity sha512-NXKvBVUzIbs6ylBwmOwHFkZS2EXCcjnqr8ZCRNaXBkHAf+3mn/rPcJxwrzuc6movh8fxQAsUUfYklJ/EG+hZqQ==
@@ -2058,9 +2021,9 @@
     "@types/pg" "*"
 
 "@types/pg@*":
-  version "8.6.2"
-  resolved "https://registry.npmjs.org/@types/pg/-/pg-8.6.2.tgz#eba3df3287eae69b374479eda94a569d72b9ae15"
-  integrity sha512-UbLp6B77Papo68M7jKXJHTqd3pBjodCsCE1WzsjSxeYtdxcOfpAk5NemXbuLaLhmlAbapIHJCBdv39UpiG4dsg==
+  version "8.6.3"
+  resolved "https://registry.npmjs.org/@types/pg/-/pg-8.6.3.tgz#eacfd5954752dd64d93d71d639e8c5b1f3bd3f22"
+  integrity sha512-P0RrXJcw1hPS+KF0nBCC3FEEdZBfRsHbYtAzbY2QTc0gC4jFQvjQxIKXs0X/NgPhPI4DbAzdeW7WMCjaWjT7Pg==
   dependencies:
     "@types/node" "*"
     pg-protocol "*"
@@ -5226,7 +5189,7 @@ playwright-core@>=1.2.0:
 
 playwright@^1.17.1:
   version "1.17.1"
-  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.17.1.tgz#a6d63302ee40f41283c4bf869de261c4743a787c"
+  resolved "https://registry.npmjs.org/playwright/-/playwright-1.17.1.tgz#a6d63302ee40f41283c4bf869de261c4743a787c"
   integrity sha512-DisCkW9MblDJNS3rG61p8LiLA2WA7IY/4A4W7DX4BphWe/HuWjKmGQptuk4NVIh5UuSwXpW/jaH2+ZgjHs3GMA==
   dependencies:
     playwright-core "=1.17.1"
@@ -6347,9 +6310,9 @@ ws@^7.4.6:
   integrity sha512-zP9z6GXm6zC27YtspwH99T3qTG7bBFv2VIkeHstMLrLlDJuzA7tQ5ls3OJ1hOGGCzTQPniNJoHXIAOS0Jljohg==
 
 ws@^8.2.3:
-  version "8.3.0"
-  resolved "https://registry.npmjs.org/ws/-/ws-8.3.0.tgz#7185e252c8973a60d57170175ff55fdbd116070d"
-  integrity sha512-Gs5EZtpqZzLvmIM59w4igITU57lrtYVFneaa434VROv4thzJyV6UjIL3D42lslWlI+D4KzLYnxSwtfuiO79sNw==
+  version "8.4.0"
+  resolved "https://registry.npmjs.org/ws/-/ws-8.4.0.tgz#f05e982a0a88c604080e8581576e2a063802bed6"
+  integrity sha512-IHVsKe2pjajSUIl4KYMQOdlyliovpEPquKkqbwswulszzI7r0SfQrxnXdWAEqOlDCLrVSJzo+O1hAwdog2sKSQ==
 
 xml-name-validator@^3.0.0:
   version "3.0.0"

@@ -1,4 +1,4 @@
-import {Event, EventCallback, EventTarget, EventTargetAddListenerOptions} from "@opennetwork/environment";
+import {Event, EventCallback, EventTarget, EventTargetAddListenerOptions} from "./event-target";
 
 export class AppHistoryEventTarget<T> extends EventTarget {
 

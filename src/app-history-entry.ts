@@ -6,7 +6,7 @@ import {
 } from "./app-history.prototype";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {v4} from "uuid";
-import {EventTargetListeners} from "@opennetwork/environment";
+import {EventTargetListeners} from "./event-target";
 
 export const AppHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
 export const AppHistoryEntryKnownAs = Symbol.for("@virtualstate/app-history/entry/knownAs");

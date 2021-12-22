@@ -13,7 +13,7 @@ import {
 } from "./app-history.prototype";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
-import {EventTargetListeners} from "@opennetwork/environment";
+import {EventTargetListeners} from "./event-target";
 import {AbortController} from "abort-controller";
 import {AppHistoryTransition} from "./app-history-transition";
 import {createAppHistoryTransition, InternalAppHistoryNavigationType, InternalAppHistoryNavigateOptions, Rollback, UpdateCurrent} from "./create-app-history-transition";

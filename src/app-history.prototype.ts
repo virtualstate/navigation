@@ -6,7 +6,7 @@
  * null is still included in places where properties have been marked as optional
  */
 
-import {EventTarget, Event, EventTargetListeners, EventDescriptor} from "@opennetwork/environment";
+import {EventTarget, Event, EventTargetListeners, EventDescriptor} from "./event-target";
 
 export interface AppHistoryEventMap {
     "navigate": AppHistoryNavigateEvent;

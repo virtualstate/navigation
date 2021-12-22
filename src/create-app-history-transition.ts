@@ -1,6 +1,4 @@
 import type {AppHistoryTransitionInit} from "./app-history.prototype";
-import type {AppHistory} from "./app-history";
-import {AppHistoryEntry} from "./app-history-entry";
 import {AbortController} from "abort-controller";
 import {InvalidStateError} from "./app-history-errors";
 import {WritableProps} from "./writable";
@@ -11,6 +9,7 @@ import {
     AppHistoryNavigateOptions,
     AppHistoryNavigationType
 } from "./app-history.prototype";
+import {AppHistoryEntry} from "./app-history-entry";
 
 export const UpdateCurrent = Symbol.for("@virtualstate/app-history/updateCurrent");
 export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
