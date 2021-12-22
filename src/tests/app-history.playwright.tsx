@@ -2,6 +2,8 @@ import { chromium } from "playwright";
 import { h, toString } from "@virtualstate/fringe";
 import {deferred} from "../deferred";
 import { DependenciesContent } from "./dependencies";
+import { promises as fs } from "fs";
+import { join, dirname, resolve as pathResolve } from "path";
 
 declare global {
     interface Window {
@@ -22,7 +24,10 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
     const context = await browser.newContext({});
     const page = await context.newPage();
 
-    let src = "https://cdn.skypack.dev/@virtualstate/app-history/tests";
+    const namespacePath = "/@virtualstate/app-history/";
+    const testsSrcPath = `${namespacePath}tests/`;
+
+    let src = `https://cdn.skypack.dev${testsSrcPath}`;
 
     const pageContent = await toString(
         h("html", {},
@@ -31,7 +36,7 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
                 h("script", { type: "importmap" }, <DependenciesContent
                     imports={{
                         "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
-                        "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop"
+                        "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
                     }}
                 />)
             ),
@@ -69,8 +74,32 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
 
     page.on('console', console.log);
 
-    await page.route('**/*', (route, request) => {
+    await page.route('**/*', async (route, request) => {
         const { pathname, hostname } = new URL(request.url());
+        // console.log(await request.headersArray());
+
+        if (pathname.startsWith(namespacePath)) {
+            const { pathname: file } = new URL(import.meta.url);
+            let importTarget = pathResolve(join(dirname(file), '..', pathname.replace(namespacePath, "")));
+            if (!/\.[a-z]+$/.test(importTarget)) {
+                console.log({ importTarget });
+                if (!importTarget.endsWith("/")) {
+                    importTarget += "/";
+                }
+                importTarget += "index.js";
+            }
+            console.log({ importTarget });
+            const contents = await fs.readFile(importTarget, "utf-8");
+            console.log({ importTarget, contents: !!contents });
+            return route.fulfill({
+                body: contents,
+                headers: {
+                    'Content-Type': 'application/javascript',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            });
+        }
+
         // console.log({ pathname, hostname });
         // if (pathname !== "/test-page-entrypoint") return route.continue();
         if (hostname !== "example.com") return route.continue();
