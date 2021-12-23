@@ -44,7 +44,7 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   const { name } = await fs.readFile("package.json", "utf-8").then(JSON.parse);
 
   badges.push(
-      '### Platforms\n\n',
+      '### Support\n\n',
       '- ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)\n',
       '- ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-brightgreen)\n',
       '- ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-brightgreen)\n',

@@ -4,7 +4,7 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
 [//]: # (badges)
 
-### Platforms
+### Support
 
  - ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
  - ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-brightgreen)
