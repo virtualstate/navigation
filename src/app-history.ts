@@ -11,10 +11,9 @@ import {
     AppHistoryNavigationOptions,
     AppHistoryReloadOptions,
     AppHistoryResult,
-    AppHistoryTransitionInit,
     AppHistoryUpdateCurrentOptions,
     AppHistoryTransition as AppHistoryTransitionPrototype
-} from "./app-history.prototype";
+} from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
 import {Event, EventTargetListeners} from "./event-target";
@@ -28,7 +27,7 @@ import {
     UpdateCurrent, Unset
 } from "./create-app-history-transition";
 
-export * from "./app-history.prototype";
+export * from "./spec/app-history";
 
 export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implements AppHistoryPrototype {
 

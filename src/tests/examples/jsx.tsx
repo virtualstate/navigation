@@ -1,4 +1,4 @@
-import {AppHistory} from "../../app-history.prototype";
+import {AppHistory} from "../../spec/app-history";
 import {h, toString} from "@virtualstate/fringe";
 import {EventTarget} from "../../event-target";
 import {ok} from "../util";

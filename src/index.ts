@@ -1,4 +1,4 @@
 import "./import-types";
 
 export * from "./app-history";
-export * from "./app-history.prototype";
+export * from "./spec/app-history";

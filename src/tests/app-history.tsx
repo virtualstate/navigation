@@ -1,7 +1,7 @@
 /* c8 ignore start */
 import {
     AppHistory
-} from "../app-history.prototype";
+} from "../spec/app-history";
 import * as Examples from "./examples";
 
 export interface AppHistoryAssertFn {

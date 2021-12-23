@@ -32,7 +32,7 @@
     "./src/tests/util": "./src/tests/util.ts",
     "./src/app-history": "./src/app-history.ts",
     "./src/app-history-entry": "./src/app-history-entry.ts",
-    "./src/app-history.prototype": "./src/app-history.prototype.ts",
+    "./src/spec/app-history": "./src/spec/app-history.ts",
     "./src/app-history-errors": "./src/app-history-errors.ts",
     "./src/app-history-event-target": "./src/app-history-event-target.ts",
     "./src/app-history-transition": "./src/app-history-transition.ts",

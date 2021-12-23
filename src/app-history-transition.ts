@@ -5,7 +5,7 @@ import {
     AppHistoryResult,
     AppHistoryTransition as AppHistoryTransitionPrototype,
     AppHistoryTransitionInit as AppHistoryTransitionInitPrototype
-} from "./app-history.prototype";
+} from "./spec/app-history";
 
 export interface AppHistoryTransitionInit extends AppHistoryTransitionInitPrototype {
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult;

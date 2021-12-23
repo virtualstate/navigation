@@ -4,7 +4,7 @@ import {
     AppHistoryCurrentChangeEvent, AppHistoryDestination,
     AppHistoryEntry,
     AppHistoryNavigateEvent
-} from "../../app-history.prototype";
+} from "../../spec/app-history";
 import {EventTarget, Event} from "../../event-target"
 import {FetchEvent, fetch} from "./fetch"
 import {addEventListener, removeEventListener} from "../../event-target/global";

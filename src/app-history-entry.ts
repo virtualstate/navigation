@@ -3,7 +3,7 @@ import {
     AppHistoryEntryEventMap,
     AppHistoryEntryInit as AppHistoryEntryInitPrototype,
     AppHistoryNavigationType
-} from "./app-history.prototype";
+} from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {EventTargetListeners} from "./event-target";
 
