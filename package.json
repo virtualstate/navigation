@@ -73,14 +73,17 @@
     "jest": "^27.1.0",
     "jest-playwright-preset": "^1.7.0",
     "mkdirp": "^1.0.4",
+    "patch-package": "^6.4.7",
     "playwright": "^1.17.1",
+    "postinstall-postinstall": "^2.1.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.61.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-ignore": "^1.0.10",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "urlpattern-polyfill": "^1.0.0-rc1"
   },
   "scripts": {
     "build": "rm -rf esnext && tsc",
@@ -90,6 +93,7 @@
     "test": "yarn build && node --enable-source-maps esnext/tests/index.js",
     "test:deno": "yarn build && deno run --allow-read --allow-net --import-map=import-map-deno.json esnext/tests/index.js",
     "test:inspect": "yarn build && node --enable-source-maps --inspect-brk esnext/tests/index.js",
-    "coverage": "yarn build && c8 node esnext/tests/index.js && yarn postbuild"
+    "coverage": "yarn build && c8 node esnext/tests/index.js && yarn postbuild",
+    "postinstall": "patch-package"
   }
 }

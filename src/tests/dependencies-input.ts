@@ -14,5 +14,6 @@ export default [
   "iterable",
   "uuid",
   "whatwg-url",
-  "abort-controller"
+  "abort-controller",
+  "urlpattern-polyfill"
 ] as const;

@@ -1,0 +1,14 @@
+diff --git a/node_modules/urlpattern-polyfill/package.json b/node_modules/urlpattern-polyfill/package.json
+index 36e7a66..bd08849 100755
+--- a/node_modules/urlpattern-polyfill/package.json
++++ b/node_modules/urlpattern-polyfill/package.json
+@@ -9,6 +9,9 @@
+   "main": "./dist/index.cjs",
+   "module": "./dist/index.js",
+   "unpkg": "./dist/index.umd.js",
++  "types": "./dist/index.d.ts",
++  "exports": "./dist/index.js",
++  "type": "module",
+   "files": [
+     "src",
+     "dist"

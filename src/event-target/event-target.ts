@@ -167,10 +167,10 @@ export class EventTarget implements EventTarget {
                     unhandled = unhandled.filter(result => !isSignalHandled(event, result.reason))
                 }
                 if (unhandled.length === 1) {
-                    await Promise.reject(unhandled[0]);
+                    await Promise.reject(unhandled[0].reason);
                     throw unhandled[0]; // We shouldn't get here
                 } else if (unhandled.length > 1) {
-                    throw new AggregateError(unhandled);
+                    throw new AggregateError(unhandled.map(({ reason }) => reason));
                 }
             }
         }
