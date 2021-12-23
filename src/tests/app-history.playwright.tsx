@@ -15,18 +15,18 @@ declare global {
 const DEBUG = false;
 
 const browsers = [
-    ["chromium", Playwright.chromium, { esm: true }] as const,
-    ["webkit", Playwright.webkit, { esm: false }] as const,
-    ["firefox", Playwright.firefox, { esm: false }] as const
+    ["chromium", Playwright.chromium, { esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
+    ["webkit", Playwright.webkit, { esm: false, args: [] }] as const,
+    ["firefox", Playwright.firefox, { esm: false, args: [] }] as const
 ] as const
 
 // webkit and firefox do not support importmap
-for (const [browserName, browserLauncher, { esm }] of browsers.filter(([, browser]) => browser)) {
+for (const [browserName, browserLauncher, { esm, args }] of browsers.filter(([, browser]) => browser)) {
     const browser = await browserLauncher.launch({
         headless: !DEBUG,
         devtools: DEBUG,
         args: [
-            "--enable-experimental-web-platform-features"
+            ...args
         ]
     });
     console.log(`Running playwright tests for ${browserName} ${browser.version()}`)
