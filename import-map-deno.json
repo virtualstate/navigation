@@ -19,6 +19,7 @@
     "deno:std/uuid/mod": "https://deno.land/std@0.113.0/uuid/mod.ts",
     "deno:std/uuid/v4": "https://deno.land/std@0.113.0/uuid/v4.ts",
     "./src/tests/examples": "./src/tests/examples/index.ts",
+    "./src/tests/examples/remote": "./src/tests/examples/remote/index.ts",
     "./src/tests/examples/jsx": "./src/tests/examples/jsx.tsx",
     "./src/tests/examples/fetch": "./src/tests/examples/fetch.ts",
     "./src/tests/examples/readme-detailed": "./src/tests/examples/readme-detailed.tsx",
