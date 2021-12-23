@@ -40,7 +40,9 @@
   "dependencies": {
     "abort-controller": "^3.0.0",
     "uuid": "^8.3.2",
-    "whatwg-url": "^9.1.0"
+    "whatwg-url": "^9.1.0",
+    "patch-package": "^6.4.7",
+    "postinstall-postinstall": "^2.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.15.4",
@@ -73,9 +75,7 @@
     "jest": "^27.1.0",
     "jest-playwright-preset": "^1.7.0",
     "mkdirp": "^1.0.4",
-    "patch-package": "^6.4.7",
     "playwright": "^1.17.1",
-    "postinstall-postinstall": "^2.1.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.61.1",
     "rollup-plugin-babel": "^4.4.0",
