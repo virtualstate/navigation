@@ -10,7 +10,7 @@ export interface EventCallback<TargetEvent extends Event = Event, This = unknown
     <E extends TargetEvent>(event: E): Promise<void> | void
 }
 
-export function matchEventCallback(type: string, callback?: EventCallback | Function, options?: unknown): (descriptor: EventDescriptor) => boolean {
+export function matchEventCallback(type: string | symbol, callback?: EventCallback | Function, options?: unknown): (descriptor: EventDescriptor) => boolean {
     const optionsDescriptor = isOptionsDescriptor(options) ? options : undefined;
     return descriptor => {
         if (optionsDescriptor) {

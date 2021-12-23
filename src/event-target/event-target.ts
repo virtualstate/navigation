@@ -27,10 +27,10 @@ export interface SyncEventTarget<Event = unknown, This = unknown> {
 }
 
 export interface EventTarget<This = unknown> extends SyncEventTarget<Event, This> {
-    addEventListener(type: string, callback: EventCallback<Event, This>, options?: EventTargetAddListenerOptions): void
-    removeEventListener(type: string, callback: Function, options?: unknown): void
+    addEventListener(type: string | symbol, callback: EventCallback<Event, This>, options?: EventTargetAddListenerOptions): void
+    removeEventListener(type: string | symbol, callback: Function, options?: unknown): void
+    hasEventListener(type: string | symbol, callback?: Function): Promise<boolean>
     dispatchEvent(event: Event): void | Promise<void>
-    hasEventListener(type: string, callback?: Function): Promise<boolean>
 }
 
 function isFunctionEventCallback(fn: Function): fn is EventCallback {
@@ -75,7 +75,7 @@ export class EventTarget implements EventTarget {
         this.#listeners.push(listener.descriptor)
     }
 
-    removeEventListener(type: string, callback: Function, options?: unknown) {
+    removeEventListener(type: string | symbol, callback: Function, options?: unknown) {
         if (!isFunctionEventCallback(callback)) {
             return
         }
