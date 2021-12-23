@@ -1,6 +1,6 @@
 import {isEvent, Event} from "./event";
 
-export interface TransitionEvent<Name extends string = string, T = unknown> extends Event<Name> {
+export interface TransitionEvent<Name extends string | symbol = string, T = unknown> extends Event<Name> {
     /**
      * @param value
      * @throws InvalidStateError
@@ -8,7 +8,7 @@ export interface TransitionEvent<Name extends string = string, T = unknown> exte
     transitionWhile(value: T | Promise<T>): void
 }
 
-export function isTransitionEvent<T = unknown>(value: object): value is TransitionEvent<string, T> {
+export function isTransitionEvent<T = unknown>(value: object): value is TransitionEvent<string | symbol, T> {
     function isTransitionEventLike(value: object): value is Partial<Record<keyof TransitionEvent, unknown>> {
         return isEvent(value)
     }

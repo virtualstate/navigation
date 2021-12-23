@@ -13,7 +13,7 @@ export interface AbortController {
     abort(): void
 }
 
-export interface SignalEvent<Name extends string = string> extends Event<Name> {
+export interface SignalEvent<Name extends string | symbol = string> extends Event<Name> {
     signal: AbortSignal
 }
 

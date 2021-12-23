@@ -1,6 +1,6 @@
 import {Event, isEvent} from "./event";
 
-export interface RespondEvent<Name extends string = string, T = unknown> extends Event<Name> {
+export interface RespondEvent<Name extends string | symbol = string, T = unknown> extends Event<Name> {
     /**
      * @param value
      * @throws InvalidStateError

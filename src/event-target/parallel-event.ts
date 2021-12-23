@@ -1,6 +1,6 @@
 import { Event, isEvent } from "./event"
 
-export interface ParallelEvent<Name extends string = string> extends Event<Name> {
+export interface ParallelEvent<Name extends string | symbol = string> extends Event<Name> {
     parallel: true | undefined
 }
 

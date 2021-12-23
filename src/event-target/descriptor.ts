@@ -4,7 +4,7 @@ export const EventDescriptorSymbol = Symbol.for("@opennetwork/environment/events
 
 export interface EventDescriptor {
     [EventDescriptorSymbol]: true;
-    type: string
+    type: string | symbol
     callback: EventCallback
     once?: boolean
 }
