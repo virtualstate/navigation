@@ -6,20 +6,11 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
 ### Support
 
- - ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
- - ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-brightgreen)
- - ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-brightgreen)
- - ![Webkit supported](https://img.shields.io/badge/webkit-%3E%3D15.4-brightgreen)
- - ![Firefox supported](https://img.shields.io/badge/firefox-%3E%3D94.0.1-brightgreen)
+ ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-blue) ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-blue) ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-blue) ![Webkit supported](https://img.shields.io/badge/webkit-%3E%3D15.4-blue) ![Firefox supported](https://img.shields.io/badge/firefox-%3E%3D94.0.1-blue)
 
  ### Test Coverage
 
- - ![nycrc config on GitHub](https://img.shields.io/nycrc/virtualstate/app-history)
- - ![95.13%25 lines covered](https://img.shields.io/badge/lines-95.13%25-brightgreen)
- - ![95.13%25 statements covered](https://img.shields.io/badge/statements-95.13%25-brightgreen)
- - ![93.28%25 functions covered](https://img.shields.io/badge/functions-93.28%25-brightgreen)
- - ![80.96%25 branches covered](https://img.shields.io/badge/branches-80.96%25-brightgreen)
-
+ ![nycrc config on GitHub](https://img.shields.io/nycrc/virtualstate/app-history) ![95.13%25 lines covered](https://img.shields.io/badge/lines-95.13%25-brightgreen) ![95.13%25 statements covered](https://img.shields.io/badge/statements-95.13%25-brightgreen) ![93.28%25 functions covered](https://img.shields.io/badge/functions-93.28%25-brightgreen) ![80.96%25 branches covered](https://img.shields.io/badge/branches-80.96%25-brightgreen)
 
 [//]: # (badges)
 
