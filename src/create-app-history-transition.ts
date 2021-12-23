@@ -1,6 +1,6 @@
 import AbortController from "abort-controller";
 import {InvalidStateError} from "./app-history-errors";
-import {WritableProps} from "./writable";
+import {WritableProps} from "./util/writable";
 import {
     AppHistoryCurrentChangeEvent,
     AppHistoryDestination,

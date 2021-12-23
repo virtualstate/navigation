@@ -1,6 +1,6 @@
 import {Request, Response} from "@opennetwork/http-representation";
 import {RespondEvent} from "../../event-target/respond-event";
-import {deferred} from "../../deferred";
+import {deferred} from "../../util/deferred";
 import { dispatchEvent } from "../../event-target/global";
 
 export interface FetchEvent extends RespondEvent<"fetch", Response> {

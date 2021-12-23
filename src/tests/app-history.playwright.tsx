@@ -1,6 +1,6 @@
 import * as Playwright from "playwright";
 import { h, toString } from "@virtualstate/fringe";
-import {deferred} from "../deferred";
+import {deferred} from "../util/deferred";
 import { DependenciesContent } from "./dependencies";
 import fs from "fs";
 import path from "path";

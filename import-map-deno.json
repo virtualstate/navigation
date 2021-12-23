@@ -37,10 +37,10 @@
     "./src/app-history-event-target": "./src/app-history-event-target.ts",
     "./src/app-history-transition": "./src/app-history-transition.ts",
     "./src/create-app-history-transition": "./src/create-app-history-transition.ts",
-    "./src/deferred": "./src/deferred.ts",
-    "./src/deno-uuid": "./src/deno-uuid.ts",
+    "./src/util/deferred": "./src/util/deferred.ts",
+    "./src/util/deno-uuid": "./src/util/deno-uuid.ts",
     "./src/index": "./src/index.ts",
-    "./src/writable": "./src/writable.ts",
+    "./src/util/writable": "./src/util/writable.ts",
     "./src": "./src/index.ts",
     "./src/event-target": "./src/event-target/index.ts",
     "./src/event-target/callback": "./src/event-target/callback.ts",
@@ -54,6 +54,6 @@
     "./src/event-target/respond-event": "./src/event-target/respond-event.ts",
     "./src/event-target/signal-event": "./src/event-target/signal-event.ts",
     "./src/event-target/transition-event": "./src/event-target/transition-event.ts",
-    "./src/import-types": "https://unpkg.com/rollup@2.36.1/dist/rollup.browser.js"
+    "./src/util/import-types": "./src/util/import-types.ts"
   }
 }
