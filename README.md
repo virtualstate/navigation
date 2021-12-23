@@ -10,7 +10,7 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
  ### Test Coverage
 
- ![nycrc config on GitHub](https://img.shields.io/nycrc/virtualstate/app-history) ![95.12%25 lines covered](https://img.shields.io/badge/lines-95.12%25-brightgreen) ![95.12%25 statements covered](https://img.shields.io/badge/statements-95.12%25-brightgreen) ![93.28%25 functions covered](https://img.shields.io/badge/functions-93.28%25-brightgreen) ![80.96%25 branches covered](https://img.shields.io/badge/branches-80.96%25-brightgreen)
+ ![nycrc config on GitHub](https://img.shields.io/nycrc/virtualstate/app-history) ![95.08%25 lines covered](https://img.shields.io/badge/lines-95.08%25-brightgreen) ![95.08%25 statements covered](https://img.shields.io/badge/statements-95.08%25-brightgreen) ![92.65%25 functions covered](https://img.shields.io/badge/functions-92.65%25-brightgreen) ![81.01%25 branches covered](https://img.shields.io/badge/branches-81.01%25-brightgreen)
 
 [//]: # (badges)
 
