@@ -25,7 +25,7 @@ jobs:
           deno-version: 'v1.x'
       - run: |
           yarn install
-          npx playwright install-deps chromium
+          npx playwright install-deps
       - run: yarn build
       # yarn coverage === c8 + yarn test
       - run: yarn coverage
