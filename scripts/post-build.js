@@ -44,7 +44,17 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   const { name } = await fs.readFile("package.json", "utf-8").then(JSON.parse);
 
   badges.push(
-      `![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})`
+      '### Platforms\n\n',
+      '- ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)\n',
+      '- ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-brightgreen)\n',
+      '- ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-brightgreen)\n',
+      '- ![Webkit supported](https://img.shields.io/badge/webkit-%3E%3D15.4-brightgreen)\n',
+      '- ![Firefox supported](https://img.shields.io/badge/firefox-%3E%3D94.0.1-brightgreen)\n\n'
+  )
+
+  badges.push(
+      '### Test Coverage\n\n',
+      `- ![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})\n`
   )
 
   const coverage = await fs.readFile("coverage/coverage-summary.json", "utf8").then(JSON.parse).catch(() => ({}));
@@ -55,7 +65,7 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
     const color = pct >= good ? "brightgreen" : "yellow";
     const message = `${pct}%25`;
     badges.push(
-        `![${message} ${name} covered](https://img.shields.io/badge/${name}-${message}-${color})`
+        `- ![${message} ${name} covered](https://img.shields.io/badge/${name}-${message}-${color})\n`
     );
   }
 
