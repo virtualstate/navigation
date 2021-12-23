@@ -1,9 +1,9 @@
-import { chromium } from "playwright";
+import * as Playwright from "playwright";
 import { h, toString } from "@virtualstate/fringe";
 import {deferred} from "../deferred";
 import { DependenciesContent } from "./dependencies";
-import { promises as fs } from "fs";
-import { join, dirname, resolve as pathResolve } from "path";
+import fs from "fs";
+import path from "path";
 
 declare global {
     interface Window {
@@ -14,8 +14,14 @@ declare global {
 
 const DEBUG = false;
 
+const browsers = [
+    ["chromium", Playwright.chromium, { esm: true }] as const,
+    ["webkit", Playwright.webkit, { esm: false }] as const,
+    ["firefox", Playwright.firefox, { esm: false }] as const
+] as const
+
 // webkit and firefox do not support importmap
-for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
+for (const [browserName, browserLauncher, { esm }] of browsers.filter(([, browser]) => browser)) {
     const browser = await browserLauncher.launch({
         headless: !DEBUG,
         devtools: DEBUG,
@@ -23,11 +29,12 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
             "--enable-experimental-web-platform-features"
         ]
     });
+    console.log(`Running playwright tests for ${browserName} ${browser.version()}`)
     const context = await browser.newContext({});
     const page = await context.newPage();
 
     const namespacePath = "/@virtualstate/app-history/";
-    const testsSrcPath = `${namespacePath}tests/`;
+    const testsSrcPath = `${namespacePath}tests/${esm ? "" : "rollup.js"}`;
 
     let src = `https://cdn.skypack.dev${testsSrcPath}`;
 
@@ -64,6 +71,9 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
             await import(${JSON.stringify(src)});
             await window.testsComplete();
         } catch (error) {
+            console.log(error instanceof Error ? error.message : \`\${error}\`);
+            console.log(error);
+            console.log(error.stack);
             await window.testsFailed(error instanceof Error ? error.message : \`\${error}\`);
         }
         `))
@@ -73,11 +83,11 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
     const { resolve, reject, promise } = deferred<void>();
 
     await page.exposeFunction("testsComplete", () => {
-        console.log("Tests complete");
+        console.log(`Playwright tests complete tests for ${browserName} ${browser.version()}`)
         return resolve();
     });
     await page.exposeFunction("testsFailed", (reason: unknown) => {
-        console.log("Tests failed");
+        console.log(`Playwright tests failed tests for ${browserName} ${browser.version()}`, reason);
         return reject(reason);
     });
 
@@ -90,7 +100,7 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
 
         if (pathname.startsWith(namespacePath)) {
             const { pathname: file } = new URL(import.meta.url);
-            let importTarget = pathResolve(join(dirname(file), '..', pathname.replace(namespacePath, "")));
+            let importTarget = path.resolve(path.join(path.dirname(file), '..', pathname.replace(namespacePath, "")));
             if (!/\.[a-z]+$/.test(importTarget)) {
                 // console.log({ importTarget });
                 if (!importTarget.endsWith("/")) {
@@ -99,7 +109,7 @@ for (const browserLauncher of [chromium/*, webkit, firefox*/]) {
                 importTarget += "index.js";
             }
             // console.log({ importTarget });
-            const contents = await fs.readFile(importTarget, "utf-8");
+            const contents = await fs.promises.readFile(importTarget, "utf-8");
             // console.log({ importTarget, contents: !!contents });
             return route.fulfill({
                 body: contents,

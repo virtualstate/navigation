@@ -17,7 +17,7 @@ import {
 } from "./app-history.prototype";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
-import {EventTargetListeners} from "./event-target";
+import {Event, EventTargetListeners} from "./event-target";
 import AbortController from "abort-controller";
 import {AppHistoryTransition} from "./app-history-transition";
 import {
@@ -287,7 +287,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             if (givenNavigationType === Unset && typeof options?.index === "number" && options.entries) {
                 this.#entries = options.entries;
                 this.#currentIndex = options.index;
-                this.#known = options.known ?? this.#known;
+                if (options.known) {
+                    this.#known = new Set([...this.#known, ...options.known]);
+                }
                 return entry;
             } else if (!entry) {
                 throw new InvalidStateError();
@@ -339,7 +341,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 throw new InvalidStateError("Aborted");
             }
 
-            this.#known = known;
+            this.#known = new Set([...this.#known, ...known]);
             this.#entries = entries;
             this.#currentIndex = index;
 
@@ -435,19 +437,23 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     }
 
     #dispose = async () => {
-        // console.log(this.#known, this.#entries);
+        // console.log(JSON.stringify({ known: [...this.#known], entries: this.#entries }));
         for (const known of this.#known) {
-            const index = this.#entries.findIndex(entry => entry.id === known.id);
+            const index = this.#entries.findIndex(entry => entry.key === known.key);
             if (index !== -1) {
                 // Still in use
                 continue;
             }
             // No index, no longer known
             this.#known.delete(known);
-            await known.dispatchEvent({
-                type: "dispose"
-            });
+            const event = {
+                type: "dispose",
+                entry: known
+            };
+            await known.dispatchEvent(event);
+            await this.dispatchEvent(event);
         }
+        // console.log(JSON.stringify({ pruned: [...this.#known] }));
     }
 
     reload(options?: AppHistoryReloadOptions): AppHistoryResult {

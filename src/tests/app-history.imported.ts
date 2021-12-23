@@ -1,8 +1,13 @@
 import {AppHistoryAssertFn, assertAppHistory} from "./app-history";
-import { importPath } from "./imported";
 
-const { AppHistory } = await import(importPath);
-const input = () => new AppHistory();
-const fn: AppHistoryAssertFn = await assertAppHistory(input);
-fn(input);
-console.log(`PASS assertAppHistory:${importPath}:new AppHistory`);
+try {
+    const { AppHistory } = (await import("@virtualstate/app-history-imported")) ?? { AppHistory: undefined };
+    if (AppHistory) {
+        const input = () => new AppHistory();
+        const fn: AppHistoryAssertFn = await assertAppHistory(input);
+        fn(input);
+        console.log(`PASS assertAppHistory:imported:new AppHistory`);
+    }
+} catch {
+    console.warn(`WARN FAILED assertAppHistory:imported:new AppHistory`);
+}

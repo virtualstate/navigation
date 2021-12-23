@@ -280,23 +280,39 @@ export async function disposeExample(appHistory: AppHistory) {
     assert<string>(startingKey);
 
     const values: (1 | 2 | 3)[] = [];
+    assert(values);
+    console.log(JSON.stringify({ 0: values }));
 
-    const entry1 = await appHistory.navigate("/1").committed;
-    const entry2 = await appHistory.navigate("/2").committed;
-    const entry3 = await appHistory.navigate("/3").finished;
-
+    const { committed: entry1Committed, finished: entry1Finished } = appHistory.navigate("/1");
+    const entry1 = await entry1Committed;
     entry1.addEventListener("dispose", () => values.push(1));
+    const entry1Disposed = new Promise(resolve => entry1.addEventListener("dispose", resolve, { once: true }));
+    await entry1Finished;
+
+    const { committed: entry2Committed, finished: entry2Finished } = appHistory.navigate("/2");
+    const entry2 = await entry2Committed;
+    const entry2Disposed = new Promise(resolve => entry2.addEventListener("dispose", resolve, { once: true }));
     entry2.addEventListener("dispose", () => values.push(2));
+
+    await entry2Finished;
+
+    const { committed: entry3Committed, finished: entry3Finished } = await appHistory.navigate("/3");
+    const entry3 = await entry3Committed;
+    const entry3Disposed = new Promise(resolve => entry3.addEventListener("dispose", resolve, { once: true }));
     entry3.addEventListener("dispose", () => values.push(3));
+    await entry3Finished;
 
     await appHistory.goTo(startingKey).finished;
     await appHistory.navigate("/1-b").finished;
 
-    // console.log({ values });
+    await Promise.all([entry1Disposed, entry2Disposed, entry3Disposed]);
+
+    // console.log(JSON.stringify({ 3: values, entries: appHistory.entries() }));
 
     ok(values.includes(1));
     ok(values.includes(2));
     ok(values.includes(3));
+    console.log(JSON.stringify(values));
 
 }
 

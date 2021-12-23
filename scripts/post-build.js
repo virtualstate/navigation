@@ -1,5 +1,41 @@
 import "./correct-import-extensions.js";
 import { promises as fs } from "fs";
+import { rollup } from "rollup";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+import ignore from "rollup-plugin-ignore";
+import babel from "rollup-plugin-babel";
+
+const bundle = await rollup({
+  input: "./esnext/tests/index.js",
+  plugins: [
+    ignore([
+      "playwright",
+      "fs",
+      "path",
+      "uuid",
+      "@virtualstate/app-history",
+      "@virtualstate/app-history-imported"
+    ]),
+    nodeResolve()
+  ],
+  inlineDynamicImports: true,
+  treeshake: {
+    preset: "smallest",
+    moduleSideEffects: "no-external"
+  }
+});
+await bundle.write({
+  sourcemap: true,
+  output: {
+    file: "./esnext/tests/rollup.js",
+  },
+  inlineDynamicImports: true,
+  format: "cjs",
+  interop: "auto",
+  globals: {
+    "esnext/tests/app-history.playwright.js": "globalThis"
+  }
+});
 
 if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
 
@@ -8,7 +44,7 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   const { name } = await fs.readFile("package.json", "utf-8").then(JSON.parse);
 
   badges.push(
-    `![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})`
+      `![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})`
   )
 
   const coverage = await fs.readFile("coverage/coverage-summary.json", "utf8").then(JSON.parse).catch(() => ({}));
@@ -19,7 +55,7 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
     const color = pct >= good ? "brightgreen" : "yellow";
     const message = `${pct}%25`;
     badges.push(
-      `![${message} ${name} covered](https://img.shields.io/badge/${name}-${message}-${color})`
+        `![${message} ${name} covered](https://img.shields.io/badge/${name}-${message}-${color})`
     );
   }
 
@@ -40,3 +76,4 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   await fs.writeFile("README.md", readMeNext);
   console.log("Wrote coverage badges!");
 }
+

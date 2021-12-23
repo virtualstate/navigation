@@ -5,8 +5,11 @@ import {
     AppHistoryNavigationType
 } from "./app-history.prototype";
 import {AppHistoryEventTarget} from "./app-history-event-target";
-import {v4} from "uuid";
 import {EventTargetListeners} from "./event-target";
+
+const { v4 } = await import("uuid").catch(() => undefined).then((mod) => mod ?? ({ v4(): string {
+    return `0101010-0101010-${Math.random()}`.replace(".", "");
+}}));
 
 export const AppHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
 export const AppHistoryEntryKnownAs = Symbol.for("@virtualstate/app-history/entry/knownAs");
