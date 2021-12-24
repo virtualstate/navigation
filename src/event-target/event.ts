@@ -1,4 +1,4 @@
-export interface Event<Name extends string | symbol = string> {
+export interface Event<Name extends string | symbol = string | symbol> {
     type: Name
     parallel?: boolean
     signal?: {

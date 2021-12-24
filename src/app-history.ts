@@ -15,14 +15,27 @@ import {
     AppHistoryTransition as AppHistoryTransitionPrototype
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
-import {AbortError, InvalidStateError} from "./app-history-errors";
-import {Event, EventTargetListeners} from "./event-target";
+import {InvalidStateError} from "./app-history-errors";
+import {EventTargetListeners} from "./event-target";
 import AbortController from "abort-controller";
 import {
     AppHistoryTransition,
     AppHistoryTransitionDeferred,
-    AppHistoryTransitionType,
-    InternalAppHistoryNavigationType, Rollback, Unset, UpdateCurrent
+    AppHistoryTransitionEntry,
+    AppHistoryTransitionError,
+    AppHistoryTransitionFinally,
+    AppHistoryTransitionStart,
+    AppHistoryTransitionInitialEntries,
+    AppHistoryTransitionInitialIndex,
+    AppHistoryTransitionKnown,
+    AppHistoryTransitionNavigationType,
+    AppHistoryTransitionParentEventTarget,
+    AppHistoryTransitionPromises,
+    AppHistoryTransitionWait,
+    InternalAppHistoryNavigationType,
+    Rollback,
+    Unset,
+    UpdateCurrent, AppHistoryTransitionWhile, AppHistoryTransitionStartDeadline
 } from "./app-history-transition";
 import {
     createAppHistoryTransition,
@@ -169,10 +182,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
             rollback: this.#createRollback(this.#pushEntry),
             [AppHistoryTransitionDeferred]: transitionDeferred,
-            [AppHistoryTransitionType]: givenNavigationType,
+            [AppHistoryTransitionNavigationType]: givenNavigationType,
+            [AppHistoryTransitionInitialEntries]: [...this.#entries],
+            [AppHistoryTransitionInitialIndex]: this.#currentIndex,
+            [AppHistoryTransitionKnown]: [...this.#known],
+            [AppHistoryTransitionEntry]: entry,
+            [AppHistoryTransitionParentEventTarget]: this
         });
-        const { resolve } = nextTransition[AppHistoryTransitionDeferred];
-        entry.addEventListener("finish", resolve.bind(undefined, entry), { once: true });
         const finished: Promise<AppHistoryEntry> = (this.#activePromise ?? Promise.resolve(entry))
             .catch((error) => void error) // Catch somewhere else please
             .then(async (): Promise<AppHistoryEntry> => {
@@ -246,16 +262,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         }
     }
 
-    #createActiveThen = (entry: AppHistoryEntry): PromiseLike<AppHistoryEntry>["then"] => {
-        return async (resolve, reject) => {
-            const handler = async () => entry;
-            while (this.#activePromise) {
-                await this.#activePromise;
-            }
-            return handler().then(resolve, reject);
-        }
-    }
-
     #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions): Promise<AppHistoryEntry> => {
         if (!transition) {
             throw new InvalidStateError("Expected transition");
@@ -273,7 +279,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const { current } = this;
         const abortController = new AbortController();
         this.#inProgressAbortController = abortController;
-        let promises: Promise<unknown>[] = [];
 
         const rollbackImmediately = this.#createRollback(this.#transition);
 
@@ -286,6 +291,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 if (options.known) {
                     this.#known = new Set([...this.#known, ...options.known]);
                 }
+                await this.dispatchEvent({
+                    type: "currentchange"
+                });
                 return entry;
             } else if (!entry) {
                 throw new InvalidStateError();
@@ -295,15 +303,10 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             const transitionResult = await createAppHistoryTransition({
                 current,
                 currentIndex: this.#currentIndex,
-                abortController,
-                entries: this.#entries,
-                entry,
                 options,
-                navigationType,
-                transition: currentTransition,
+                transition,
                 startTime,
-                known: this.#known,
-                transitionWhile
+                known: this.#known
             });
 
             const {
@@ -314,7 +317,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 navigate,
             } = transitionResult;
 
-            if (abortController.signal.aborted) {
+            if (transition.signal.aborted) {
                 throw new InvalidStateError("Aborted");
             }
 
@@ -325,12 +328,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             if (typeof navigationType === "string" || navigationType === Rollback) {
                 await current?.dispatchEvent({
                     type: "navigatefrom",
-                    transitionWhile,
+                    transitionWhile: transition[AppHistoryTransitionWhile],
                 });
             }
 
             if (typeof navigationType === "string") {
-                await this.dispatchEvent(navigate);
+                await transition.dispatchEvent(navigate);
             }
 
             if (abortController.signal.aborted) {
@@ -342,58 +345,66 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             this.#currentIndex = index;
 
             if (entry.sameDocument) {
-                await this.dispatchEvent(currentChange);
+                await transition.dispatchEvent(currentChange);
             }
             if (typeof navigationType === "string") {
                 await entry.dispatchEvent({
                     type: "navigateto",
-                    transitionWhile,
+                    transitionWhile: transition[AppHistoryTransitionWhile],
                 });
             }
             await this.#dispose();
-            if (!promises.length) {
+            if (!transition[AppHistoryTransitionPromises].size) {
                 await microtask;
             }
-            if (promises.length) {
-                const capturedPromises = promises;
-                promises = []; // Reset so that we can collect more if needed
-                await Promise.all(capturedPromises);
-            }
+            await transition.dispatchEvent({
+                type: AppHistoryTransitionStartDeadline,
+                transition,
+                entry
+            });
+            await transition[AppHistoryTransitionWait]();
 
             if (typeof navigationType === "string") {
-                await entry.dispatchEvent({
+                await transition.dispatchEvent({
                     type: "finish",
-                    transitionWhile
+                    transitionWhile: transition[AppHistoryTransitionWhile]
                 });
             }
             if (typeof navigationType === "string") {
-                await this.dispatchEvent({
+                await transition.dispatchEvent({
                     type: "navigatesuccess",
-                    transitionWhile
+                    transitionWhile: transition[AppHistoryTransitionWhile]
                 });
             }
 
             // If we have more length here, we have added more transition
-            if (promises.length) {
-                const capturedPromises = promises;
-                // Clear so we can see if there are any uncaught promises
-                // TODO check this length in finally, throw if length
-                promises = [];
-                await Promise.all(capturedPromises);
-            }
+            await transition[AppHistoryTransitionWait]();
 
             return entry;
         }
 
         try {
+            await transition.dispatchEvent({
+                type: AppHistoryTransitionStart,
+                transition,
+                entry
+            });
             return await completeTransition();
         } catch (error) {
+
+            await transition.dispatchEvent({
+                type: AppHistoryTransitionError,
+                error,
+                transition,
+                entry
+            });
+
             if (!(error instanceof InvalidStateError) && (typeof navigationType === "string" || navigationType === Rollback)) {
                 if (navigationType !== Rollback) {
                     // console.warn("Rolling back immediately due to internal error", error);
                     await rollbackImmediately();
                 }
-                await this.dispatchEvent({
+                await transition.dispatchEvent({
                     type: "navigateerror",
                     error,
                     get message() {
@@ -410,6 +421,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         } finally {
             await this.#dispose();
 
+            await transition.dispatchEvent({
+                type: AppHistoryTransitionFinally,
+                transition,
+                entry
+            });
+
             if (this.#activeTransition === currentTransition) {
                 this.#activeTransition = undefined;
             }
@@ -422,13 +439,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                     `same-document-navigation-finish:${entry.id}`
                 );
             }
-        }
-
-        function transitionWhile(newNavigationAction: Promise<unknown>): void {
-            if (abortController.signal.aborted) {
-                throw new InvalidStateError("Event has already finished processing");
-            }
-            promises.push(newNavigationAction);
         }
     }
 

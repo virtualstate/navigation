@@ -6,11 +6,18 @@ import {
     AppHistoryDestination,
     AppHistoryNavigateEvent,
     AppHistoryNavigateOptions,
-    AppHistoryNavigationType,
-    AppHistoryTransitionInit
+    AppHistoryNavigationType
 } from "./spec/app-history";
 import {AppHistoryEntry} from "./app-history-entry";
-import {InternalAppHistoryNavigationType, Rollback, UpdateCurrent} from "./app-history-transition";
+import {
+    AppHistoryTransition, AppHistoryTransitionAbort,
+    AppHistoryTransitionEntry,
+    AppHistoryTransitionInitialEntries, AppHistoryTransitionKnown,
+    AppHistoryTransitionNavigationType, AppHistoryTransitionWhile,
+    InternalAppHistoryNavigationType,
+    Rollback,
+    UpdateCurrent
+} from "./app-history-transition";
 
 export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
     entries?: AppHistoryEntry[];
@@ -20,17 +27,12 @@ export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOpt
 }
 
 export interface AppHistoryTransitionContext {
-    transition: AppHistoryTransitionInit;
-    entries: AppHistoryEntry[];
-    navigationType: InternalAppHistoryNavigationType;
+    transition: AppHistoryTransition;
     options?: InternalAppHistoryNavigateOptions;
-    entry: AppHistoryEntry;
     currentIndex: number;
     known: Set<AppHistoryEntry>;
     startTime?: number;
     current?: AppHistoryEntry;
-    abortController: AbortController;
-    transitionWhile: AppHistoryNavigateEvent["transitionWhile"];
 }
 
 export interface AppHistoryTransitionResult {
@@ -54,22 +56,25 @@ function getEntryIndex(entries: AppHistoryEntry[], entry: AppHistoryEntry) {
 
 export async function createAppHistoryTransition(context: AppHistoryTransitionContext): Promise<AppHistoryTransitionResult> {
     const {
-        entry,
         currentIndex,
         options,
-        entries: previousEntries,
         known: initialKnown,
         startTime,
         current,
-        abortController,
-        abortController: {
+        transition,
+        transition: {
+            [AppHistoryTransitionInitialEntries]: previousEntries,
+            [AppHistoryTransitionEntry]: entry,
+            [AppHistoryTransitionWhile]: transitionWhile,
             signal
-        },
-        transitionWhile
+        }
     } = context;
     let {
-        navigationType,
+        transition: {
+            [AppHistoryTransitionNavigationType]: navigationType
+        }
     } = context;
+
     let resolvedEntries = [...previousEntries];
     const known = new Set(initialKnown);
 
@@ -129,9 +134,7 @@ export async function createAppHistoryTransition(context: AppHistoryTransitionCo
         ),
         userInitiated: false,
         destination,
-        preventDefault() {
-            abortController.abort();
-        },
+        preventDefault: transition[AppHistoryTransitionAbort].bind(transition),
         transitionWhile,
         type: "navigate"
     }
