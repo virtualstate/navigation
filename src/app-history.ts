@@ -15,10 +15,10 @@ import {
     AppHistoryTransition as AppHistoryTransitionPrototype
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
-import {InvalidStateError} from "./app-history-errors";
+import {AbortError, InvalidStateError} from "./app-history-errors";
 import {Event, EventTargetListeners} from "./event-target";
 import AbortController from "abort-controller";
-import {AppHistoryTransition} from "./app-history-transition";
+import {AppHistoryTransition, AppHistoryTransitionDeferred} from "./app-history-transition";
 import {
     createAppHistoryTransition,
     InternalAppHistoryNavigationType,
@@ -26,6 +26,7 @@ import {
     Rollback,
     UpdateCurrent, Unset
 } from "./create-app-history-transition";
+import {deferred} from "./util/deferred";
 
 export * from "./spec/app-history";
 
@@ -159,26 +160,23 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     };
 
     #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry,  transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
-        let nextTransition: AppHistoryTransition | undefined = transition;
+        const transitionDeferred = deferred<AppHistoryEntry>();
+        const nextTransition: AppHistoryTransition | undefined = transition ?? new AppHistoryTransition({
+            finished: transitionDeferred.promise,
+            from: entry,
+            navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
+            rollback: this.#createRollback(this.#pushEntry),
+            [AppHistoryTransitionDeferred]: transitionDeferred,
+        });
+        const { resolve } = nextTransition[AppHistoryTransitionDeferred];
+        entry.addEventListener("finish", resolve.bind(undefined, entry), { once: true });
         const finished: Promise<AppHistoryEntry> = (this.#activePromise ?? Promise.resolve(entry))
             .catch((error) => void error) // Catch somewhere else please
             .then(async (): Promise<AppHistoryEntry> => {
-                if (!nextTransition) {
-                    throw new InvalidStateError("Expected transition to be available");
-                }
                 return this.#immediateTransition(givenNavigationType, entry, finished, nextTransition, options);
             });
         // finished.catch(error => void error);
         this.#activePromise = finished;
-        nextTransition = new AppHistoryTransition({
-            get finished() {
-                return finished;
-            },
-            from: entry,
-            navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
-            rollback: this.#createRollback(this.#pushEntry),
-            then: this.#createActiveThen(entry),
-        });
         this.#queueTransition(nextTransition);
         if (givenNavigationType !== UpdateCurrent) {
             this.#inProgressAbortController?.abort();
@@ -276,11 +274,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
         const rollbackImmediately = this.#createRollback(this.#transition);
 
-        const currentTransition: AppHistoryTransition | undefined = new AppHistoryTransition({
-            ...transition,
-            rollback: this.#createRollback(this.#pushEntry),
-            then: this.#createActiveThen(entry)
-        });
+        const currentTransition: AppHistoryTransition = transition;
 
         const completeTransition = async (): Promise<AppHistoryEntry> => {
             if (givenNavigationType === Unset && typeof options?.index === "number" && options.entries) {

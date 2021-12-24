@@ -11,8 +11,8 @@ export type {
     EventCallback
 }
 
-export interface EventTargetAddListenerOptions extends Pick<EventDescriptor, "once"> {
-
+export interface EventTargetAddListenerOptions {
+    once?: boolean;
 }
 
 /**
@@ -20,14 +20,15 @@ export interface EventTargetAddListenerOptions extends Pick<EventDescriptor, "on
  */
 export const EventTargetListeners = Symbol.for("@opennetwork/environment/events/target/listeners");
 
-export interface SyncEventTarget<Event = unknown, This = unknown> {
-    addEventListener(type: string, callback: SyncEventCallback<Event, This>, options?: EventTargetAddListenerOptions): void
-    removeEventListener(type: string, callback: SyncEventCallback<Event, This>, options?: unknown): void
+export interface SyncEventTarget<Event = unknown> {
+    addEventListener(type: string, callback: SyncEventCallback<Event>, options?: EventTargetAddListenerOptions): void
+    removeEventListener(type: string, callback: SyncEventCallback<Event>, options?: unknown): void
     dispatchEvent(event: Event): void
 }
 
-export interface EventTarget<This = unknown> extends SyncEventTarget<Event, This> {
-    addEventListener(type: string | symbol, callback: EventCallback<Event, This>, options?: EventTargetAddListenerOptions): void
+export interface EventTarget extends SyncEventTarget<Event> {
+    addEventListener(type: string | symbol, callback: EventCallback, options?: EventTargetAddListenerOptions): void
+    addEventListener(type: string | symbol, callback: Function, options?: EventTargetAddListenerOptions): void
     removeEventListener(type: string | symbol, callback: Function, options?: unknown): void
     hasEventListener(type: string | symbol, callback?: Function): Promise<boolean>
     dispatchEvent(event: Event): void | Promise<void>
@@ -57,7 +58,7 @@ export class EventTarget implements EventTarget {
         return [...this.#listeners];
     }
 
-    addEventListener(type: string, callback: EventCallback, options?: Record<string, unknown>) {
+    addEventListener(type: string, callback: EventCallback, options?: EventTargetAddListenerOptions) {
         const listener: EventListener = {
             ...options,
             isListening: () => !!this.#listeners.find(matchEventCallback(type, callback)),

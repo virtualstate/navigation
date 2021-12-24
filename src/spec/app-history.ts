@@ -4,9 +4,15 @@
  * The main changes here is the usage of optional types over null, and support for updateCurrent()?.finished;
  *
  * null is still included in places where properties have been marked as optional
+ *
+ * Property based event listeners are not invoked, e.g. the below will not work
+ *
+ * e.g. appHistory.oncurrentchange = () => console.log("changed!")
+ *
+ * Instead use addEventListener
  */
 
-import {EventTarget, Event, EventTargetListeners, EventDescriptor} from "../event-target";
+import {EventTarget, EventCallback, Event, EventTargetListeners, EventDescriptor, EventTargetAddListenerOptions} from "../event-target";
 
 export interface AppHistoryEventMap {
     "navigate": AppHistoryNavigateEvent;
@@ -38,15 +44,16 @@ export interface AppHistory extends EventTarget {
     back(options?: AppHistoryNavigationOptions): AppHistoryResult;
     forward(options?: AppHistoryNavigationOptions): AppHistoryResult;
 
-    onnavigate?: ((this: AppHistory, ev: AppHistoryNavigateEvent) => unknown) | null;
-    onnavigatesuccess?: ((this: AppHistory, ev: Event) => unknown) | null;
-    onnavigateerror?: ((this: AppHistory, ev: ErrorEvent) => unknown) | null;
-    oncurrentchange?: ((this: AppHistory, ev: AppHistoryCurrentChangeEvent) => unknown) | null;
+    // TODO, not implemented
+    // onnavigate?: ((this: AppHistory, ev: AppHistoryNavigateEvent) => unknown) | null;
+    // onnavigatesuccess?: ((this: AppHistory, ev: Event) => unknown) | null;
+    // onnavigateerror?: ((this: AppHistory, ev: ErrorEvent) => unknown) | null;
+    // oncurrentchange?: ((this: AppHistory, ev: AppHistoryCurrentChangeEvent) => unknown) | null;
 
-    addEventListener<K extends keyof AppHistoryEventMap>(type: K, listener: (this: AppHistory, ev: AppHistoryEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-    removeEventListener<K extends keyof AppHistoryEventMap>(type: K, listener: (this: AppHistory, ev: AppHistoryEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    addEventListener<K extends keyof AppHistoryEventMap>(type: K, listener: (ev: AppHistoryEventMap[K]) => unknown, options?: boolean | EventTargetAddListenerOptions): void;
+    addEventListener(type: string, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void;
+    removeEventListener<K extends keyof AppHistoryEventMap>(type: K, listener: (ev: AppHistoryEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventCallback, options?: boolean | EventListenerOptions): void;
 }
 
 export interface AppHistoryTransitionInit {
@@ -87,15 +94,15 @@ export interface AppHistoryEntry<S = unknown> extends EventTarget {
 
     getState<ST extends S>(): ST;
 
-    onnavigateto?: ((this: AppHistoryEntry, ev: Event) => unknown)|null;
-    onnavigatefrom?: ((this: AppHistoryEntry, ev: Event) => unknown)|null;
-    onfinish?: ((this: AppHistoryEntry, ev: Event) => unknown)|null;
-    ondispose?: ((this: AppHistoryEntry, ev: Event) => unknown)|null;
+    onnavigateto?: ((ev: Event) => unknown)|null;
+    onnavigatefrom?: ((ev: Event) => unknown)|null;
+    onfinish?: ((ev: Event) => unknown)|null;
+    ondispose?: ((ev: Event) => unknown)|null;
 
-    addEventListener<K extends keyof AppHistoryEntryEventMap>(type: K, listener: (this: AppHistory, ev: AppHistoryEntryEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
-    removeEventListener<K extends keyof AppHistoryEntryEventMap>(type: K, listener: (this: AppHistory, ev: AppHistoryEntryEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    addEventListener<K extends keyof AppHistoryEntryEventMap>(type: K, listener: EventCallback<AppHistoryEntryEventMap[K]>, options?: boolean | EventTargetAddListenerOptions): void;
+    addEventListener(type: string, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void;
+    removeEventListener<K extends keyof AppHistoryEntryEventMap>(type: K, listener: EventCallback, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventCallback, options?: boolean | EventListenerOptions): void;
 }
 
 export type AppHistoryNavigationType = 'reload'|'push'|'replace'|'traverse';

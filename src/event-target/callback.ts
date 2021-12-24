@@ -1,13 +1,12 @@
 import {Event} from "./event"
 import {EventDescriptor, EventDescriptorSymbol} from "./descriptor"
 
-export interface SyncEventCallback<TargetEvent = unknown, This = unknown> {
-    (this: This, event: TargetEvent): void
+export interface SyncEventCallback<TargetEvent = unknown> {
+    (event: TargetEvent): void
 }
 
-export interface EventCallback<TargetEvent extends Event = Event, This = unknown> {
-    <E extends TargetEvent>(this: This, event: E): Promise<void> | void
-    <E extends TargetEvent>(event: E): Promise<void> | void
+export interface EventCallback<TargetEvent extends Event = Event> {
+    <E extends TargetEvent>(event: E): Promise<unknown | void> | unknown | void
 }
 
 export function matchEventCallback(type: string | symbol, callback?: EventCallback | Function, options?: unknown): (descriptor: EventDescriptor) => boolean {

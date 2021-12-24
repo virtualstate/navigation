@@ -1,5 +1,6 @@
 import {EventCallback, EventTarget, EventTargetAddListenerOptions} from "./event-target";
 import {Event} from "./event";
+import {FetchEvent} from "../tests/examples/fetch";
 
 const globalEventTarget = new EventTarget();
 
@@ -7,8 +8,9 @@ export function dispatchEvent(event: Event) {
     return globalEventTarget.dispatchEvent(event);
 }
 
+export function addEventListener(type: "fetch", callback: EventCallback<FetchEvent>, options?: EventTargetAddListenerOptions): void
 export function addEventListener(type: string | symbol, callback: EventCallback, options?: EventTargetAddListenerOptions): void
-export function addEventListener(type: string | symbol, callback: EventCallback, options?: EventTargetAddListenerOptions): void {
+export function addEventListener(type: string | symbol, callback: Function, options?: EventTargetAddListenerOptions): void {
     return globalEventTarget.addEventListener(type, callback, options);
 }
 

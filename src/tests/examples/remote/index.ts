@@ -12,7 +12,7 @@ export async function remoteExample(appHistory: AppHistorySpec) {
 
     appHistory.addEventListener("currentchange", async () => {
         const { current } = appHistory;
-        if (!current) return;
+        if (typeof current?.url !== "string") return;
         await remote.navigate(
             current.url,
             {

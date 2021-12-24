@@ -2,9 +2,9 @@ import {Event, EventCallback, EventTarget, EventTargetAddListenerOptions} from "
 
 export class AppHistoryEventTarget<T> extends EventTarget {
 
-    addEventListener<K extends keyof T, This>(this: This, type: K, listener: (this: This, ev: T[K] extends Event ? T[K] : never) => unknown, options?: boolean | AddEventListenerOptions): void;
-    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventTargetAddListenerOptions): void;
-    addEventListener(type: string, listener: Function | EventListenerOrEventListenerObject, options?: boolean | EventTargetAddListenerOptions): void {
+    addEventListener<K extends keyof T>(type: K, listener: EventCallback<T[K] extends Event ? T[K] : never>, options?: boolean | EventTargetAddListenerOptions): void;
+    addEventListener(type: string | symbol, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void;
+    addEventListener(type: string | symbol, listener: Function | EventCallback, options?: boolean | EventTargetAddListenerOptions): void {
         assertEventCallback(listener);
         return super.addEventListener(type, listener, typeof options === "boolean" ? { once: options } : options);
         function assertEventCallback(listener: unknown): asserts listener is EventCallback {
@@ -12,9 +12,9 @@ export class AppHistoryEventTarget<T> extends EventTarget {
         }
     }
 
-    removeEventListener(type: string, listener: (...args: unknown[]) => unknown, options?: boolean | EventListenerOptions): void;
-    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
-    removeEventListener(type: string, listener: Function | EventListenerOrEventListenerObject): void {
+    removeEventListener(type: string | symbol, listener: EventCallback, options?: unknown): void
+    removeEventListener(type: string | symbol, callback: Function, options?: unknown): void;
+    removeEventListener(type: string | symbol, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void {
         assertEventCallback(listener);
         return super.removeEventListener(type, listener);
         function assertEventCallback(listener: unknown): asserts listener is EventCallback {

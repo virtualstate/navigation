@@ -6,10 +6,13 @@ import {
     AppHistoryTransition as AppHistoryTransitionPrototype,
     AppHistoryTransitionInit as AppHistoryTransitionInitPrototype
 } from "./spec/app-history";
+import {Deferred} from "./util/deferred";
+
+export const AppHistoryTransitionDeferred = Symbol.for("@virtualstate/app-history/transition/deferred");
 
 export interface AppHistoryTransitionInit extends AppHistoryTransitionInitPrototype {
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult;
-    then: PromiseLike<AppHistoryEntry>["then"];
+    [AppHistoryTransitionDeferred]: Deferred<AppHistoryEntry>;
 }
 
 export class AppHistoryTransition implements AppHistoryTransitionPrototype {
@@ -17,11 +20,11 @@ export class AppHistoryTransition implements AppHistoryTransitionPrototype {
     readonly from: AppHistoryEntry;
     readonly navigationType: AppHistoryNavigationType;
 
-    get then() {
-        return this.#options.then;
-    }
-
     #options: AppHistoryTransitionInit;
+
+    get [AppHistoryTransitionDeferred]() {
+        return this.#options[AppHistoryTransitionDeferred];
+    }
 
     constructor(init: AppHistoryTransitionInit) {
         this.#options = init;
