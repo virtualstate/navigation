@@ -8,11 +8,23 @@ import {
 } from "./spec/app-history";
 import {Deferred} from "./util/deferred";
 
+export const UpdateCurrent = Symbol.for("@virtualstate/app-history/updateCurrent");
+export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
+export const Unset = Symbol.for("@virtualstate/app-history/unset");
+
+export type InternalAppHistoryNavigationType =
+    | AppHistoryNavigationType
+    | typeof Rollback
+    | typeof UpdateCurrent
+    | typeof Unset;
+
 export const AppHistoryTransitionDeferred = Symbol.for("@virtualstate/app-history/transition/deferred");
+export const AppHistoryTransitionType = Symbol.for("@virtualstate/app-history/transition/type");
 
 export interface AppHistoryTransitionInit extends AppHistoryTransitionInitPrototype {
     rollback(options?: AppHistoryNavigationOptions): AppHistoryResult;
     [AppHistoryTransitionDeferred]: Deferred<AppHistoryEntry>;
+    [AppHistoryTransitionType]: InternalAppHistoryNavigationType;
 }
 
 export class AppHistoryTransition implements AppHistoryTransitionPrototype {
@@ -24,6 +36,10 @@ export class AppHistoryTransition implements AppHistoryTransitionPrototype {
 
     get [AppHistoryTransitionDeferred]() {
         return this.#options[AppHistoryTransitionDeferred];
+    }
+
+    get [AppHistoryTransitionType]() {
+        return this.#options[AppHistoryTransitionType];
     }
 
     constructor(init: AppHistoryTransitionInit) {

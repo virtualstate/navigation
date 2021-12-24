@@ -10,16 +10,7 @@ import {
     AppHistoryTransitionInit
 } from "./spec/app-history";
 import {AppHistoryEntry} from "./app-history-entry";
-
-export const UpdateCurrent = Symbol.for("@virtualstate/app-history/updateCurrent");
-export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
-export const Unset = Symbol.for("@virtualstate/app-history/unset");
-
-export type InternalAppHistoryNavigationType =
-    | AppHistoryNavigationType
-    | typeof Rollback
-    | typeof UpdateCurrent
-    | typeof Unset;
+import {InternalAppHistoryNavigationType, Rollback, UpdateCurrent} from "./app-history-transition";
 
 export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
     entries?: AppHistoryEntry[];

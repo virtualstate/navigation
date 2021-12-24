@@ -18,13 +18,15 @@ import {AppHistoryEventTarget} from "./app-history-event-target";
 import {AbortError, InvalidStateError} from "./app-history-errors";
 import {Event, EventTargetListeners} from "./event-target";
 import AbortController from "abort-controller";
-import {AppHistoryTransition, AppHistoryTransitionDeferred} from "./app-history-transition";
+import {
+    AppHistoryTransition,
+    AppHistoryTransitionDeferred,
+    AppHistoryTransitionType,
+    InternalAppHistoryNavigationType, Rollback, Unset, UpdateCurrent
+} from "./app-history-transition";
 import {
     createAppHistoryTransition,
-    InternalAppHistoryNavigationType,
     InternalAppHistoryNavigateOptions,
-    Rollback,
-    UpdateCurrent, Unset
 } from "./create-app-history-transition";
 import {deferred} from "./util/deferred";
 
@@ -167,6 +169,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
             rollback: this.#createRollback(this.#pushEntry),
             [AppHistoryTransitionDeferred]: transitionDeferred,
+            [AppHistoryTransitionType]: givenNavigationType,
         });
         const { resolve } = nextTransition[AppHistoryTransitionDeferred];
         entry.addEventListener("finish", resolve.bind(undefined, entry), { once: true });
