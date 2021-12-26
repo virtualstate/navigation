@@ -54,7 +54,7 @@ export interface AppHistoryTransitionInit extends AppHistoryTransitionInitProtot
     [AppHistoryTransitionInitialIndex]: number;
     [AppHistoryTransitionFinishedEntries]?: AppHistoryEntry[];
     [AppHistoryTransitionFinishedIndex]?: number;
-    [AppHistoryTransitionKnown]?: Iterable<AppHistoryEntry>;
+    [AppHistoryTransitionKnown]?: Iterable<EventTarget>;
     [AppHistoryTransitionEntry]: AppHistoryEntry;
     [AppHistoryTransitionParentEventTarget]: EventTarget;
 }
@@ -85,7 +85,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
     [AppHistoryTransitionFinishedEntries]?: AppHistoryEntry[];
     [AppHistoryTransitionFinishedIndex]?: number;
 
-    readonly [AppHistoryTransitionKnown] = new Set<AppHistoryEntry>();
+    readonly [AppHistoryTransitionKnown] = new Set<EventTarget>();
     readonly [AppHistoryTransitionEntry]: AppHistoryEntry;
 
     #promises = new Set<Promise<unknown>>()
@@ -134,7 +134,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
         );
     }
 
-    rollback(options?: AppHistoryNavigationOptions): AppHistoryResult {
+    rollback = (options?: AppHistoryNavigationOptions): AppHistoryResult => {
         if (this.#rolledBack) {
             // TODO
             throw new InvalidStateError("Rollback invoked multiple times: Please raise an issue at https://github.com/virtualstate/app-history with the use case where you want to use a rollback multiple times, this may have been unexpected behaviour");
@@ -142,13 +142,13 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
         return this.#options.rollback(options);
     }
 
-    [AppHistoryTransitionPromiseResolved](...promises: Promise<unknown>[]) {
+    [AppHistoryTransitionPromiseResolved] = (...promises: Promise<unknown>[]) => {
         for (const promise of promises) {
             this.#promises.delete(promise);
         }
     }
 
-    [AppHistoryTransitionPromiseRejected](promise: Promise<unknown>) {
+    [AppHistoryTransitionPromiseRejected] = (promise: Promise<unknown>) => {
         // TODO decide if this fast track should be removed
         this[AppHistoryTransitionDeferred].reject(promise);
     }
@@ -157,16 +157,17 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
         this.#promises.add(promise);
     }
 
-    async [AppHistoryTransitionWait]() {
-        if (!this.#promises.size) return;
+    [AppHistoryTransitionWait] = async (): Promise<AppHistoryEntry> => {
+        if (!this.#promises.size) return this[AppHistoryTransitionEntry];
         const captured = [...this.#promises];
         const results = await Promise.allSettled(captured);
         const rejected = results.filter(({ status }) => status === "rejected");
         if (rejected.length) {
-            // TODO
+            // TODO handle differently when there are failures, e.g. we could move navigateerror to here
             throw await Promise.all(captured);
         }
         this[AppHistoryTransitionPromiseResolved](...captured);
+        return this[AppHistoryTransitionEntry];
     }
 
     [AppHistoryTransitionAbort]() {
