@@ -6,7 +6,10 @@ export interface AbortError extends Error {
 }
 
 export class AbortError extends Error {
-    name = "AbortError" as const
+    constructor(message?: string) {
+        super(`AbortError${message ? `: ${message}` : ""}`);
+        this.name = "AbortError";
+    }
 }
 
 export function isAbortError(error: unknown): error is AbortError {
@@ -19,13 +22,12 @@ export interface InvalidStateError extends Error {
 }
 
 export class InvalidStateError extends Error {
-    name = "InvalidStateError" as const;
-
     constructor(message?: string) {
         super(`InvalidStateError${message ? `: ${message}` : ""}`);
+        this.name = "InvalidStateError";
     }
 }
 
 export function isInvalidStateError(error: unknown): error is InvalidStateError {
-    return error instanceof Error && error.name === "AbortError"
+    return error instanceof Error && error.name === "InvalidStateError"
 }

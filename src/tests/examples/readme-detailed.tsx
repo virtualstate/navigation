@@ -201,12 +201,12 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
             caption?: string;
         }
 
-        const { committed, finished } = await appHistory.navigate(`/photos/${photoId}`, { state: { } });
+        const { committed, finished } = appHistory.navigate(`/photos/${photoId}`, { state: { } });
 
         // In our app, the `navigate` handler will take care of actually showing the photo and updating the content area.
         const entry = await committed;
 
-        let updateCurrentEntry!: AppHistoryEntry;
+        let updateCurrentEntryCommitted!: Promise<AppHistoryEntry>;
         let updateCurrentEntryFinished!: Promise<AppHistoryEntry>;
 
         // When we navigate away from this photo, save any changes the user made.
@@ -219,7 +219,7 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
             });
             // Just ensure committed before we move on
             // We know that this will be applied at a minimum
-            updateCurrentEntry = await result?.committed;
+            updateCurrentEntryCommitted = result?.committed;
             updateCurrentEntryFinished = result?.finished;
         }, { once: true });
 
@@ -238,6 +238,9 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
 
         // Trigger navigatefrom
         await appHistory.navigate("/").finished;
+
+        assert(updateCurrentEntryCommitted);
+        const updateCurrentEntry = await updateCurrentEntryCommitted;
 
         assert(updateCurrentEntry);
         ok(updateCurrentEntry.getState());
@@ -354,17 +357,23 @@ export async function rollbackExample(appHistory: AppHistory) {
         toasts.push(message);
     }
 
-    let navigateErrorTransitionFinished;
+
+    // rollback is automatically triggered on error
+    // let navigateErrorTransitionFinished,
+    //     navigateErrorTransitionCommitted;
 
     appHistory.addEventListener("navigateerror", async e => {
         const transition = appHistory.transition;
+        // console.log("Navigate error inner", { transition });
         if (!transition) return;
 
         const attemptedURL = transition.from.url;
 
-        const { committed, finished } = transition.rollback();
-        navigateErrorTransitionFinished = finished;
-        await committed;
+        // rollback is automatically triggered on error
+        // const { committed, finished } = transition.rollback();
+        // navigateErrorTransitionCommitted = committed;
+        // navigateErrorTransitionFinished = finished;
+        // navigateErrorTransitionCommitted.then(() => );
 
         showErrorToast(`Could not load ${attemptedURL}: ${e.message}`);
     });
@@ -378,6 +387,7 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     ok(!toasts.length);
 
+    // Reject after committed using currentchange, or before committed using navigate
     appHistory.addEventListener("navigate",  (event) => {
         event.transitionWhile(Promise.reject(new Error(expectedError)));
     }, { once: true });
@@ -385,18 +395,35 @@ export async function rollbackExample(appHistory: AppHistory) {
     // This should fail
 
     const errorUrl = `/thisWillError/${Math.random()}`
-    const error = await appHistory.navigate(errorUrl).finished.catch((error) => error);
 
-    // console.log(error);
+    const { committed, finished } = await appHistory.navigate(errorUrl);
 
-    assert<Error>(error);
-    assert(error instanceof Error);
-    assert(error.message === expectedError);
+    const [committedError, finishedError] = await Promise.all([
+        committed.catch((error) => error),
+        finished.catch((error) => error)
+    ]);
+
+    // console.log({
+    //     committedError,
+    //     finishedError
+    // });
+
+    assert<Error>(committedError);
+    assert(committedError instanceof Error);
+    assert(committedError.message === expectedError);
+    assert<Error>(finishedError);
+    assert(finishedError instanceof Error);
+    assert(finishedError.message === expectedError);
 
     ok(appHistory.current);
 
-    ok(navigateErrorTransitionFinished);
-    await navigateErrorTransitionFinished;
+
+    // rollback is automatically triggered on error
+    // ok(navigateErrorTransitionCommitted);
+    // await navigateErrorTransitionCommitted;
+    //
+    // ok(navigateErrorTransitionFinished);
+    // await navigateErrorTransitionFinished;
 
     // console.log({ current: appHistory.current, expectedRollbackState, toasts });
 
@@ -444,12 +471,11 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     appHistory.addEventListener("navigate", e => {
         e.transitionWhile((async () => {
-            const result = await determineAction(e.destination);
+            const result = determineAction(e.destination);
 
             if (result.type === "redirect") {
                 redirectFinished = appHistory.transition?.rollback().finished
                     .then(() => appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished);
-                await redirectFinished;
                 // await appHistory.transition?.rollback().finished;
                 // await appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished;
             } else if (result.type === "disallow") {
@@ -479,9 +505,12 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     const { committed: redirectCommitted, finished: redirectFinishedErrored } = appHistory.navigate(targetUrl.toString());
     redirectFinishedErrored.catch(error => void error);
-    await redirectCommitted;
+    await redirectCommitted.catch(error => void error);
 
     const redirectError = await redirectFinishedErrored.catch(error => error);
+
+    // console.log({ redirectError });
+
     assert(redirectError);
     assert(redirectError instanceof Error);
 
@@ -501,7 +530,9 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     ok(disallowCount === 0);
 
-    const initialError = await appHistory.navigate(errorTargetUrl.toString()).finished.catch(error => error);
+    const { committed: disallowCommitted, finished: disallowFinished } = appHistory.navigate(errorTargetUrl.toString());
+    await disallowCommitted.catch(error => error);
+    const initialError = await disallowFinished.catch(error => error);
 
     assert<Error>(initialError);
     assert(initialError instanceof Error);
@@ -812,7 +843,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
 
     previous.addEventListener("click", async () => {
         const prevPhotoInHistory = photoNumberFromURL(appHistory.entries()[(appHistory.current?.index ?? -2) - 1]?.url);
-        console.log(prevPhotoInHistory)
+        // console.log(prevPhotoInHistory)
         // console.log({ prevPhotoInHistory, matching: appState.currentPhoto - 1, nav: `/photos/${appState.currentPhoto - 1}` });
         if (prevPhotoInHistory === appState.currentPhoto - 1) {
             // console.log("BACK!");
@@ -895,6 +926,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     ok(!next.disabled);
     ok(!previous.disabled);
 
+    // log: Updated window pathname to /photos/2
     await next.dispatchEvent({
         type: "click"
     });
@@ -910,6 +942,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     ok(next.disabled);
     ok(!previous.disabled);
 
+    // log: Updated window pathname to /photos/8
     await previous.dispatchEvent({
         type: "click"
     });
@@ -919,6 +952,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     // Utilised navigate
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
 
+    // log: Updated window pathname to /photos/7
     await previous.dispatchEvent({
         type: "click"
     });
@@ -927,9 +961,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     // Utilised navigate
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
 
+    // Updated window pathname to /photos/8
     await next.dispatchEvent({
         type: "click"
     });
+    // Updated window pathname to /photos/9
     await next.dispatchEvent({
         type: "click"
     });
@@ -938,8 +974,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
 
+    // This should be 8
     const finalFetchCount = fetchCount;
+    assert(finalFetchCount === 8);
 
+    // log: Updated window pathname to /photos/8
     await previous.dispatchEvent({
         type: "click"
     });
@@ -948,6 +987,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
 
+    // log: Updated window pathname to /photos/7
     await previous.dispatchEvent({
         type: "click"
     });
@@ -956,10 +996,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
 
-    console.log({ finalFetchCount, fetchCount });
+    // console.log({ finalFetchCount, fetchCount });
 
     ok(finalFetchCount === fetchCount);
 
+    // log: Updated window pathname to /photos/8
     await next.dispatchEvent({
         type: "click"
     });
@@ -969,6 +1010,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
     ok(finalFetchCount === fetchCount);
 
+    // log: Updated window pathname to /photos/9
     await next.dispatchEvent({
         type: "click"
     });

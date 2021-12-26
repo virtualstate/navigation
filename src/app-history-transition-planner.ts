@@ -1,8 +1,8 @@
 import {
     AppHistoryTransition,
-    AppHistoryTransitionEntry,
+    AppHistoryTransitionEntry, AppHistoryTransitionNavigationType,
     AppHistoryTransitionWait,
-    AppHistoryTransitionWhile
+    AppHistoryTransitionWhile, UpdateCurrent
 } from "./app-history-transition";
 import {AppHistory} from "./app-history";
 import {AppHistoryEntry} from "./app-history-entry";
@@ -12,6 +12,7 @@ import {InvalidStateError} from "./app-history-errors";
 export interface AppHistoryTransitionPlannerOptions {
     transition: AppHistoryTransition;
     currentPlan?: AppHistoryTransitionPlan;
+    finishedTransitions?: Set<AppHistoryTransition>;
     constructAppHistory(): AppHistory;
 }
 
@@ -34,6 +35,7 @@ export function plan(options: AppHistoryTransitionPlannerOptions) {
         transition,
         currentPlan,
         constructAppHistory,
+        finishedTransitions,
     } = options;
     const nextPlan: AppHistoryTransitionPlan = {
         [AppHistoryTransitionPlanAppHistorySymbol]: currentPlan?.[AppHistoryTransitionPlanAppHistorySymbol] ?? constructAppHistory(),
@@ -47,6 +49,17 @@ export function plan(options: AppHistoryTransitionPlannerOptions) {
         throw new InvalidStateError("Transition already found in plan, this may lead to unexpected behaviour, please raise an issue at ")
     }
     nextPlan.knownTransitions.add(transition);
-    nextPlan.transitions.push(transition);
+    if (transition[AppHistoryTransitionNavigationType] === "traverse") {
+        nextPlan.transitions.push(transition);
+    } else {
+        // Reset on non traversal
+        nextPlan.transitions =
+            nextPlan.transitions
+                .filter(transition => transition[AppHistoryTransitionNavigationType] === UpdateCurrent)
+                .concat([transition]);
+    }
+    nextPlan.transitions = nextPlan.transitions
+        // Remove finished transitions
+        .filter(transition => finishedTransitions?.has(transition));
     return nextPlan;
 }

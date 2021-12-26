@@ -3,6 +3,7 @@ import {
     AppHistory
 } from "../spec/app-history";
 import * as Examples from "./examples";
+import {getConfig} from "./config";
 
 export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
@@ -55,11 +56,23 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             try {
                 console.log("START ", test.name);
                 await test(localAppHistory);
+
+                // Let the events to finish logging
+                if (typeof process !== "undefined" && process.nextTick) {
+                    await new Promise<void>(process.nextTick);
+                } else {
+                    await new Promise<void>(queueMicrotask);
+                }
+                // await new Promise(resolve => setTimeout(resolve, 20));
+
                 console.log("PASS  ", test.name);
             } catch (error) {
                 if (error !== expectedError) {
                     caught = caught || error;
-                    console.error("ERROR", test.name, error)
+                    console.error("ERROR", test.name, error);
+                    if (!getConfig().FLAGS?.includes("CONTINUE_ON_ERROR")) {
+                        break;
+                    }
                 } else {
                     console.log("PASS  ", test.name);
                 }

@@ -43,6 +43,7 @@ export async function jsxExample(appHistory: AppHistory) {
                     )
                 )
             );
+            console.log({ body: body.innerHTML });
         }
     });
 
@@ -54,6 +55,8 @@ export async function jsxExample(appHistory: AppHistory) {
             caption: `Photo taken on the date ${new Date().toDateString()}`
         }
     }).finished;
+
+    // console.log(body.innerHTML);
 
     ok(body.innerHTML);
 
