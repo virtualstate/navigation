@@ -63,22 +63,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     #knownTransitions = new WeakSet();
 
     get canGoBack() {
-        if (this.#currentIndex === 0) {
-            return false;
-        }
-        const previous = this.#entries[this.#currentIndex - 1];
-        return !!previous;
+       return !!this.#entries[this.#currentIndex - 1];
     };
 
     get canGoForward() {
-        if (this.#currentIndex === -1) {
-            return false;
-        }
-        if (this.#currentIndex === this.#entries.length - 1) {
-            return false;
-        }
-        const next = this.#entries[this.#currentIndex + 1];
-        return !!next;
+        return !!this.#entries[this.#currentIndex + 1];
     };
 
     get current() {
@@ -168,11 +157,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     }
 
     #pushEntry = (navigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
+        /* c8 ignore start */
         if (entry === this.current) throw new InvalidStateError();
         const existingPosition = this.#entries.findIndex(existing => existing.id === entry.id);
         if (existingPosition > -1) {
             throw new InvalidStateError();
         }
+        /* c8 ignore end */
         return this.#commitTransition(navigationType, entry, transition, options);
     };
 
@@ -252,10 +243,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
     #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions): Promise<AppHistoryEntry> => {
         // console.log({ givenNavigationType, transition });
-        if (!transition) {
-            throw new InvalidStateError("Expected transition");
-        }
-
         let navigationType = givenNavigationType;
 
         const performance = await getPerformance();
@@ -282,8 +269,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                     type: "currentchange"
                 });
                 return entry;
-            } else if (!entry) {
-                throw new InvalidStateError();
             }
 
             const transitionResult = await createAppHistoryTransition({
@@ -331,7 +316,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const dispose = async () => this.#dispose();
 
         function *transitionSteps(transitionResult: AppHistoryTransitionResult): Iterable<Promise<unknown>> {
-
             const microtask = new Promise<void>(queueMicrotask);
             const {
                 known,
@@ -340,10 +324,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 currentChange,
                 navigate,
             } = transitionResult;
-
-            if (transition.signal.aborted) {
-                return;
-            }
 
             if (typeof navigationType === "string" || navigationType === Rollback) {
                 yield current?.dispatchEvent({

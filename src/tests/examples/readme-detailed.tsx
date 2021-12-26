@@ -26,9 +26,16 @@ export async function initialNavigateThenBack(appHistory: AppHistory) {
     ok(finishedEntry === appHistory.current);
     ok(committedEntry === finishedEntry);
 
-    if (appHistory.canGoBack) {
-        await appHistory.back();
+    let caught;
+    if (!appHistory.canGoBack) {
+        try {
+            await appHistory.back();
+        } catch (error) {
+            // No initial back
+            caught = error;
+        }
     }
+    assert(caught);
 }
 
 export async function routeHandlerExample(appHistory: AppHistory) {
