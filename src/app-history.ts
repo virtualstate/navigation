@@ -168,7 +168,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     };
 
     #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry,  transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
-        const nextTransition: AppHistoryTransition | undefined = transition ?? new AppHistoryTransition({
+        const nextTransition: AppHistoryTransition = transition ?? new AppHistoryTransition({
             from: entry,
             navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
             rollback: (options) => {
@@ -205,13 +205,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         this.#knownTransitions.add(transition);
     }
 
-    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions): Promise<AppHistoryEntry> => {
+    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         try {
             this.#transitionInProgressCount += 1;
             if (this.#transitionInProgressCount > 1 && !(givenNavigationType === Rollback || givenNavigationType === UpdateCurrent)) {
                 throw new InvalidStateError("Unexpected multiple transitions");
             }
-            return await this.#transition(givenNavigationType, entry, transition, options);
+            await this.#transition(givenNavigationType, entry, transition, options);
         } finally {
             this.#transitionInProgressCount -= 1;
         }
@@ -241,7 +241,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#pushEntry(resolvedNavigationType, resolvedEntry, undefined, nextOptions);
     }
 
-    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions): Promise<AppHistoryEntry> => {
+    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         // console.log({ givenNavigationType, transition });
         let navigationType = givenNavigationType;
 
@@ -327,10 +327,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             } = transitionResult;
 
             if (typeof navigationType === "string" || navigationType === Rollback) {
-                yield current?.dispatchEvent({
+                const promise = current?.dispatchEvent({
                     type: "navigatefrom",
                     transitionWhile: transition[AppHistoryTransitionWhile],
                 });
+                if (promise) yield promise;
             }
 
             if (typeof navigationType === "string") {
