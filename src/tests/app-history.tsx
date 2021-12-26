@@ -37,8 +37,19 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const localAppHistory = createAppHistory();
             assertAppHistoryLike(localAppHistory);
 
+
+
+            localAppHistory.addEventListener("navigate", (event) => {
+                if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
+                    typeof window.appHistory === "undefined" ||
+                    window.appHistory !== localAppHistory
+                )) {
+                    event.transitionWhile(Promise.resolve());
+                }
+            })
+
             // Add as very first currentchange listener, to allow location change to happen
-            localAppHistory.addEventListener("currentchange", () => {
+            localAppHistory.addEventListener("currentchange", (event) => {
                 const { current } = localAppHistory;
                 if (!current) return;
                 const state = current.getState<{ title?: string }>() ?? {};
