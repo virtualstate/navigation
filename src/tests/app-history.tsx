@@ -4,6 +4,7 @@ import {
 } from "../spec/app-history";
 import * as Examples from "./examples";
 import {getConfig} from "./config";
+import {isWindowAppHistory} from "./util";
 
 export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
@@ -37,13 +38,9 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const localAppHistory = createAppHistory();
             assertAppHistoryLike(localAppHistory);
 
-
-
             localAppHistory.addEventListener("navigate", (event) => {
-                if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
-                    typeof window.appHistory === "undefined" ||
-                    window.appHistory !== localAppHistory
-                )) {
+                if (isWindowAppHistory(localAppHistory)) {
+                    // Add a default navigation to disable network features
                     event.transitionWhile(Promise.resolve());
                 }
             })
@@ -54,10 +51,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
                 if (!current) return;
                 const state = current.getState<{ title?: string }>() ?? {};
                 const { pathname } = new URL(current.url ?? "/", "https://example.com");
-                if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
-                    typeof window.appHistory === "undefined" ||
-                    window.appHistory !== localAppHistory
-                )) {
+                if (typeof window !== "undefined" && typeof window.history !== "undefined" && !isWindowAppHistory(localAppHistory)) {
                     window.history.pushState(state, state.title ?? "", pathname);
                 }
                 console.log(`Updated window pathname to ${pathname}`);

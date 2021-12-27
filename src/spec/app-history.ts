@@ -165,7 +165,7 @@ export interface AppHistoryNavigateEventInit extends EventInit {
 
 export interface AppHistoryDestination {
     readonly url: string;
-    readonly key: string;
+    readonly key?: string;
     readonly id?: string ;
     readonly index: number;
     readonly sameDocument: boolean;

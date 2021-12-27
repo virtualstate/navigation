@@ -32,8 +32,10 @@ export async function jsxExample(appHistory: AppHistory) {
 
     const body: EventTarget & { innerHTML?: string } = new EventTarget();
 
+    let bodyUpdated!: Promise<void>;
+
     appHistory.addEventListener("currentchange", async (event) => {
-        await (event.transitionWhile ?? (promise => promise))(handler());
+        await (event.transitionWhile ?? (promise => promise))(bodyUpdated = handler());
         async function handler() {
             body.innerHTML = await new Promise(
                 (resolve, reject) => (
@@ -57,11 +59,15 @@ export async function jsxExample(appHistory: AppHistory) {
     }).finished;
 
     // console.log(body.innerHTML);
+    ok(bodyUpdated);
+    await bodyUpdated;
 
     ok(body.innerHTML);
 
     const updatedCaption = `Photo ${Math.random()}`;
 
+    ok(bodyUpdated);
+    await bodyUpdated;
     ok(!body.innerHTML?.includes(updatedCaption));
 
     await appHistory.updateCurrent({
@@ -73,6 +79,8 @@ export async function jsxExample(appHistory: AppHistory) {
         // Not all implementations have support for async resolution
         ?.finished;
 
+    ok(bodyUpdated);
+    await bodyUpdated;
     // This test will fail if async resolution is not supported.
     ok(body.innerHTML?.includes(updatedCaption));
 
