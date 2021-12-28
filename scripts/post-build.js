@@ -4,8 +4,18 @@ import { rollup } from "rollup";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import ignore from "rollup-plugin-ignore";
 import babel from "rollup-plugin-babel";
+import { dirname, resolve } from "path";
+
+const { pathname } = new URL(import.meta.url);
+const cwd = resolve(dirname(pathname), "..")
 
 {
+
+
+  // /Volumes/Extreme/Users/fabian/src/virtualstate/esnext/tests/app-history.playwright.wpt.js
+  // /Volumes/Extreme/Users/fabian/src/virtualstate/app-history/esnext/tests/app-history.playwright.wpt.js
+
+  console.log({ cwd, path: `/Volumes/Extreme/Users/fabian/src/virtualstate/app-history/esnext/tests/app-history.playwright.wpt.js` === `${cwd}/esnext/tests/app-history.playwright.wpt.js`, p: `${cwd}/esnext/tests/app-history.playwright.wpt.js`})
 
   const bundle = await rollup({
     input: "./esnext/tests/index.js",
@@ -15,8 +25,15 @@ import babel from "rollup-plugin-babel";
         "fs",
         "path",
         "uuid",
+        "cheerio",
         "@virtualstate/app-history",
-        "@virtualstate/app-history-imported"
+        "@virtualstate/app-history-imported",
+        `${cwd}/esnext/tests/app-history.playwright.js`,
+        `${cwd}/esnext/tests/app-history.playwright.wpt.js`,
+        `${cwd}/esnext/tests/dependencies-input.js`,
+        `${cwd}/esnext/tests/dependencies.js`,
+        "./app-history.playwright.js",
+        "./app-history.playwright.wpt.js",
       ]),
       nodeResolve()
     ],
@@ -47,7 +64,13 @@ import babel from "rollup-plugin-babel";
     plugins: [
       ignore([
         "uuid",
-        "@virtualstate/app-history"
+        "@virtualstate/app-history",
+        `${cwd}/esnext/tests/app-history.playwright.js`,
+        `${cwd}/esnext/tests/app-history.playwright.wpt.js`,
+        `${cwd}/esnext/tests/dependencies-input.js`,
+        `${cwd}/esnext/tests/dependencies.js`,
+        "./app-history.playwright.js",
+        "./app-history.playwright.wpt.js",
       ]),
       nodeResolve()
     ],
