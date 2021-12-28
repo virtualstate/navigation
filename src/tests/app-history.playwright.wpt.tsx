@@ -64,6 +64,8 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         linesTotal = 0,
         linesPass = 0
 
+    let result = {};
+
     for (const url of urls) {
         total += 1;
         const context = await browser.newContext({});
@@ -75,8 +77,6 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             const $ = Cheerio.load(html);
             const lines = $("script:not([src])").html()?.length ?? 0;
             linesTotal += lines;
-
-
             await run(browserName, browser, page, url);
             console.log(`PASS  ${url} : ${lines} Lines`);
             pass += 1;
@@ -87,11 +87,19 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         }
         await page.close();
 
-        console.log({ total, pass, fail, percent: `${Math.round(pass / total * 100)}%`, linesTotal, linesPass, percentLines: `${Math.round(linesPass / linesTotal * 100)}%` })
+        result = {
+            total,
+            pass,
+            fail,
+            percent: Math.round(pass / total * 100 * 100) / 100,
+            linesTotal,
+            linesPass,
+            percentLines: Math.round(linesPass / linesTotal * 100 * 100) / 100
+        };
+        console.log(result);
     }
 
-    console.log({ total, pass, fail, percent: `${Math.round(pass / total * 100)}%`, linesTotal, linesPass, percentLines: `${Math.round(linesPass / linesTotal * 100)}%` })
-
+    await fs.promises.writeFile("./coverage/wpt.results.json", JSON.stringify(result));
     await browser.close();
 
     console.log("Playwright tests complete");
