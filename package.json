@@ -90,7 +90,7 @@
   },
   "scripts": {
     "build": "rm -rf esnext && tsc",
-    "postbuild": "node scripts/post-build.js",
+    "postbuild": "mkdir -p coverage && node scripts/post-build.js",
     "generate": "yarn build && node esnext/generate.js",
     "prepublishOnly": "npm run build",
     "test": "yarn build && node --enable-source-maps esnext/tests/index.js",
