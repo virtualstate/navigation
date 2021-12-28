@@ -1,4 +1,4 @@
-name: test-actions
+name: web-platform-test-actions
 on: [push, pull_request]
 
 jobs:
