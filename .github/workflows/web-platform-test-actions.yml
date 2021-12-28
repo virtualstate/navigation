@@ -23,6 +23,4 @@ jobs:
           yarn add --dev https://github.com/web-platform-tests/wpt.git
           npx playwright install-deps
       - run: yarn build
-      # yarn coverage === c8 + yarn test
-      - run: yarn coverage
-      - run: yarn test:deno
+      - run: yarn test
