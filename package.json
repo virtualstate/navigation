@@ -25,7 +25,9 @@
     "./tests/index.js": "./esnext/tests/index.js",
     "./tests/app-history.js": "./esnext/tests/app-history.js",
     "./tests/app-history.class.js": "./esnext/tests/app-history.class.js",
-    "./tests/app-history.imported.js": "./esnext/tests/app-history.imported.js"
+    "./tests/app-history.imported.js": "./esnext/tests/app-history.imported.js",
+    "./esnext/polyfill": "./esnext/polyfill.js",
+    "./polyfill": "./esnext/polyfill.js"
   },
   "repository": {
     "type": "git",
@@ -67,6 +69,7 @@
     "@virtualstate/x": "^2.46.0",
     "c8": "^7.10.0",
     "chance": "^1.1.8",
+    "cheerio": "^1.0.0-rc.10",
     "core-js": "^3.17.2",
     "dom-lite": "^20.2.0",
     "filehound": "^1.17.4",

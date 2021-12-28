@@ -45,6 +45,8 @@ function isFunctionEventCallback(fn: Function): fn is EventCallback {
 
 export class EventTarget implements EventTarget {
 
+    [key: string]: unknown;
+
     #listeners: EventDescriptor[] = [];
     #ignoreExternalListener = new WeakSet<EventDescriptor>();
 
@@ -99,7 +101,14 @@ export class EventTarget implements EventTarget {
         const listeners = (this[EventTargetListeners] ?? this.#listeners)
             .filter(descriptor => descriptor.type === event.type || descriptor.type === "*")
             .filter(descriptor => !this.#ignoreExternalListener.has(descriptor));
-
+        const assignedListener = typeof event.type === "string" ? this[`on${event.type}`] : undefined;
+        if (typeof assignedListener === "function" && isFunctionEventCallback(assignedListener)) {
+            listeners.push({
+                callback: assignedListener,
+                type: event.type,
+                [EventDescriptorSymbol]: true
+            });
+        }
         // Don't even dispatch an aborted event
         if (isSignalEvent(event) && event.signal.aborted) {
             throw new AbortError();

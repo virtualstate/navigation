@@ -121,8 +121,8 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             return route.fulfill({
                 body: contents,
                 headers: {
-                    'Content-Type': 'application/javascript',
-                    'Access-Control-Allow-Origin': '*'
+                    "Content-Type": "application/javascript",
+                    "Access-Control-Allow-Origin": "*"
                 }
             });
         }

@@ -5,37 +5,71 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import ignore from "rollup-plugin-ignore";
 import babel from "rollup-plugin-babel";
 
-const bundle = await rollup({
-  input: "./esnext/tests/index.js",
-  plugins: [
-    ignore([
-      "playwright",
-      "fs",
-      "path",
-      "uuid",
-      "@virtualstate/app-history",
-      "@virtualstate/app-history-imported"
-    ]),
-    nodeResolve()
-  ],
-  inlineDynamicImports: true,
-  treeshake: {
-    preset: "smallest",
-    moduleSideEffects: "no-external"
-  }
-});
-await bundle.write({
-  sourcemap: true,
-  output: {
-    file: "./esnext/tests/rollup.js",
-  },
-  inlineDynamicImports: true,
-  format: "cjs",
-  interop: "auto",
-  globals: {
-    "esnext/tests/app-history.playwright.js": "globalThis"
-  }
-});
+{
+
+  const bundle = await rollup({
+    input: "./esnext/tests/index.js",
+    plugins: [
+      ignore([
+        "playwright",
+        "fs",
+        "path",
+        "uuid",
+        "@virtualstate/app-history",
+        "@virtualstate/app-history-imported"
+      ]),
+      nodeResolve()
+    ],
+    inlineDynamicImports: true,
+    treeshake: {
+      preset: "smallest",
+      moduleSideEffects: "no-external"
+    }
+  });
+  await bundle.write({
+    sourcemap: true,
+    output: {
+      file: "./esnext/tests/rollup.js",
+    },
+    inlineDynamicImports: true,
+    format: "cjs",
+    interop: "auto",
+    globals: {
+      "esnext/tests/app-history.playwright.js": "globalThis"
+    }
+  });
+}
+
+{
+
+  const bundle = await rollup({
+    input: "./esnext/polyfill.js",
+    plugins: [
+      ignore([
+        "uuid",
+        "@virtualstate/app-history"
+      ]),
+      nodeResolve()
+    ],
+    inlineDynamicImports: true,
+    treeshake: {
+      preset: "smallest",
+      moduleSideEffects: "no-external"
+    }
+  });
+  await bundle.write({
+    sourcemap: true,
+    output: {
+      file: "./esnext/polyfill-rollup.js",
+    },
+    inlineDynamicImports: true,
+    format: "cjs",
+    interop: "auto",
+    globals: {
+
+    }
+  });
+}
 
 if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
 

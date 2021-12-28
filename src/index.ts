@@ -1,4 +1,5 @@
-import "./import-types";
-
 export * from "./app-history";
 export * from "./spec/app-history";
+export {
+    AppHistoryTransitionFinally
+} from "./app-history-transition"
