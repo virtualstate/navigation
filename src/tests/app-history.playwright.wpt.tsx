@@ -8,17 +8,23 @@ import {getConfig} from "./config";
 import * as Cheerio from "cheerio";
 import {DependenciesHTML} from "./dependencies";
 import {Browser, Page} from "playwright";
+import {v4} from "uuid";
+import v8ToIstanbul from "v8-to-istanbul";
 
 const namespacePath = "/node_modules/wpt/app-history";
 const buildPath = "/esnext";
 const resourcesInput = "/resources";
-const resourcesTarget = "/node_modules/wpt/resources"
+const resourcesTarget = "/node_modules/wpt/resources";
+const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
+
+console.log({ testWrapperFnName });
 
 const DEBUG = false;
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
 ] as const
+
 
 // webkit and firefox do not support importmap
 for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filter(([, browser]) => browser)) {
@@ -41,8 +47,6 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
 
 
     const urls = [
-        "/navigate-event/transitionWhile-resolve.html",
-        "/navigate-event/transitionWhile-reject.html",
         ...(await Promise.all(
             types.map(async type => {
                 return (
@@ -53,16 +57,20 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             })
         ))
             .flatMap(value => value)
-    ]
+    ];
 
-    console.log(urls);
+    console.log("STARTING:");
+    urls.forEach(url => console.log(`  - ${url}`));
 
     let total = 0,
         pass = 0,
         fail = 0,
         // TODO use coverage trace to ensure this scripts lines are fully executed
         linesTotal = 0,
-        linesPass = 0
+        linesPass = 0,
+        linesPassCovered = 0,
+        urlsPass = [],
+        urlsFailed = [];
 
     let result = {};
 
@@ -75,15 +83,43 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
 
             const html = await fs.promises.readFile(`.${namespacePath}/${url}`, 'utf-8');
             const $ = Cheerio.load(html);
-            const lines = $("script:not([src])").html()?.length ?? 0;
+            const lines = $("script:not([src])").html()?.split('\n').length ?? 0;
             linesTotal += lines;
+
+            await page.coverage.startJSCoverage();
+
             await run(browserName, browser, page, url);
+
+            const coverage = await page.coverage.stopJSCoverage();
+
+            const matchingFnEntry = coverage.find(entry => entry.functions.find(fn => fn.functionName === testWrapperFnName));
+            const matchingFn = matchingFnEntry.functions.find(fn => fn.functionName === testWrapperFnName);
+
+            const code = matchingFn.ranges
+                .filter(range => range.count > 0)
+                .map(range => matchingFnEntry.source.slice(range.startOffset, range.endOffset))
+                .join('');
+
+            // Minus 2 because this code includes the function definition, start bracket, and end bracket
+            const coveredLines = code.split('\n').length - 2;
+
+            console.log(code, code.split('\n').length);
+
+
+            // console.log(JSON.stringify(coverage));
+
+            console.log(matchingFn.ranges);
+
             console.log(`PASS  ${url} : ${lines} Lines`);
+            urlsPass.push(url);
             pass += 1;
             linesPass += lines;
+            linesPassCovered += coveredLines;
+
         } catch (error) {
             console.log(`FAIL  ${url}`, error);
             fail += 1;
+            urlsFailed.push(url);
         }
         await page.close();
 
@@ -94,7 +130,10 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             percent: Math.round(pass / total * 100 * 100) / 100,
             linesTotal,
             linesPass,
-            percentLines: Math.round(linesPass / linesTotal * 100 * 100) / 100
+            linesPassCovered,
+            percentLines: Math.round(linesPass / linesTotal * 100 * 100) / 100,
+            percentLinesCovered: Math.round(linesPassCovered / linesTotal * 100 * 100) / 100,
+            percentLinesCoveredMatched: Math.round(linesPassCovered / linesPass * 100 * 100) / 100
         };
         console.log(result);
     }
@@ -103,6 +142,11 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
     await browser.close();
 
     console.log("Playwright tests complete");
+
+    console.log("PASSED:");
+    urlsPass.forEach(url => console.log(`  - ${url}`));
+    console.log("\nFAILED:");
+    urlsFailed.forEach(url => console.log(`  - ${url}`));
 
 }
 
@@ -238,7 +282,12 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 
                 console.log("Starting tests");
                 
-                ${script.html() ? script.html().replace("null", "undefined") : "globalThis.window.testsFailed()"};
+                async function ${testWrapperFnName}() {
+                  ${script.html() ? script.html().replace("null", "undefined") : "globalThis.window.testsFailed()"}
+                }
+                
+                await ${testWrapperFnName}();
+                
                 `;
 
                 script.html(scriptText);
