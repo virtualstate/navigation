@@ -9,7 +9,6 @@ import * as Cheerio from "cheerio";
 import {DependenciesHTML} from "./dependencies";
 import {Browser, Page} from "playwright";
 import {v4} from "uuid";
-import v8ToIstanbul from "v8-to-istanbul";
 
 const namespacePath = "/node_modules/wpt/app-history";
 const buildPath = "/esnext";
@@ -20,6 +19,7 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 console.log({ testWrapperFnName });
 
 const DEBUG = false;
+const AT_A_TIME = 20;
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
@@ -69,12 +69,45 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         linesTotal = 0,
         linesPass = 0,
         linesPassCovered = 0,
-        urlsPass = [],
-        urlsFailed = [];
+        urlsPass: string[] = [],
+        urlsFailed: string[] = [];
 
     let result = {};
 
-    for (const url of urls) {
+    while (urls.length) {
+        await Promise.all(
+            Array.from({ length: AT_A_TIME }, () => urls.shift())
+                .filter(Boolean)
+                .map(async url => {
+                    await withUrl(url);
+                    result = {
+                        total,
+                        pass,
+                        fail,
+                        percent: Math.round(pass / total * 100 * 100) / 100,
+                        linesTotal,
+                        linesPass,
+                        linesPassCovered,
+                        percentLines: Math.round(linesPass / linesTotal * 100 * 100) / 100,
+                        percentLinesCovered: Math.round(linesPassCovered / linesTotal * 100 * 100) / 100,
+                        percentLinesCoveredMatched: Math.round(linesPassCovered / linesPass * 100 * 100) / 100
+                    };
+                    console.log(result);
+                })
+        )
+    }
+
+    await fs.promises.writeFile("./coverage/wpt.results.json", JSON.stringify(result));
+    await browser.close();
+
+    console.log("Playwright tests complete");
+
+    console.log("PASSED:");
+    urlsPass.forEach(url => console.log(`  - ${url}`));
+    console.log("\nFAILED:");
+    urlsFailed.forEach(url => console.log(`  - ${url}`));
+
+    async function withUrl(url: string) {
         total += 1;
         const context = await browser.newContext({});
         const page = await context.newPage();
@@ -103,7 +136,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             // Minus 2 because this code includes the function definition, start bracket, and end bracket
             const coveredLines = code.split('\n').length - 2;
 
-            console.log(code, code.split('\n').length);
+            // console.log(code.split('\n').length);
 
 
             // console.log(JSON.stringify(coverage));
@@ -122,31 +155,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             urlsFailed.push(url);
         }
         await page.close();
-
-        result = {
-            total,
-            pass,
-            fail,
-            percent: Math.round(pass / total * 100 * 100) / 100,
-            linesTotal,
-            linesPass,
-            linesPassCovered,
-            percentLines: Math.round(linesPass / linesTotal * 100 * 100) / 100,
-            percentLinesCovered: Math.round(linesPassCovered / linesTotal * 100 * 100) / 100,
-            percentLinesCoveredMatched: Math.round(linesPassCovered / linesPass * 100 * 100) / 100
-        };
-        console.log(result);
     }
-
-    await fs.promises.writeFile("./coverage/wpt.results.json", JSON.stringify(result));
-    await browser.close();
-
-    console.log("Playwright tests complete");
-
-    console.log("PASSED:");
-    urlsPass.forEach(url => console.log(`  - ${url}`));
-    console.log("\nFAILED:");
-    urlsFailed.forEach(url => console.log(`  - ${url}`));
 
 }
 
@@ -229,16 +238,21 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 await initialNavigationFinally;
                 
                 add_completion_callback((tests, testStatus) => {
-                    console.log("Complete", tests, testStatus)
+                    // testStatus.status === testStatus.OK
+                    const allPass = !!tests.length && tests.every(test => test.status === testStatus.OK);
+                
+                    console.log("Complete", allPass ? " PASS " : " FAIL ", testStatus.status === testStatus.OK ? " TEST STATUS OK " : " TEST STATUS NOT OK")
+                    tests.forEach(test => console.log("  ", test.status === testStatus.OK ? "PASS  " : "FAIL ", test.name, test.message));
                     
                     try {
-                     if (testStatus.status === testStatus.OK) {
-                      globalThis.window.testsComplete();
-                    } else {
-                      globalThis.window.testsFailed();
-                    }
+                      if (allPass) {
+                        globalThis.window.testsComplete();
+                      } else {
+                        globalThis.window.testsFailed();
+                      }
                     } catch (e) {
                        console.log(e);
+                        globalThis.window.testsFailed(e);
                     }
                     
                     
@@ -248,7 +262,6 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 
                 const window = {
                   set onload(value) {
-                  console.log("onload set");
                     value();
                   },
                   appHistory
@@ -280,7 +293,7 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                     }
                 }
                 
-                console.log("Starting tests");
+                ${DEBUG ? "console.log(\"Starting tests\");" : ""}
                 
                 async function ${testWrapperFnName}() {
                   ${script.html() ? script.html().replace("null", "undefined") : "globalThis.window.testsFailed()"}
