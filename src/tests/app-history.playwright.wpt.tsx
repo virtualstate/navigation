@@ -9,7 +9,6 @@ import * as Cheerio from "cheerio";
 import {DependenciesHTML} from "./dependencies";
 import {Browser, Page} from "playwright";
 import {v4} from "uuid";
-import v8ToIstanbul from "v8-to-istanbul";
 
 const namespacePath = "/node_modules/wpt/app-history";
 const buildPath = "/esnext";
@@ -19,7 +18,8 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 
 console.log({ testWrapperFnName });
 
-const DEBUG = false;
+const DEBUG = true;
+const RUN_AT_ONCE = DEBUG ? 1 : 4;
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
@@ -45,8 +45,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
 
     const types = (await fs.promises.readdir(`.${namespacePath}`)).filter(value => !value.includes("."));
 
-
-    const urls = [
+    let urls = [
         ...(await Promise.all(
             types.map(async type => {
                 return (
@@ -59,6 +58,11 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             .flatMap(value => value)
     ];
 
+    if (DEBUG) {
+        // urls = urls.slice(0, 3);
+        urls = urls.filter(url => url.includes("transitionWhile"));
+    }
+
     console.log("STARTING:");
     urls.forEach(url => console.log(`  - ${url}`));
 
@@ -69,12 +73,44 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         linesTotal = 0,
         linesPass = 0,
         linesPassCovered = 0,
-        urlsPass = [],
-        urlsFailed = [];
+        urlsPass: string[] = [],
+        urlsFailed: string[] = [];
 
     let result = {};
 
-    for (const url of urls) {
+    while (urls.length) {
+        await Promise.all(
+            Array.from({ length: RUN_AT_ONCE }, () => urls.shift())
+                .map(async url => {
+                    await withUrl(url);
+                    result = {
+                        total,
+                        pass,
+                        fail,
+                        percent: Math.round(pass / total * 100 * 100) / 100,
+                        linesTotal,
+                        linesPass,
+                        linesPassCovered,
+                        percentLines: Math.round(linesPass / linesTotal * 100 * 100) / 100,
+                        percentLinesCovered: Math.round(linesPassCovered / linesTotal * 100 * 100) / 100,
+                        percentLinesCoveredMatched: Math.round(linesPassCovered / linesPass * 100 * 100) / 100
+                    };
+                    console.log(result);
+                })
+        );
+    }
+
+    await fs.promises.writeFile("./coverage/wpt.results.json", JSON.stringify(result));
+    await browser.close();
+
+    console.log("Playwright tests complete");
+
+    console.log("PASSED:");
+    urlsPass.forEach(url => console.log(`  - ${url}`));
+    console.log("\nFAILED:");
+    urlsFailed.forEach(url => console.log(`  - ${url}`));
+
+    async function withUrl(url: string) {
         total += 1;
         const context = await browser.newContext({});
         const page = await context.newPage();
@@ -103,12 +139,10 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             // Minus 2 because this code includes the function definition, start bracket, and end bracket
             const coveredLines = code.split('\n').length - 2;
 
-            console.log(code, code.split('\n').length);
-
-
+            // console.log(code.split('\n').length);
             // console.log(JSON.stringify(coverage));
 
-            console.log(matchingFn.ranges);
+            // console.log(matchingFn.ranges);
 
             console.log(`PASS  ${url} : ${lines} Lines`);
             urlsPass.push(url);
@@ -122,32 +156,8 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             urlsFailed.push(url);
         }
         await page.close();
-
-        result = {
-            total,
-            pass,
-            fail,
-            percent: Math.round(pass / total * 100 * 100) / 100,
-            linesTotal,
-            linesPass,
-            linesPassCovered,
-            percentLines: Math.round(linesPass / linesTotal * 100 * 100) / 100,
-            percentLinesCovered: Math.round(linesPassCovered / linesTotal * 100 * 100) / 100,
-            percentLinesCoveredMatched: Math.round(linesPassCovered / linesPass * 100 * 100) / 100
-        };
-        console.log(result);
+        await context.close();
     }
-
-    await fs.promises.writeFile("./coverage/wpt.results.json", JSON.stringify(result));
-    await browser.close();
-
-    console.log("Playwright tests complete");
-
-    console.log("PASSED:");
-    urlsPass.forEach(url => console.log(`  - ${url}`));
-    console.log("\nFAILED:");
-    urlsFailed.forEach(url => console.log(`  - ${url}`));
-
 }
 
 console.log(`PASS assertAppHistory:playwright:new AppHistory`);
@@ -167,7 +177,12 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
         return reject(reason);
     });
 
-    page.on('console', console.log);
+    if (DEBUG) {
+        page.on('console', console.log);
+    } else {
+        // you can comment out this one :)
+        page.on('console', console.log);
+    }
     page.on('pageerror', reject);
 
     await page.route('**/*', async (route, request) => {
@@ -201,100 +216,123 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
             if (importTarget.endsWith(".html")) {
                 contentType = "text/html";
 
-                const $ = Cheerio.load(contents);
-
-                // Set all scripts as module
-                $("script").attr("type", "module");
-
-                const script = $("script:not([src])");
+                const targetUrl = `http://localhost:3000/app-history${url}.js?exportAs=${testWrapperFnName}&globals=appHistory,window,i,iframe,location,history`;
 
                 const scriptText = `
-                
-                globalThis.rv = [];
-                
-                const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
-                
-                const appHistory = new AppHistory();
-                
-                globalThis.appHistory = appHistory;
-                
-                appHistory.addEventListener("navigateerror", console.error);
-                
-                // This allows us to wait for the navigation to fully settle before starting 
-                const initialNavigationFinally = new Promise((resolve) => appHistory.addEventListener(AppHistoryTransitionFinally, resolve, { once: true }));
-                
-                // Initialise first navigation to emulate a page loaded
-                await appHistory.navigate("/").finished;
-                
-                await initialNavigationFinally;
-                
-                add_completion_callback((tests, testStatus) => {
-                    console.log("Complete", tests, testStatus)
-                    
-                    try {
-                     if (testStatus.status === testStatus.OK) {
-                      globalThis.window.testsComplete();
-                    } else {
-                      globalThis.window.testsFailed();
-                    }
-                    } catch (e) {
-                       console.log(e);
-                    }
-                    
-                    
-                });
-                
-                const Event = CustomEvent;
-                
-                const window = {
-                  set onload(value) {
-                  console.log("onload set");
-                    value();
-                  },
-                  appHistory
-                };
-                
-                const iframe = {
-                  contentWindow: {
-                    appHistory,
-                    DOMException: InvalidStateError
-                  }
-                };
-                
-                const i = iframe;
-                
-                let locationHref = new URL("/", globalThis.window.location.href);
-                
-                const location = {
-                    get href() {
-                        return locationHref.toString()
-                    },
-                    set href(value) {
-                        locationHref = new URL(value, locationHref.toString());
-                        const { finished, committed } = appHistory.navigate(locationHref.toString());
-                        void committed.catch(error => error);
-                        void finished.catch(error => error);
-                    },
-                    get hash() {
-                        return locationHref.hash;
-                    }
-                }
-                
-                console.log("Starting tests");
-                
-                async function ${testWrapperFnName}() {
-                  ${script.html() ? script.html().replace("null", "undefined") : "globalThis.window.testsFailed()"}
-                }
-                
-                await ${testWrapperFnName}();
-                
-                `;
+globalThis.rv = [];
 
-                script.html(scriptText);
+const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
 
-                $("*").first().before(DependenciesHTML);
+const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
 
-                contents = $.html();
+let appHistoryTarget = new AppHistory();
+
+function proxyAppHistory(appHistory, get) {
+  return new Proxy(appHistoryTarget, {
+    get(u, property) {
+      const value = get()[property];
+      if (typeof value === "function") return value.bind(appHistoryTarget);
+      return value;
+    }
+  });
+}
+
+const appHistory = proxyAppHistory(appHistoryTarget, () => appHistoryTarget);
+
+globalThis.appHistory = appHistory;
+
+appHistory.addEventListener("navigateerror", console.error);
+
+async function navigateFinally(appHistory, url) {
+    // This allows us to wait for the navigation to fully settle before starting 
+    const initialNavigationFinally = new Promise((resolve) => appHistory.addEventListener(AppHistoryTransitionFinally, resolve, { once: true }));
+    
+    // Initialise first navigation to emulate a page loaded
+    await appHistory.navigate("/").finished;
+    
+    await initialNavigationFinally;
+}
+await navigateFinally(appHistoryTarget, "/");
+
+add_completion_callback((tests, testStatus) => {
+    const allPassed = !!tests.length && tests.every(test => test.status === testStatus.OK);
+    console.log("Complete", allPassed ? "PASS" : "FAIL");
+    tests.forEach(test => console.log("  ", test.status === testStatus.OK ? "PASS  " : "FAIL ",test.name));
+    
+    try {
+     if (tests.length && allPassed) {
+      globalThis.window.testsComplete();
+    } else {
+      globalThis.window.testsFailed();
+    }
+    } catch (e) {
+       console.log(e);
+    }
+    
+    
+});
+
+const Event = CustomEvent;
+
+const window = {
+  set onload(value) {
+  console.log("onload set");
+    value();
+  },
+  appHistory
+};
+
+let iframeAppHistoryTarget = new AppHistory();
+await navigateFinally(iframeAppHistoryTarget, "/");
+const iframe = {
+  contentWindow: {
+    appHistory: proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget),
+    DOMException: InvalidStateError
+  },
+  remove() {
+    iframeAppHistoryTarget = new AppHistory();
+  }
+};
+
+let locationHref = new URL("/", globalThis.window.location.href);
+
+const location = {
+    get href() {
+        return locationHref.toString()
+    },
+    set href(value) {
+        locationHref = new URL(value, locationHref.toString());
+        const { finished, committed } = appHistory.navigate(locationHref.toString());
+        void committed.catch(error => error);
+        void finished.catch(error => error);
+    },
+    get hash() {
+        return locationHref.hash;
+    }
+}
+
+const history = {
+  pushState() {
+    
+  }
+}
+
+console.log("Starting tests");
+
+${testWrapperFnName}({
+  window,
+  location,
+  history: globalThis.history,
+  appHistory,
+  iframe,
+  i: iframe
+});
+                
+                `.trim();
+                contents = `
+${DependenciesHTML}
+<script type="module">${scriptText}</script>
+                `.trim()
                 //
                 // console.log(contents);
             }
@@ -326,10 +364,15 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
 
     // console.log("Network idle");
 
-    setTimeout(reject, 60000, new Error("Timeout"));
+    // setTimeout(reject, 60000, new Error("Timeout"));
 
-    await promise;
-
-
+    try {
+        await promise;
+    } finally {
+        if (DEBUG) {
+            // await new Promise(() => void 0);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+    }
 }
 /* c8 ignore end */
