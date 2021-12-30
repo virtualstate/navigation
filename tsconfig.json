@@ -15,6 +15,7 @@
         "noImplicitAny": true,
         "downlevelIteration": true,
         "moduleResolution": "node",
+        "declaration": true,
         "sourceMap": true,
         "outDir": "esnext",
         "baseUrl": "./src",
