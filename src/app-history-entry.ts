@@ -23,7 +23,7 @@ export interface AppHistoryEntryInit<S = unknown> extends AppHistoryEntryInitPro
 export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHistoryEntryEventMap> implements AppHistoryEntryPrototype<S> {
 
     #index: number | (() => number);
-    #state: S;
+    #state: S | undefined;
 
     get index() {
         return typeof this.#index === "number" ? this.#index : this.#index();

@@ -1,8 +1,8 @@
 import {
     AppHistoryTransition,
-    AppHistoryTransitionEntry, AppHistoryTransitionNavigationType,
+    AppHistoryTransitionNavigationType,
     AppHistoryTransitionWait,
-    AppHistoryTransitionWhile, UpdateCurrent
+    AppHistoryTransitionWhile,
 } from "./app-history-transition";
 import {AppHistory} from "./app-history";
 import {AppHistoryEntry} from "./app-history-entry";
@@ -54,8 +54,7 @@ export function plan(options: AppHistoryTransitionPlannerOptions) {
     } else {
         // Reset on non traversal
         nextPlan.transitions =
-            nextPlan.transitions
-                .filter(transition => transition[AppHistoryTransitionNavigationType] === UpdateCurrent)
+            []
                 .concat([transition]);
     }
     nextPlan.transitions = nextPlan.transitions

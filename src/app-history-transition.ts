@@ -11,14 +11,12 @@ import {deferred, Deferred} from "./util/deferred";
 import {AbortError, InvalidStateError, isAbortError, isInvalidStateError} from "./app-history-errors";
 import {AsyncEventTarget as EventTarget} from "./event-target";
 
-export const UpdateCurrent = Symbol.for("@virtualstate/app-history/updateCurrent");
 export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
 export const Unset = Symbol.for("@virtualstate/app-history/unset");
 
 export type InternalAppHistoryNavigationType =
     | AppHistoryNavigationType
     | typeof Rollback
-    | typeof UpdateCurrent
     | typeof Unset;
 
 export const AppHistoryTransitionParentEventTarget = Symbol.for("@virtualstate/app-history/transition/parentEventTarget");

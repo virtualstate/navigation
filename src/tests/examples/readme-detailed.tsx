@@ -436,7 +436,6 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     ok(!toasts.length);
 
-    // Reject after committed using currentchange, or before committed using navigate
     appHistory.addEventListener("navigate",  (event) => {
         event.transitionWhile(Promise.reject(new Error(expectedError)));
     }, { once: true });
@@ -453,23 +452,17 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     await navigateError.promise;
 
-    const [committedError, finishedError] = await Promise.all([
-        committed.catch((error) => error),
+    const [committedEntry, finishedError] = await Promise.all([
+        committed,
         finished.catch((error) => error)
     ]);
 
     // console.log({
-    //     committedError,
+    //     committedEntry,
     //     finishedError
     // });
+    assert<AppHistoryEntry>(committedEntry);
 
-    if (isWindowAppHistory(appHistory)) {
-        assert<AppHistoryEntry>(committedError);
-    } else {
-        assert<Error>(committedError);
-        assert(committedError instanceof Error);
-        assert(committedError.message === expectedError);
-    }
     assert<Error>(finishedError);
     assert(finishedError instanceof Error);
     assert(finishedError.message === expectedError);

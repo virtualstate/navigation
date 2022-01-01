@@ -17,7 +17,6 @@ import {
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
 import {EventTargetListeners} from "./event-target";
-import AbortController from "abort-controller";
 import {
     AppHistoryTransition,
     AppHistoryTransitionEntry,
@@ -34,7 +33,6 @@ import {
     InternalAppHistoryNavigationType,
     Rollback,
     Unset,
-    UpdateCurrent,
     AppHistoryTransitionWhile,
     AppHistoryTransitionStartDeadline,
     AppHistoryTransitionCommit,
@@ -60,8 +58,8 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     #currentIndex = -1;
     #activePromise?: Promise<unknown>;
     #activeTransition?: AppHistoryTransition;
-
-    #upcomingNonTraverseTransition: AppHistoryTransition;
+    //
+    // #upcomingNonTraverseTransition: AppHistoryTransition;
 
     #knownTransitions = new WeakSet();
 
@@ -188,13 +186,17 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const handler = () => {
             return this.#immediateTransition(givenNavigationType, entry, nextTransition, options);
         };
-        const previousPromise = this.#activePromise ?? Promise.resolve();
+        const previousPromise = this.#activePromise;
         let nextPromise;
         // console.log({ givenNavigationType });
         if (givenNavigationType === Rollback) {
             nextPromise = handler().then(() => previousPromise);
         } else {
-            nextPromise = previousPromise.then(handler);
+            if (previousPromise) {
+                nextPromise = previousPromise.then(handler);
+            } else {
+                nextPromise = handler();
+            }
         }
         this.#activePromise = nextPromise.catch(error => void error);
         this.#queueTransition(nextTransition);
@@ -208,13 +210,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         this.#knownTransitions.add(transition);
     }
 
-    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
+    #immediateTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         try {
             this.#transitionInProgressCount += 1;
-            if (this.#transitionInProgressCount > 1 && !(givenNavigationType === Rollback || givenNavigationType === UpdateCurrent)) {
+            if (this.#transitionInProgressCount > 1 && !(givenNavigationType === Rollback)) {
                 throw new InvalidStateError("Unexpected multiple transitions");
             }
-            await this.#transition(givenNavigationType, entry, transition, options);
+            return this.#transition(givenNavigationType, entry, transition, options);
         } finally {
             this.#transitionInProgressCount -= 1;
         }
@@ -244,7 +246,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#pushEntry(resolvedNavigationType, resolvedEntry, undefined, nextOptions);
     }
 
-    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
+    #transition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions): Promise<AppHistoryEntry> => {
         // console.log({ givenNavigationType, transition });
         let navigationType = givenNavigationType;
 
@@ -264,43 +266,71 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             transition,
             known: this.#known
         });
+        this.#activeTransition?.[AppHistoryTransitionAbort]();
+        this.#activeTransition = transition;
 
-        const completeTransition = async (): Promise<AppHistoryEntry> => {
-            if (givenNavigationType !== UpdateCurrent) {
-                this.#activeTransition?.[AppHistoryTransitionAbort]();
-            }
-            this.#activeTransition = transition;
+        const startEventPromise = transition.dispatchEvent({
+            type: AppHistoryTransitionStart,
+            transition,
+            entry
+        });
 
-            if (givenNavigationType === Unset && typeof options?.index === "number" && options.entries) {
-                await asyncCommit({
-                    entries: options.entries,
-                    index: options.index,
-                    known: options.known,
-                });
-                await this.dispatchEvent(
-                    createEvent({
-                        type: "currentchange"
-                    })
-                );
-                return entry;
+        const unsetTransition = async () => {
+            await startEventPromise;
+            if (!(typeof options?.index === "number" && options.entries)) throw new InvalidStateError();
+            await asyncCommit({
+                entries: options.entries,
+                index: options.index,
+                known: options.known,
+            });
+            await this.dispatchEvent(
+                createEvent({
+                    type: "currentchange"
+                })
+            );
+            return entry;
+        }
+
+
+        const completeTransition = (): Promise<AppHistoryEntry> => {
+            if (givenNavigationType === Unset) {
+                return unsetTransition();
             }
 
             const microtask = new Promise<void>(queueMicrotask);
-            let promises = [];
-            for (const promise of transitionSteps(transitionResult)) {
-                if (promise && "then" in promise) {
-                    promises.push(promise);
-                    if ((committed || transition[AppHistoryTransitionIsOngoing])) {
-                        await Promise.all(promises);
-                        promises = [];
+            let promises: Promise<unknown>[] = [];
+            const iterator = transitionSteps(transitionResult)[Symbol.iterator]();
+            const iterable = { [Symbol.iterator]: () => ({ next: () => iterator.next() })};
+
+            function syncTransition() {
+                for (const promise of iterable) {
+                    if (promise && "then" in promise) {
+                        promises.push(promise);
+                    }
+                    if (committed) {
+                        return asyncTransition();
+                    }
+                    if (transition.signal.aborted) {
+                        break;
                     }
                 }
-                if (transition.signal.aborted) {
-                    break;
-                }
+                return Promise.resolve(); // We got through with no async
             }
+            async function asyncTransition(): Promise<void> {
+                const captured = [...promises];
+                if (captured.length) {
+                    promises = [];
+                    await Promise.all(captured);
+                } else if (!transition[AppHistoryTransitionIsOngoing]) {
+                    await microtask;
+                }
+                return syncTransition();
+            }
+
             // console.log("Returning", { entry });
-            return entry;
+            return syncTransition()
+                .then(() => transition[AppHistoryTransitionIsOngoing] ? undefined : microtask)
+                .then(() => entry);
         }
 
         interface Commit  {
@@ -409,43 +439,49 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             yield transition[AppHistoryTransitionWait]();
         }
 
-        try {
-            await transition.dispatchEvent({
-                type: AppHistoryTransitionStart,
-                transition,
-                entry
-            });
-            return await completeTransition();
-        } catch (error) {
-            await transition.dispatchEvent({
-                type: AppHistoryTransitionError,
-                error,
-                transition,
-                entry
-            });
-            // console.log("Error for", entry, error);
-            // Don't throw here, as this error will be handled by transition directly
-            // throw await Promise.reject(error);
-        } finally {
-            await this.#dispose();
-            await transition.dispatchEvent({
-                type: AppHistoryTransitionFinally,
-                transition,
-                entry
-            });
-            await transition[AppHistoryTransitionWait]();
-            if (this.#activeTransition === transition) {
-                this.#activeTransition = undefined;
-            }
-            if (entry.sameDocument && typeof navigationType === "string") {
-                performance.mark(`same-document-navigation-finish:${entry.id}`);
-                performance.measure(
-                    `same-document-navigation:${entry.url}`,
-                    `same-document-navigation:${entry.id}`,
-                    `same-document-navigation-finish:${entry.id}`
-                );
+        const maybeSyncTransition = () => {
+            try {
+                return completeTransition();
+            } catch (error) {
+                return Promise.reject(error);
             }
         }
+
+        return Promise.allSettled([
+            maybeSyncTransition()
+        ])
+            .then(async ([detail]) => {
+                if (detail.status === "rejected") {
+                    await transition.dispatchEvent({
+                        type: AppHistoryTransitionError,
+                        error: detail.reason,
+                        transition,
+                        entry
+                    });
+                } else {
+                    await dispose();
+                    await transition.dispatchEvent({
+                        type: AppHistoryTransitionFinally,
+                        transition,
+                        entry
+                    });
+                    await transition[AppHistoryTransitionWait]();
+                    if (this.#activeTransition === transition) {
+                        this.#activeTransition = undefined;
+                    }
+                    if (entry.sameDocument && typeof navigationType === "string") {
+                        performance.mark(`same-document-navigation-finish:${entry.id}`);
+                        performance.measure(
+                            `same-document-navigation:${entry.url}`,
+                            `same-document-navigation:${entry.id}`,
+                            `same-document-navigation-finish:${entry.id}`
+                        );
+                    }
+                }
+            })
+            .then(() => entry)
+
+
     }
 
     #dispose = async () => {
@@ -479,6 +515,10 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     updateCurrent(options: AppHistoryUpdateCurrentOptions): void
     updateCurrent(options: AppHistoryUpdateCurrentOptions): unknown {
         const { current } = this;
+
+        if (!current) {
+            throw new InvalidStateError("Expected current entry");
+        }
 
         // Instant change
         current[AppHistoryEntrySetState](options.state);

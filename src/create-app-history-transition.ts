@@ -15,8 +15,7 @@ import {
     AppHistoryTransitionInitialEntries, AppHistoryTransitionKnown,
     AppHistoryTransitionNavigationType, AppHistoryTransitionWhile,
     InternalAppHistoryNavigationType,
-    Rollback,
-    UpdateCurrent
+    Rollback
 } from "./app-history-transition";
 import {createEvent} from "./event-target/create-event";
 
@@ -80,9 +79,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
 
     let destinationIndex = -1,
         nextIndex = currentIndex;
-    if ( navigationType === UpdateCurrent) {
-        destinationIndex = getEntryIndex(previousEntries, entry);
-    } else if (navigationType === Rollback) {
+    if (navigationType === Rollback) {
         const { index } = options ?? { index: undefined };
         if (typeof index !== "number") throw new InvalidStateError("Expected index to be provided for rollback");
         destinationIndex = index;
@@ -144,9 +141,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         navigationType: navigate.navigationType,
         transitionWhile
     });
-    if (navigationType === UpdateCurrent) {
-        resolvedEntries[destination.index] = entry;
-    } else if (navigationType === Rollback) {
+    if (navigationType === Rollback) {
         const { entries } = options ?? { entries: undefined };
         if (!entries) throw new InvalidStateError("Expected entries to be provided for rollback");
         resolvedEntries = entries;
