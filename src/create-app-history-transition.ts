@@ -60,7 +60,6 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         currentIndex,
         options,
         known: initialKnown,
-        startTime,
         current,
         transition,
         transition: {
@@ -143,7 +142,6 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         from: current,
         type: "currentchange",
         navigationType: navigate.navigationType,
-        startTime,
         transitionWhile
     });
     if (navigationType === UpdateCurrent) {

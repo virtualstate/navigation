@@ -34,7 +34,7 @@ export interface AppHistory extends EventTarget {
     readonly transition?: AppHistoryTransition | null;
 
     entries(): AppHistoryEntry[];
-    updateCurrent(options: AppHistoryUpdateCurrentOptions): AppHistoryResult;
+    updateCurrent(options: AppHistoryUpdateCurrentOptions): Promise<void>;
     updateCurrent(options: AppHistoryUpdateCurrentOptions): void;
 
     navigate(url: string, options?: AppHistoryNavigateOptions): AppHistoryResult;
@@ -133,7 +133,6 @@ export interface AppHistoryCurrentChangeEventInit extends EventInit {
 export interface AppHistoryCurrentChangeEvent extends Event, AppHistoryCurrentChangeEventInit {
     readonly navigationType?: AppHistoryNavigationType ;
     readonly from?: AppHistoryEntry;
-    readonly startTime?: number;
     transitionWhile?(newNavigationAction: Promise<unknown>): void;
 }
 

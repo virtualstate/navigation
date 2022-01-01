@@ -2,7 +2,7 @@ import {
     AppHistoryEntry,
     AppHistoryEntryInit,
     AppHistoryEntryKnownAs,
-    AppHistoryEntryNavigationType
+    AppHistoryEntryNavigationType, AppHistoryEntrySetState
 } from "./app-history-entry";
 import {
     AppHistory as AppHistoryPrototype,
@@ -12,7 +12,7 @@ import {
     AppHistoryReloadOptions,
     AppHistoryResult,
     AppHistoryUpdateCurrentOptions,
-    AppHistoryTransition as AppHistoryTransitionPrototype
+    AppHistoryTransition as AppHistoryTransitionPrototype, AppHistoryCurrentChangeEvent
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
@@ -465,12 +465,21 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#pushEntry("reload", entry, undefined, options);
     }
 
-    updateCurrent(options: AppHistoryUpdateCurrentOptions): AppHistoryResult
+    updateCurrent(options: AppHistoryUpdateCurrentOptions): Promise<void>
     updateCurrent(options: AppHistoryUpdateCurrentOptions): void
-    updateCurrent(options: AppHistoryUpdateCurrentOptions): AppHistoryResult {
+    updateCurrent(options: AppHistoryUpdateCurrentOptions): unknown {
         const { current } = this;
-        const entry = this.#cloneAppHistoryEntry(current, options);
-        return this.#pushEntry(UpdateCurrent, entry, undefined, options);
+
+        // Instant change
+        current[AppHistoryEntrySetState](options.state);
+
+        const currentChange: AppHistoryCurrentChangeEvent = createEvent({
+            from: current,
+            type: "currentchange",
+            navigationType: undefined,
+        });
+
+        return this.dispatchEvent(currentChange);
     }
 
 }

@@ -225,7 +225,7 @@ export async function toggleExample(appHistory: AppHistory) {
                 ...state,
                 detailsOpen: detailsElement.open ?? !state?.detailsOpen
             }
-        })?.finished;
+        });
     });
 
     ok(!appHistory.current?.getState<State>()?.detailsOpen);
@@ -258,7 +258,6 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         // In our app, the `navigate` handler will take care of actually showing the photo and updating the content area.
         const entry = await committed;
 
-        const updateCurrentEntryCommitted = deferred<unknown>();
         const updateCurrentEntryFinished = deferred<unknown>();
 
         // When we navigate away from this photo, save any changes the user made.
@@ -272,8 +271,7 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
             });
             // Just ensure committed before we move on
             // We know that this will be applied at a minimum
-            updateCurrentEntryCommitted.resolve(result?.committed);
-            updateCurrentEntryFinished.resolve(result?.finished);
+            updateCurrentEntryFinished.resolve(result);
         }, { once: true });
 
         let navigateBackToState!: State;
@@ -292,12 +290,8 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         // Trigger navigatefrom
         await appHistory.navigate("/").finished;
 
-        assert(updateCurrentEntryCommitted);
-        const updateCurrentEntry = await updateCurrentEntryCommitted.promise;
-
-        assert<AppHistoryEntry>(updateCurrentEntry);
-        ok(updateCurrentEntry.getState());
-        assert(updateCurrentEntry.key === entry.key);
+        assert(updateCurrentEntryFinished);
+        await updateCurrentEntryFinished.promise;
 
         ok(updateCurrentEntryFinished);
         await updateCurrentEntryFinished;
@@ -306,8 +300,6 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         await appHistory.goTo(entry.key).finished;
 
         assert(appHistory.current?.key === entry.key);
-        assert<AppHistoryEntry>(updateCurrentEntry);
-        assert(appHistory.current?.key === updateCurrentEntry.key);
 
         const finalState = appHistory.current?.getState<State>();
 

@@ -75,9 +75,7 @@ export async function jsxExample(appHistory: AppHistory) {
             ...appHistory.current?.getState<State>(),
             caption: updatedCaption
         }
-    })
-        // Not all implementations have support for async resolution
-        ?.finished;
+    });
 
     ok(bodyUpdated);
     await bodyUpdated;
