@@ -9,5 +9,8 @@ export function getConfig(): Record<string, string> {
 
 function getNodeConfig(): Record<string, string> {
     if (typeof process === "undefined") return {};
-    return JSON.parse(process.env.TEST_CONFIG ?? "{}");
+    return {
+        FLAGS: process.env.FLAGS,
+        ...JSON.parse(process.env.TEST_CONFIG ?? "{}")
+    };
 }

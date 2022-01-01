@@ -22,13 +22,14 @@ async function runTests() {
     await import("./app-history.class");
     if (typeof window === "undefined" && typeof process !== "undefined") {
         await import("./app-history.imported");
+        console.log(getConfig())
         if (getConfig().FLAGS?.includes("PLAYWRIGHT")) {
             await import("./app-history.playwright");
         }
     }
-    // else {
-    //     await import("./app-history.scope");
-    // }
+    else {
+        await import("./app-history.scope");
+    }
 }
 
 if (typeof window === "undefined") {
@@ -44,7 +45,11 @@ try {
     caught = error;
     exitCode = 1;
     console.error("Caught test error!");
-    console.error(caught);
+    if (typeof window === "undefined" && typeof process !== "undefined") {
+        console.error(caught);
+    } else {
+        throw await Promise.reject(caught);
+    }
 }
 
 // Settle tests, allow for the above handlers to fire if they need to

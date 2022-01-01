@@ -15,11 +15,11 @@ declare global {
 const DEBUG = false;
 
 const browsers = [
-    ["chromium", Playwright.chromium, { eventTarget: "async", esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
+    // ["chromium", Playwright.chromium, { eventTarget: "async", esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
     ["chromium", Playwright.chromium, { eventTarget: "async", esm: true, args: [] }] as const,
     ["webkit", Playwright.webkit, { eventTarget: "async", esm: false, args: [] }] as const,
     ["firefox", Playwright.firefox, { eventTarget: "async", esm: false, args: [] }] as const,
-    ["chromium", Playwright.chromium, { eventTarget: "sync", esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
+    // ["chromium", Playwright.chromium, { eventTarget: "sync", esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
     ["chromium", Playwright.chromium, { eventTarget: "sync", esm: true, args: [] }] as const,
     ["webkit", Playwright.webkit, { eventTarget: "sync", esm: false, args: [] }] as const,
     ["firefox", Playwright.firefox, { eventTarget: "sync", esm: false, args: [] }] as const
