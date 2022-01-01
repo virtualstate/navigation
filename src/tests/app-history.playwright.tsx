@@ -15,13 +15,18 @@ declare global {
 const DEBUG = false;
 
 const browsers = [
-    ["chromium", Playwright.chromium, { esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
-    ["webkit", Playwright.webkit, { esm: false, args: [] }] as const,
-    ["firefox", Playwright.firefox, { esm: false, args: [] }] as const
+    ["chromium", Playwright.chromium, { eventTarget: "async", esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
+    ["chromium", Playwright.chromium, { eventTarget: "async", esm: true, args: [] }] as const,
+    ["webkit", Playwright.webkit, { eventTarget: "async", esm: false, args: [] }] as const,
+    ["firefox", Playwright.firefox, { eventTarget: "async", esm: false, args: [] }] as const,
+    ["chromium", Playwright.chromium, { eventTarget: "sync", esm: true, args: ["--enable-experimental-web-platform-features"] }] as const,
+    ["chromium", Playwright.chromium, { eventTarget: "sync", esm: true, args: [] }] as const,
+    ["webkit", Playwright.webkit, { eventTarget: "sync", esm: false, args: [] }] as const,
+    ["firefox", Playwright.firefox, { eventTarget: "sync", esm: false, args: [] }] as const
 ] as const
 
 // webkit and firefox do not support importmap
-for (const [browserName, browserLauncher, { esm, args }] of browsers.filter(([, browser]) => browser)) {
+for (const [browserName, browserLauncher, { eventTarget, esm, args }] of browsers.filter(([, browser]) => browser)) {
     const browser = await browserLauncher.launch({
         headless: !DEBUG,
         devtools: DEBUG,
@@ -49,7 +54,7 @@ for (const [browserName, browserLauncher, { esm, args }] of browsers.filter(([, 
                     imports={{
                         "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
                         "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
-                        "@virtualstate/app-history/event-target": "https://cdn.skypack.dev/@virtualstate/app-history/event-target/async",
+                        "@virtualstate/app-history/event-target": `https://cdn.skypack.dev/@virtualstate/app-history/event-target/${eventTarget}`,
                     }}
                 />)
             ),
