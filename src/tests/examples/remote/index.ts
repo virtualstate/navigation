@@ -1,6 +1,6 @@
 import {AppHistory as AppHistorySpec, AppHistoryEntry} from "../../../spec/app-history";
 import {AppHistory} from "../../../app-history";
-import {assert, ok} from "../../util";
+import {assert, isWindowAppHistory, ok} from "../../util";
 import {addEventListener} from "../../../event-target/global";
 import {Response} from "@opennetwork/http-representation";
 import {fetch} from "../fetch";
@@ -11,6 +11,8 @@ import {fetch} from "../fetch";
 // Also doesn't abstract between the two with a transport later like fetch, we will
 // show that later on
 export async function remoteExample(appHistory: AppHistorySpec) {
+    if (isWindowAppHistory(appHistory)) return;
+
     const remote = new AppHistory();
 
     appHistory.addEventListener("currentchange", async () => {
@@ -42,6 +44,8 @@ export async function remoteExample(appHistory: AppHistorySpec) {
 
 // Step 2, abstract across fetch
 export async function remoteFetchExample(appHistory: AppHistorySpec) {
+    if (isWindowAppHistory(appHistory)) return;
+
     const remote = new AppHistory();
 
     addEventListener("fetch", async ({ request, respondWith }) => {

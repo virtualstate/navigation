@@ -3,6 +3,9 @@
 import process from "./node-process";
 import {getConfig} from "./config";
 
+console.log("====== START NEW SET OF TESTS ======");
+
+
 if (typeof process !== "undefined") {
     process.on("uncaughtException", (...args: unknown[]) => {
         console.log("process uncaught exception", ...args);
@@ -35,6 +38,10 @@ async function runTests() {
 if (typeof window === "undefined") {
     console.log("Running tests within shell");
 } else {
+    if (sessionStorage.testsRanInThisWindow) {
+        throw new Error("Tests already ran in this window, network navigation caused");
+    }
+    sessionStorage.setItem("testsRanInThisWindow", "1");
     console.log("Running tests within window");
 }
 let exitCode = 0,
