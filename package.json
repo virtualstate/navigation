@@ -29,6 +29,8 @@
     "./event-target": "./esnext/event-target/async-event-target.js",
     "./event-target/async": "./esnext/event-target/async-event-target.js",
     "./event-target/sync": "./esnext/event-target/sync-event-target.js",
+    "./event-target/async-event-target": "./esnext/event-target/async-event-target.js",
+    "./event-target/sync-event-target": "./esnext/event-target/sync-event-target.js",
     "./esnext/polyfill": "./esnext/polyfill.js",
     "./polyfill": "./esnext/polyfill.js"
   },

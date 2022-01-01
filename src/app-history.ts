@@ -16,7 +16,7 @@ import {
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
-import {EventTargetListeners} from "./event-target";
+import {AsyncEventTarget, EventTargetListeners} from "./event-target";
 import AbortController from "abort-controller";
 import {
     AppHistoryTransition,
@@ -186,15 +186,30 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const handler = () => {
             return this.#immediateTransition(givenNavigationType, entry, nextTransition, options);
         };
-        const previousPromise = this.#activePromise ?? Promise.resolve();
-        let nextPromise;
-        // console.log({ givenNavigationType });
-        if (givenNavigationType === Rollback) {
-            nextPromise = handler().then(() => previousPromise);
+        const previousPromise = this.#activePromise;
+        let nextPromise: Promise<unknown> | undefined;
+        if (givenNavigationType === Rollback || givenNavigationType === UpdateCurrent) {
+            nextPromise = handler();
         } else {
-            nextPromise = previousPromise.then(handler);
+            if (previousPromise) {
+                nextPromise = previousPromise.then(handler);
+            } else {
+                nextPromise = handler();
+            }
         }
-        this.#activePromise = nextPromise.catch(error => void error);
+        if (nextPromise && "then" in nextPromise) {
+            const promise = Promise.resolve(nextPromise)
+                .catch(error => void error)
+                .then(() => {
+                    if (promise === this.#activePromise) {
+                        this.#activePromise = undefined;
+                    }
+                })
+
+            this.#activePromise = promise;
+        }
+
+        void handler()
         this.#queueTransition(nextTransition);
         return { committed, finished };
 
@@ -206,13 +221,13 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         this.#knownTransitions.add(transition);
     }
 
-    #immediateTransition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
+    #immediateTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         try {
             this.#transitionInProgressCount += 1;
             if (this.#transitionInProgressCount > 1 && !(givenNavigationType === Rollback || givenNavigationType === UpdateCurrent)) {
                 throw new InvalidStateError("Unexpected multiple transitions");
             }
-            await this.#transition(givenNavigationType, entry, transition, options);
+            return this.#transition(givenNavigationType, entry, transition, options);
         } finally {
             this.#transitionInProgressCount -= 1;
         }
@@ -242,11 +257,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#pushEntry(resolvedNavigationType, resolvedEntry, undefined, nextOptions);
     }
 
-    #transition = async (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
+    #transition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry, transition: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         // console.log({ givenNavigationType, transition });
         let navigationType = givenNavigationType;
 
-        const performance = await getPerformance();
+        const performance = getPerformance();
         const startTime = performance.now();
 
         if (entry.sameDocument && typeof navigationType === "string") {
@@ -254,27 +269,20 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         }
 
         const { current } = this;
-        const completeTransition = async (): Promise<AppHistoryEntry> => {
+        const completeTransition = (): void | Promise<void> => {
             if (givenNavigationType !== UpdateCurrent) {
                 this.#activeTransition?.[AppHistoryTransitionAbort]();
             }
             this.#activeTransition = transition;
 
             if (givenNavigationType === Unset && typeof options?.index === "number" && options.entries) {
-                await asyncCommit({
+                return swapAsync(undefined, [dispatchCommitChange({
                     entries: options.entries,
                     index: options.index,
                     known: options.known,
-                });
-                await this.dispatchEvent(
-                    createEvent({
-                        type: "currentchange"
-                    })
-                );
-                return entry;
+                })]);
             }
 
-            const microtask = new Promise<void>(queueMicrotask);
             const transitionResult = createAppHistoryTransition({
                 current,
                 currentIndex: this.#currentIndex,
@@ -284,14 +292,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 known: this.#known
             });
 
-            for (const promise of transitionSteps(transitionResult)) {
-                await promise;
-                if (transition.signal.aborted) {
-                    break;
-                }
-            }
-            // console.log("Returning", { entry });
-            return entry;
+            return swapAsync(undefined, transitionSteps(transitionResult));
         }
 
         interface Commit  {
@@ -300,7 +301,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             known?: Set<AppHistoryEntry>;
         }
 
-        const syncCommit = ({ entries, index, known }: Commit) => {
+        const doCommit = ({ entries, index, known }: Commit) => {
             this.#entries = entries;
             if (known) {
                 this.#known = new Set([...this.#known, ...(known)])
@@ -308,9 +309,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             this.#currentIndex = index;
         }
 
-        const asyncCommit = async (commit: Commit) => {
-            syncCommit(commit);
-            await transition.dispatchEvent(
+        const dispatchCommit = (commit: Commit) => {
+            doCommit(commit);
+            return transition.dispatchEvent(
                 createEvent(
                     {
                         type: AppHistoryTransitionCommit,
@@ -321,7 +322,16 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             );
         }
 
-        const dispose = async () => this.#dispose();
+        const dispatchCommitChange = (commit: Commit) => {
+            return swapAsync(undefined, [
+                dispatchCommit(commit),
+                transition.dispatchEvent(
+                    createEvent({
+                        type: "currentchange"
+                    })
+                )
+            ])
+        }
 
         function *transitionSteps(transitionResult: AppHistoryTransitionResult): Iterable<Promise<unknown>> {
             const microtask = new Promise<void>(queueMicrotask);
@@ -332,6 +342,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 currentChange,
                 navigate,
             } = transitionResult;
+
+            yield transition.dispatchEvent({
+                type: AppHistoryTransitionStart,
+                transition,
+                entry
+            });
 
             if (typeof navigationType === "string" || navigationType === Rollback) {
                 const promise = current?.dispatchEvent(
@@ -347,7 +363,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 yield transition.dispatchEvent(navigate);
             }
 
-            yield asyncCommit({
+            yield dispatchCommit({
                 entries: entries,
                 index: index,
                 known: known,
@@ -397,36 +413,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             }
             // If we have more length here, we have added more transition
             yield transition[AppHistoryTransitionWait]();
-        }
 
-        try {
-            await transition.dispatchEvent({
-                type: AppHistoryTransitionStart,
-                transition,
-                entry
-            });
-            return await completeTransition();
-        } catch (error) {
-            await transition.dispatchEvent({
-                type: AppHistoryTransitionError,
-                error,
-                transition,
-                entry
-            });
-            // console.log("Error for", entry, error);
-            // Don't throw here, as this error will be handled by transition directly
-            // throw await Promise.reject(error);
-        } finally {
-            await this.#dispose();
-            await transition.dispatchEvent({
-                type: AppHistoryTransitionFinally,
-                transition,
-                entry
-            });
-            await transition[AppHistoryTransitionWait]();
-            if (this.#activeTransition === transition) {
-                this.#activeTransition = undefined;
-            }
             if (entry.sameDocument && typeof navigationType === "string") {
                 performance.mark(`same-document-navigation-finish:${entry.id}`);
                 performance.measure(
@@ -436,6 +423,82 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 );
             }
         }
+
+        const dispose = () => this.#dispose();
+        const removeActiveTransition = () => {
+            if (this.#activeTransition === transition) {
+                this.#activeTransition = undefined;
+            }
+        };
+
+        try {
+            let returnValue: void | Promise<void> = completeTransition();
+            if (returnValue && "then" in returnValue) {
+                returnValue = returnValue.catch(error => {
+                    return transition.dispatchEvent({
+                        type: AppHistoryTransitionError,
+                        error,
+                        transition,
+                        entry
+                    });
+                })
+            }
+            return swapAsync(returnValue, transitionFinally());
+        } catch (e) {
+            return swapAsync(undefined, transitionError(e));
+        }
+
+        function *transitionError(error: unknown) {
+            yield transition.dispatchEvent({
+                type: AppHistoryTransitionError,
+                error,
+                transition,
+                entry
+            });
+            yield * transitionFinally();
+        }
+
+        function *transitionFinally() {
+            yield dispose();
+            yield transition.dispatchEvent({
+                type: AppHistoryTransitionFinally,
+                transition,
+                entry
+            });
+            yield transition[AppHistoryTransitionWait]();
+            removeActiveTransition();
+        }
+
+        function swapAsync<T>(returnValue: T | Promise<T>, iterable: Iterable<unknown>): T | Promise<T> {
+            const iterator: Iterator<unknown> = iterable[Symbol.iterator]();
+            let result: IteratorResult<unknown>;
+            return complete(returnValue);
+
+            function complete<T>(returnValue: T | Promise<T>): T | Promise<T> {
+                if (returnValue && "then" in returnValue) {
+                    return completeAsync(returnValue, result.value);
+                }
+                do {
+                    result = iterator.next();
+                    if (result.value && "then" in result.value) {
+                        return completeAsync(returnValue, result.value);
+                    }
+                    if (transition.signal.aborted) {
+                        break; // Handled elsewhere
+                    }
+                } while (!result.done);
+                return returnValue;
+            }
+
+            async function completeAsync<T>(returnValue: T | Promise<T>, value: Promise<unknown>): Promise<T> {
+                if (returnValue && "then" in returnValue) {
+                    return completeAsync(await returnValue, result.value);
+                }
+                await value;
+                return complete(returnValue);
+            }
+        }
+
     }
 
     #dispose = async () => {
@@ -475,11 +538,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
 }
 
-async function getPerformance(): Promise<{
+function getPerformance(): {
     now(): number;
     measure(name: string, start: string, finish: string): unknown;
     mark(mark: string): unknown;
-}> {
+} {
     if (typeof performance !== "undefined") {
         return performance;
     }
