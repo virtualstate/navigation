@@ -1,6 +1,7 @@
 /* c8 ignore start */
 // import {run, dispatchEvent, addEventListener} from "@opennetwork/environment";
 import process from "./node-process";
+import {getConfig} from "./config";
 
 if (typeof process !== "undefined") {
     process.on("uncaughtException", (...args: unknown[]) => {
@@ -21,7 +22,7 @@ async function runTests() {
     await import("./app-history.class");
     if (typeof window === "undefined" && typeof process !== "undefined") {
         await import("./app-history.imported");
-        if (process.env.FLAGS?.includes("PLAYWRIGHT")) {
+        if (getConfig().FLAGS?.includes("PLAYWRIGHT")) {
             await import("./app-history.playwright");
         }
     }
@@ -35,14 +36,22 @@ if (typeof window === "undefined") {
 } else {
     console.log("Running tests within window");
 }
-await runTests();
+let exitCode = 0,
+    caught = undefined;
+try {
+    await runTests();
+} catch (error) {
+    caught = error;
+    exitCode = 1;
+    console.error("Caught test error!");
+    console.error(caught);
+}
 
 // Settle tests, allow for the above handlers to fire if they need to
 await new Promise(resolve => setTimeout(resolve, 200));
 
-// TODO add checks to ensure everything is closed
-if (typeof process !== "undefined") {
-    // process.exit(0);
+if (typeof process !== "undefined" && exitCode) {
+    process.exit(exitCode);
 }
 
-export default 1;
+export default exitCode;
