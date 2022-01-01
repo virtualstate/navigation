@@ -46,6 +46,7 @@ import {
     InternalAppHistoryNavigateOptions,
 } from "./create-app-history-transition";
 import {deferred} from "./util/deferred";
+import {createEvent} from "./event-target/create-event";
 
 export * from "./spec/app-history";
 
@@ -265,9 +266,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                     index: options.index,
                     known: options.known,
                 });
-                await this.dispatchEvent({
-                    type: "currentchange"
-                });
+                await this.dispatchEvent(
+                    createEvent({
+                        type: "currentchange"
+                    })
+                );
                 return entry;
             }
 
@@ -307,11 +310,15 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
         const asyncCommit = async (commit: Commit) => {
             syncCommit(commit);
-            await transition.dispatchEvent({
-                type: AppHistoryTransitionCommit,
-                transition,
-                entry
-            });
+            await transition.dispatchEvent(
+                createEvent(
+                    {
+                        type: AppHistoryTransitionCommit,
+                        transition,
+                        entry
+                    }
+                )
+            );
         }
 
         const dispose = async () => this.#dispose();
@@ -327,10 +334,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             } = transitionResult;
 
             if (typeof navigationType === "string" || navigationType === Rollback) {
-                const promise = current?.dispatchEvent({
-                    type: "navigatefrom",
-                    transitionWhile: transition[AppHistoryTransitionWhile],
-                });
+                const promise = current?.dispatchEvent(
+                    createEvent({
+                        type: "navigatefrom",
+                        transitionWhile: transition[AppHistoryTransitionWhile],
+                    })
+                );
                 if (promise) yield promise;
             }
 
@@ -347,10 +356,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 yield transition.dispatchEvent(currentChange);
             }
             if (typeof navigationType === "string") {
-                yield entry.dispatchEvent({
-                    type: "navigateto",
-                    transitionWhile: transition[AppHistoryTransitionWhile],
-                });
+                yield entry.dispatchEvent(
+                    createEvent({
+                        type: "navigateto",
+                        transitionWhile: transition[AppHistoryTransitionWhile],
+                    })
+                );
             }
             yield dispose();
             if (!transition[AppHistoryTransitionPromises].size) {
@@ -369,16 +380,20 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 transitionWhile: transition[AppHistoryTransitionWhile]
             });
             if (typeof navigationType === "string") {
-                yield transition.dispatchEvent({
-                    type: "finish",
-                    transitionWhile: transition[AppHistoryTransitionWhile]
-                });
+                yield transition.dispatchEvent(
+                    createEvent({
+                        type: "finish",
+                        transitionWhile: transition[AppHistoryTransitionWhile]
+                    })
+                );
             }
             if (typeof navigationType === "string") {
-                yield transition.dispatchEvent({
-                    type: "navigatesuccess",
-                    transitionWhile: transition[AppHistoryTransitionWhile]
-                });
+                yield transition.dispatchEvent(
+                    createEvent({
+                        type: "navigatesuccess",
+                        transitionWhile: transition[AppHistoryTransitionWhile]
+                    })
+                );
             }
             // If we have more length here, we have added more transition
             yield transition[AppHistoryTransitionWait]();
@@ -433,10 +448,10 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             }
             // No index, no longer known
             this.#known.delete(known);
-            const event = {
+            const event = createEvent({
                 type: "dispose",
                 entry: known
-            };
+            });
             await known.dispatchEvent(event);
             await this.dispatchEvent(event);
         }

@@ -134,8 +134,8 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
             return route.fulfill({
                 body: contents,
                 headers: {
-                    'Content-Type': 'application/javascript',
-                    'Access-Control-Allow-Origin': '*'
+                    "Content-Type": "application/javascript",
+                    "Access-Control-Allow-Origin": "*"
                 }
             });
         }

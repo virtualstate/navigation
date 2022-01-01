@@ -25,7 +25,9 @@ async function runTests() {
     await import("./app-history.class");
     if (typeof window === "undefined" && typeof process !== "undefined") {
         await import("./app-history.imported");
-        console.log(getConfig())
+        if (getConfig().FLAGS?.includes("WEB_PLATFORM_TESTS")) {
+            await import("./app-history.playwright.wpt");
+        }
         if (getConfig().FLAGS?.includes("PLAYWRIGHT")) {
             await import("./app-history.playwright");
         }

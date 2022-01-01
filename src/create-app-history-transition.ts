@@ -18,6 +18,7 @@ import {
     Rollback,
     UpdateCurrent
 } from "./app-history-transition";
+import {createEvent} from "./event-target/create-event";
 
 export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
     entries?: AppHistoryEntry[];
@@ -122,7 +123,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         }
     };
 
-    const navigate: AppHistoryNavigateEvent = {
+    const navigate: AppHistoryNavigateEvent = createEvent({
         signal,
         info: undefined,
         ...options,
@@ -137,14 +138,14 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         preventDefault: transition[AppHistoryTransitionAbort].bind(transition),
         transitionWhile,
         type: "navigate"
-    }
-    const currentChange: AppHistoryCurrentChangeEvent = {
+    });
+    const currentChange: AppHistoryCurrentChangeEvent = createEvent({
         from: current,
         type: "currentchange",
         navigationType: navigate.navigationType,
         startTime,
         transitionWhile
-    };
+    });
     if (navigationType === UpdateCurrent) {
         resolvedEntries[destination.index] = entry;
     } else if (navigationType === Rollback) {

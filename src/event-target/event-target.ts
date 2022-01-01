@@ -1,5 +1,4 @@
 import { AsyncEventTarget } from "./async-event-target";
-import {EventTargetListeners} from "./event-target-listeners";
 
 const defaultModule =  { EventTarget: AsyncEventTarget, AsyncEventTarget, SyncEventTarget: AsyncEventTarget } as const;
 
