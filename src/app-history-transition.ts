@@ -41,6 +41,7 @@ export const AppHistoryTransitionKnown = Symbol.for("@virtualstate/app-history/t
 export const AppHistoryTransitionPromises = Symbol.for("@virtualstate/app-history/transition/promises");
 
 export const AppHistoryTransitionWhile = Symbol.for("@virtualstate/app-history/transition/while");
+export const AppHistoryTransitionIsOngoing = Symbol.for("@virtualstate/app-history/transition/isOngoing");
 export const AppHistoryTransitionWait = Symbol.for("@virtualstate/app-history/transition/wait");
 
 export const AppHistoryTransitionPromiseResolved = Symbol.for("@virtualstate/app-history/transition/promise/resolved");
@@ -100,6 +101,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
     [AppHistoryTransitionIsCommitted] = false;
     [AppHistoryTransitionIsFinished] = false;
     [AppHistoryTransitionIsRejected] = false;
+    [AppHistoryTransitionIsOngoing] = false;
 
     readonly [AppHistoryTransitionKnown] = new Set<EventTarget>();
     readonly [AppHistoryTransitionEntry]: AppHistoryEntry;
@@ -289,6 +291,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
     }
 
     [AppHistoryTransitionWhile] = (promise: Promise<unknown>): void => {
+        this[AppHistoryTransitionIsOngoing] = true;
         // console.log({ AppHistoryTransitionWhile, promise });
         const statusPromise = promise
             .then((): PromiseSettledResult<void> => ({

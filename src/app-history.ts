@@ -38,7 +38,7 @@ import {
     AppHistoryTransitionWhile,
     AppHistoryTransitionStartDeadline,
     AppHistoryTransitionCommit,
-    AppHistoryTransitionFinish, AppHistoryTransitionAbort
+    AppHistoryTransitionFinish, AppHistoryTransitionAbort, AppHistoryTransitionIsOngoing
 } from "./app-history-transition";
 import {
     AppHistoryTransitionResult,
@@ -60,6 +60,8 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     #currentIndex = -1;
     #activePromise?: Promise<unknown>;
     #activeTransition?: AppHistoryTransition;
+
+    #upcomingNonTraverseTransition: AppHistoryTransition;
 
     #knownTransitions = new WeakSet();
 
@@ -246,14 +248,23 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         // console.log({ givenNavigationType, transition });
         let navigationType = givenNavigationType;
 
-        const performance = await getPerformance();
-        const startTime = performance.now();
+        const performance = getPerformance();
 
         if (entry.sameDocument && typeof navigationType === "string") {
             performance.mark(`same-document-navigation:${entry.id}`);
         }
 
+        let committed = false;
+
         const { current } = this;
+        const transitionResult = createAppHistoryTransition({
+            current,
+            currentIndex: this.#currentIndex,
+            options,
+            transition,
+            known: this.#known
+        });
+
         const completeTransition = async (): Promise<AppHistoryEntry> => {
             if (givenNavigationType !== UpdateCurrent) {
                 this.#activeTransition?.[AppHistoryTransitionAbort]();
@@ -275,17 +286,15 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             }
 
             const microtask = new Promise<void>(queueMicrotask);
-            const transitionResult = createAppHistoryTransition({
-                current,
-                currentIndex: this.#currentIndex,
-                options,
-                transition,
-                startTime,
-                known: this.#known
-            });
-
+            let promises = [];
             for (const promise of transitionSteps(transitionResult)) {
-                await promise;
+                if (promise && "then" in promise) {
+                    promises.push(promise);
+                    if ((committed || transition[AppHistoryTransitionIsOngoing])) {
+                        await Promise.all(promises);
+                        promises = [];
+                    }
+                }
                 if (transition.signal.aborted) {
                     break;
                 }
@@ -301,6 +310,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         }
 
         const syncCommit = ({ entries, index, known }: Commit) => {
+            committed = true;
             this.#entries = entries;
             if (known) {
                 this.#known = new Set([...this.#known, ...(known)])
@@ -484,11 +494,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
 }
 
-async function getPerformance(): Promise<{
+function getPerformance(): {
     now(): number;
     measure(name: string, start: string, finish: string): unknown;
     mark(mark: string): unknown;
-}> {
+} {
     if (typeof performance !== "undefined") {
         return performance;
     }
