@@ -10,6 +10,8 @@ export default [
   "@virtualstate/union",
   "@virtualstate/x",
   "@virtualstate/app-history",
+  "@virtualstate/app-history/event-target/sync",
+  "@virtualstate/app-history/event-target/async",
   "dom-lite",
   "iterable",
   "uuid",

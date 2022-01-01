@@ -36,6 +36,9 @@ for (const [browserName, browserLauncher, { esm, args }] of browsers.filter(([, 
     const namespacePath = "/@virtualstate/app-history/";
     const testsSrcPath = `${namespacePath}tests/${esm ? "" : "rollup.js"}`;
 
+    const eventTargetSyncPath = `${namespacePath}event-target/sync`
+    const eventTargetAsyncPath = `${namespacePath}event-target/async`
+
     let src = `https://cdn.skypack.dev${testsSrcPath}`;
 
     const pageContent = await toString(
@@ -46,6 +49,7 @@ for (const [browserName, browserLauncher, { esm, args }] of browsers.filter(([, 
                     imports={{
                         "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
                         "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
+                        "@virtualstate/app-history/event-target": "https://cdn.skypack.dev/@virtualstate/app-history/event-target/async",
                     }}
                 />)
             ),
@@ -100,8 +104,13 @@ for (const [browserName, browserLauncher, { esm, args }] of browsers.filter(([, 
 
         if (pathname.startsWith(namespacePath)) {
             const { pathname: file } = new URL(import.meta.url);
-            let importTarget = path.resolve(path.join(path.dirname(file), '..', pathname.replace(namespacePath, "")));
-            if (!/\.[a-z]+$/.test(importTarget)) {
+            let importTarget = path.resolve(path.join(path.dirname(file), "..", pathname.replace(namespacePath, "")));
+            // console.log({ pathname, eventTargetSyncPath, eventTargetAsyncPath })
+            if (pathname === eventTargetSyncPath) {
+                importTarget = path.resolve(path.join(importTarget, "../sync-event-target.js"))
+            } else if (pathname === eventTargetAsyncPath) {
+                importTarget = path.resolve(path.join(importTarget, "../async-event-target.js"))
+            } else if (!/\.[a-z]+$/.test(importTarget)) {
                 // console.log({ importTarget });
                 if (!importTarget.endsWith("/")) {
                     importTarget += "/";
