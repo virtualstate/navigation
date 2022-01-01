@@ -12,7 +12,7 @@
  * Instead use addEventListener
  */
 
-import {EventTarget, EventCallback, Event, EventTargetListeners, EventDescriptor, EventTargetAddListenerOptions} from "../event-target";
+import {AsyncEventTarget as EventTarget, EventCallback, Event, EventTargetListeners, EventDescriptor, EventTargetAddListenerOptions} from "../event-target";
 
 export interface AppHistoryEventMap {
     "navigate": AppHistoryNavigateEvent;

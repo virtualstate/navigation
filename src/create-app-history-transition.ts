@@ -54,7 +54,7 @@ function getEntryIndex(entries: AppHistoryEntry[], entry: AppHistoryEntry) {
     return -1;
 }
 
-export async function createAppHistoryTransition(context: AppHistoryTransitionContext): Promise<AppHistoryTransitionResult> {
+export function createAppHistoryTransition(context: AppHistoryTransitionContext): AppHistoryTransitionResult {
     const {
         currentIndex,
         options,

@@ -25,7 +25,10 @@
     "./tests/index.js": "./esnext/tests/index.js",
     "./tests/app-history.js": "./esnext/tests/app-history.js",
     "./tests/app-history.class.js": "./esnext/tests/app-history.class.js",
-    "./tests/app-history.imported.js": "./esnext/tests/app-history.imported.js"
+    "./tests/app-history.imported.js": "./esnext/tests/app-history.imported.js",
+    "./event-target": "./esnext/event-target/async-event-target.js",
+    "./event-target/async": "./esnext/event-target/async-event-target.js",
+    "./event-target/sync": "./esnext/event-target/sync-event-target.js"
   },
   "repository": {
     "type": "git",

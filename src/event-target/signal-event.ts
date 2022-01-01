@@ -1,11 +1,11 @@
 import { Event, isEvent } from "./event"
-import type { SyncEventTarget } from "./event-target"
-import type { SyncEventCallback } from "./callback";
+import { isAbortError } from "../app-history-errors";
+import { ExternalSyncEventTargetListeners } from "./event-target-listeners";
 
-export interface AbortSignal extends SyncEventTarget {
+export interface AbortSignal extends ExternalSyncEventTargetListeners {
     aborted: boolean
-    addEventListener(type: "abort", callback: SyncEventCallback): void
-    addEventListener(type: string, callback: SyncEventCallback): void
+    addEventListener(type: "abort", callback: Function): void
+    addEventListener(type: string, callback: Function): void
 }
 
 export interface AbortController {
@@ -49,3 +49,10 @@ export function isSignalEvent(value: object): value is SignalEvent {
         isAbortSignal(value.signal)
     )
 }
+
+export function isSignalHandled(event: Event, error: unknown) {
+    if (isSignalEvent(event) && event.signal.aborted && error instanceof Error && isAbortError(error)) {
+        return true
+    }
+}
+

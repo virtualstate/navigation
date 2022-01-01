@@ -1,6 +1,6 @@
 import {AppHistory} from "../../spec/app-history";
 import {h, toString} from "@virtualstate/fringe";
-import {EventTarget} from "../../event-target";
+import {AsyncEventTarget} from "../../event-target";
 import {ok} from "../util";
 
 const React = {
@@ -30,7 +30,7 @@ export async function jsxExample(appHistory: AppHistory) {
         // )
     }
 
-    const body: EventTarget & { innerHTML?: string } = new EventTarget();
+    const body: AsyncEventTarget & { innerHTML?: string } = new AsyncEventTarget();
 
     appHistory.addEventListener("currentchange", async (event) => {
         await (event.transitionWhile ?? (promise => promise))(handler());

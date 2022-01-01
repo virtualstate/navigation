@@ -1,6 +1,8 @@
-import {EventCallback, EventTarget, EventTargetAddListenerOptions} from "./event-target";
+import {EventTarget} from "./event-target";
 import {Event} from "./event";
 import {FetchEvent} from "../tests/examples/fetch";
+import {EventTargetAddListenerOptions} from "./event-target-options";
+import {EventCallback} from "./callback";
 
 const globalEventTarget = new EventTarget();
 

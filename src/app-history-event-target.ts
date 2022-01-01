@@ -14,7 +14,7 @@ export class AppHistoryEventTarget<T> extends EventTarget {
 
     removeEventListener(type: string | symbol, listener: EventCallback, options?: unknown): void
     removeEventListener(type: string | symbol, callback: Function, options?: unknown): void;
-    removeEventListener(type: string | symbol, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void {
+    removeEventListener(type: string | symbol, listener: Function | EventCallback, options?: boolean | EventTargetAddListenerOptions): void {
         assertEventCallback(listener);
         return super.removeEventListener(type, listener);
         function assertEventCallback(listener: unknown): asserts listener is EventCallback {

@@ -5,7 +5,7 @@ import {
     AppHistoryEntry,
     AppHistoryNavigateEvent
 } from "../../spec/app-history";
-import {EventTarget, Event} from "../../event-target"
+import {AsyncEventTarget as EventTarget, Event} from "../../event-target"
 import {FetchEvent, fetch} from "./fetch"
 import {addEventListener, removeEventListener} from "../../event-target/global";
 import {h} from "@virtualstate/fringe";

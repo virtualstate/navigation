@@ -300,7 +300,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             }
 
             const microtask = new Promise<void>(queueMicrotask);
-            const transitionResult = await createAppHistoryTransition({
+            const transitionResult = createAppHistoryTransition({
                 current,
                 currentIndex: this.#currentIndex,
                 options,
