@@ -4,38 +4,95 @@ import { rollup } from "rollup";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import ignore from "rollup-plugin-ignore";
 import babel from "rollup-plugin-babel";
+import { dirname, resolve } from "path";
 
-const bundle = await rollup({
-  input: "./esnext/tests/index.js",
-  plugins: [
-    ignore([
-      "playwright",
-      "fs",
-      "path",
-      "uuid",
-      "@virtualstate/app-history",
-      "@virtualstate/app-history-imported"
-    ]),
-    nodeResolve()
-  ],
-  inlineDynamicImports: true,
-  treeshake: {
-    preset: "smallest",
-    moduleSideEffects: "no-external"
-  }
-});
-await bundle.write({
-  sourcemap: true,
-  output: {
-    file: "./esnext/tests/rollup.js",
-  },
-  inlineDynamicImports: true,
-  format: "cjs",
-  interop: "auto",
-  globals: {
-    "esnext/tests/app-history.playwright.js": "globalThis"
-  }
-});
+const { pathname } = new URL(import.meta.url);
+const cwd = resolve(dirname(pathname), "..")
+
+{
+
+
+  // /Volumes/Extreme/Users/fabian/src/virtualstate/esnext/tests/app-history.playwright.wpt.js
+  // /Volumes/Extreme/Users/fabian/src/virtualstate/app-history/esnext/tests/app-history.playwright.wpt.js
+
+  console.log({ cwd, path: `/Volumes/Extreme/Users/fabian/src/virtualstate/app-history/esnext/tests/app-history.playwright.wpt.js` === `${cwd}/esnext/tests/app-history.playwright.wpt.js`, p: `${cwd}/esnext/tests/app-history.playwright.wpt.js`})
+
+  const bundle = await rollup({
+    input: "./esnext/tests/index.js",
+    plugins: [
+      ignore([
+        "playwright",
+        "fs",
+        "path",
+        "uuid",
+        "cheerio",
+        "@virtualstate/app-history",
+        "@virtualstate/app-history-imported",
+        `${cwd}/esnext/tests/app-history.playwright.js`,
+        `${cwd}/esnext/tests/app-history.playwright.wpt.js`,
+        `${cwd}/esnext/tests/dependencies-input.js`,
+        `${cwd}/esnext/tests/dependencies.js`,
+        "./app-history.playwright.js",
+        "./app-history.playwright.wpt.js",
+      ]),
+      nodeResolve()
+    ],
+    inlineDynamicImports: true,
+    treeshake: {
+      preset: "smallest",
+      moduleSideEffects: "no-external"
+    }
+  });
+  await bundle.write({
+    sourcemap: true,
+    output: {
+      file: "./esnext/tests/rollup.js",
+    },
+    inlineDynamicImports: true,
+    format: "cjs",
+    interop: "auto",
+    globals: {
+      "esnext/tests/app-history.playwright.js": "globalThis"
+    }
+  });
+}
+
+{
+
+  const bundle = await rollup({
+    input: "./esnext/polyfill.js",
+    plugins: [
+      ignore([
+        "uuid",
+        "@virtualstate/app-history",
+        `${cwd}/esnext/tests/app-history.playwright.js`,
+        `${cwd}/esnext/tests/app-history.playwright.wpt.js`,
+        `${cwd}/esnext/tests/dependencies-input.js`,
+        `${cwd}/esnext/tests/dependencies.js`,
+        "./app-history.playwright.js",
+        "./app-history.playwright.wpt.js",
+      ]),
+      nodeResolve()
+    ],
+    inlineDynamicImports: true,
+    treeshake: {
+      preset: "smallest",
+      moduleSideEffects: "no-external"
+    }
+  });
+  await bundle.write({
+    sourcemap: true,
+    output: {
+      file: "./esnext/polyfill-rollup.js",
+    },
+    inlineDynamicImports: true,
+    format: "cjs",
+    interop: "auto",
+    globals: {
+
+    }
+  });
+}
 
 if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
 
@@ -54,8 +111,17 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
 
   badges.push(
       '### Test Coverage\n\n',
-      `![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})`
+      // `![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})`
   )
+
+  const wptResults = await fs.readFile("coverage/wpt.results.json", "utf8").then(JSON.parse).catch(() => ({}));
+  if (wptResults?.total) {
+    const message = `${wptResults.pass}/${wptResults.total}`;
+    const name = "Web Platform Tests";
+    badges.push(
+        `![${name} ${message}](https://img.shields.io/badge/${encodeURIComponent(name)}-${encodeURIComponent(message)}-brightgreen)`
+    )
+  }
 
   const coverage = await fs.readFile("coverage/coverage-summary.json", "utf8").then(JSON.parse).catch(() => ({}));
   const coverageConfig = await fs.readFile(".nycrc", "utf8").then(JSON.parse);

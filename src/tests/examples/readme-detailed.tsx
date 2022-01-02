@@ -1,4 +1,4 @@
-import { ok, assert } from "../util";
+import {ok, assert, isWindowAppHistory} from "../util";
 import {
     AppHistory,
     AppHistoryCurrentChangeEvent, AppHistoryDestination,
@@ -10,24 +10,98 @@ import {FetchEvent, fetch} from "./fetch"
 import {addEventListener, removeEventListener} from "../../event-target/global";
 import {h} from "@virtualstate/fringe";
 import {Response} from "@opennetwork/http-representation";
+import {deferred} from "../../util/deferred";
 
 export async function initialNavigateThenBack(appHistory: AppHistory) {
+    let navigateCalled = false,
+        currentChangeCalled = false;
     appHistory.addEventListener("navigate", (event) => {
+        navigateCalled = true;
         event.transitionWhile( new Promise<void>(queueMicrotask));
     }, { once: true });
+    appHistory.addEventListener("currentchange", () => {
+        currentChangeCalled = true;
+    })
     const { committed, finished } = appHistory.navigate("/test", {
         state: {
             value: 1
         }
     });
+
+    // These are called sync after navigate is called no matter what
+    assert<true>(navigateCalled);
+    assert<true>(currentChangeCalled);
+
+    // This ties in the async update requirement
+    const updatedCurrent = appHistory.current;
+    assert<AppHistoryEntry>(updatedCurrent);
+    ok(updatedCurrent.getState<{ value: 1 }>().value === 1);
+
     const committedEntry = await committed;
     const finishedEntry = await finished;
 
+    ok(updatedCurrent === appHistory.current);
     ok(finishedEntry === appHistory.current);
     ok(committedEntry === finishedEntry);
 
-    if (appHistory.canGoBack) {
-        await appHistory.back();
+    if (!isWindowAppHistory(appHistory)) {
+        let caught;
+        if (!appHistory.canGoBack) {
+            try {
+                await appHistory.back();
+            } catch (error) {
+                // No initial back
+                caught = error;
+            }
+        }
+        assert(caught);
+    }
+}
+
+
+export async function initialNavigateThenBackAssigned(appHistory: AppHistory) {
+    let navigateCalled = false,
+        currentChangeCalled = false;
+    appHistory.onnavigate = (event) => {
+        navigateCalled = true;
+        event.transitionWhile( new Promise<void>(queueMicrotask));
+    };
+    appHistory.oncurrentchange = () => {
+        currentChangeCalled = true;
+    };
+    const { committed, finished } = appHistory.navigate("/test", {
+        state: {
+            value: 1
+        }
+    });
+
+    // These are called sync after navigate is called no matter what
+    assert<true>(navigateCalled);
+    assert<true>(currentChangeCalled);
+
+    // This ties in the async update requirement
+    const updatedCurrent = appHistory.current;
+    assert<AppHistoryEntry>(updatedCurrent);
+    ok(updatedCurrent.getState<{ value: 1 }>().value === 1);
+
+    const committedEntry = await committed;
+    const finishedEntry = await finished;
+
+    ok(updatedCurrent === appHistory.current);
+    ok(finishedEntry === appHistory.current);
+    ok(committedEntry === finishedEntry);
+
+    if (!isWindowAppHistory(appHistory)) {
+        let caught;
+        if (!appHistory.canGoBack) {
+            try {
+                await appHistory.back();
+            } catch (error) {
+                // No initial back
+                caught = error;
+            }
+        }
+        assert(caught);
     }
 }
 
@@ -39,8 +113,9 @@ export async function routeHandlerExample(appHistory: AppHistory) {
         if (!event.canTransition || event.hashChange) {
             return;
         }
-        if (routesTable.has(event.destination.url)) {
-            const routeHandler = routesTable.get(event.destination.url);
+        const url = pathname(event.destination.url);
+        if (routesTable.has(url)) {
+            const routeHandler = routesTable.get(url);
             if (!routeHandler) return;
             event.transitionWhile(routeHandler());
         }
@@ -67,42 +142,73 @@ export async function routeHandlerExample(appHistory: AppHistory) {
 export async function productBackButtonClicked(appHistory: AppHistory) {
     const backButtonEl = new EventTarget();
 
+    let finishedClickNavigation = deferred<unknown>();
+
+    const startingLength = isWindowAppHistory(appHistory) ? appHistory.entries().length : 0;
+
     backButtonEl.addEventListener("click", async () => {
-        const previous = appHistory.entries()[appHistory.current?.index ?? -2 - 1];
+        const nextIndex = (appHistory.current?.index ?? -2) - 1;
+        const previous = nextIndex < startingLength ? undefined : appHistory.entries()[nextIndex];
         // console.log({ previous });
         if (previous?.url === "/product-listing") {
             // console.log("Back");
             const { finished } = appHistory.back();
+            finishedClickNavigation.resolve(finished);
             await finished;
         } else {
+            // console.log("Navigate replace");
             // If the user arrived here by typing the URL directly:
             const { finished } = appHistory.navigate("/product-listing", { replace: true });
+            finishedClickNavigation.resolve(finished);
             await finished;
         }
     });
-    ok(appHistory.entries().length === 0);
+
+    ok(appHistory.entries().length === startingLength);
 
     await backButtonEl.dispatchEvent({
         type: "click"
     });
 
-    ok(appHistory.current?.url === "/product-listing");
-    ok(appHistory.entries().length === 1);
+    await finishedClickNavigation.promise;
+    finishedClickNavigation = deferred();
+
+    ok(pathname(appHistory.current?.url) === "/product-listing");
+    if (isWindowAppHistory(appHistory)) {
+        // We would have replaced the initial!
+        ok(appHistory.entries().length === startingLength);
+    } else {
+        // Else for non spec we will have our first navigation
+        ok(appHistory.entries().length === 1);
+    }
 
     const { finished } = await appHistory.navigate("/product-listing/product");
     await finished;
 
-    ok(appHistory.current?.url === "/product-listing/product");
-    ok(appHistory.entries().length === 2);
+    ok(pathname(appHistory.current?.url) === "/product-listing/product");
+    if (isWindowAppHistory(appHistory)) {
+        // We should have navigated here, so increase the count
+        ok(appHistory.entries().length === startingLength + 1);
+    } else {
+        ok(appHistory.entries().length === 2);
+    }
 
     await backButtonEl.dispatchEvent({
         type: "click"
     });
 
+    await finishedClickNavigation.promise;
+    finishedClickNavigation = deferred();
+
     // console.log(appHistory.entries());
 
-    ok(appHistory.current?.url === "/product-listing");
-    ok(appHistory.entries().length === 2);
+    ok(pathname(appHistory.current?.url) === "/product-listing");
+    // We should have gone back here, length should have stayed the same
+    if (isWindowAppHistory(appHistory)) {
+        ok(appHistory.entries().length === startingLength + 1);
+    } else {
+        ok(appHistory.entries().length === 2);
+    }
 
 }
 
@@ -125,11 +231,19 @@ export async function currentChangeExample(appHistory: AppHistory) {
     appHistory.addEventListener("currentchange", event => {
         changedEvent = event;
     });
-    ok(!appHistory.current);
+    if (!isWindowAppHistory(appHistory)) {
+        ok(!appHistory.current);
+    } else {
+        ok(appHistory.current);
+    }
     await appHistory.navigate('/').finished;
     assert<AppHistoryCurrentChangeEvent>(changedEvent);
     ok(changedEvent.navigationType);
-    ok(!changedEvent.from);
+    if (!isWindowAppHistory(appHistory)) {
+        ok(!changedEvent.from);
+    } else {
+        ok(changedEvent.from);
+    }
     const initial = appHistory.current;
     assert<AppHistoryEntry>(initial);
     await appHistory.navigate('/1').finished;
@@ -151,13 +265,13 @@ export async function homepageGoToExample(appHistory: AppHistory) {
     });
 
     await appHistory.navigate('/other').finished;
-    ok(appHistory.current?.url === '/other');
+    ok(pathname(appHistory.current?.url) === '/other');
 
     await homeButton.dispatchEvent({
         type: "click"
     });
 
-    ok(appHistory.current?.url === '/home');
+    ok(pathname(appHistory.current?.url) === '/home');
 }
 
 export async function toggleExample(appHistory: AppHistory) {
@@ -175,7 +289,7 @@ export async function toggleExample(appHistory: AppHistory) {
                 ...state,
                 detailsOpen: detailsElement.open ?? !state?.detailsOpen
             }
-        })?.finished;
+        });
     });
 
     ok(!appHistory.current?.getState<State>()?.detailsOpen);
@@ -195,22 +309,24 @@ export async function toggleExample(appHistory: AppHistory) {
 }
 
 export async function perEntryEventsExample(appHistory: AppHistory) {
+    if (isWindowAppHistory(appHistory)) return; // navigatefrom + navigateto not yet available
+
     async function showPhoto(photoId: number | string) {
         interface State {
             dateTaken?: string;
             caption?: string;
         }
 
-        const { committed, finished } = await appHistory.navigate(`/photos/${photoId}`, { state: { } });
+        const { committed, finished } = appHistory.navigate(`/photos/${photoId}`, { state: { } });
 
         // In our app, the `navigate` handler will take care of actually showing the photo and updating the content area.
         const entry = await committed;
 
-        let updateCurrentEntry!: AppHistoryEntry;
-        let updateCurrentEntryFinished!: Promise<AppHistoryEntry>;
+        const updateCurrentEntryFinished = deferred<unknown>();
 
         // When we navigate away from this photo, save any changes the user made.
         entry.addEventListener("navigatefrom", async () => {
+            console.log("navigatefrom");
             const result = appHistory.updateCurrent({
                 state: {
                     dateTaken: new Date().toISOString(),
@@ -219,8 +335,7 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
             });
             // Just ensure committed before we move on
             // We know that this will be applied at a minimum
-            updateCurrentEntry = await result?.committed;
-            updateCurrentEntryFinished = result?.finished;
+            updateCurrentEntryFinished.resolve(result);
         }, { once: true });
 
         let navigateBackToState!: State;
@@ -239,9 +354,8 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         // Trigger navigatefrom
         await appHistory.navigate("/").finished;
 
-        assert(updateCurrentEntry);
-        ok(updateCurrentEntry.getState());
-        assert(updateCurrentEntry.key === entry.key);
+        assert(updateCurrentEntryFinished);
+        await updateCurrentEntryFinished.promise;
 
         ok(updateCurrentEntryFinished);
         await updateCurrentEntryFinished;
@@ -250,12 +364,11 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         await appHistory.goTo(entry.key).finished;
 
         assert(appHistory.current?.key === entry.key);
-        assert<AppHistoryEntry>(updateCurrentEntry);
-        assert(appHistory.current?.key === updateCurrentEntry.key);
 
         const finalState = appHistory.current?.getState<State>();
 
-        // console.log({ finalState, navigateBackToState, current: appHistory.current });
+        console.log(finalState);
+        console.log({ finalState, navigateBackToState, current: appHistory.current });
 
         assert<State>(navigateBackToState);
         ok(navigateBackToState.dateTaken);
@@ -346,6 +459,7 @@ export async function currentChangeMonitoringExample(appHistory: AppHistory) {
 }
 
 export async function rollbackExample(appHistory: AppHistory) {
+    if (isWindowAppHistory(appHistory)) return; // Does not work as expected
 
     const expectedError = `Error.${Math.random()}`;
     const toasts: string[] = [];
@@ -354,17 +468,25 @@ export async function rollbackExample(appHistory: AppHistory) {
         toasts.push(message);
     }
 
-    let navigateErrorTransitionFinished;
 
-    appHistory.addEventListener("navigateerror", async e => {
+    // rollback is automatically triggered on error
+    // let navigateErrorTransitionFinished = deferred<unknown>(),
+    //     navigateErrorTransitionCommitted = deferred<unknown>();
+    let navigateError = deferred();
+
+    appHistory.addEventListener("navigateerror", e => {
         const transition = appHistory.transition;
+        console.log("Navigate error inner", { transition });
         if (!transition) return;
 
         const attemptedURL = transition.from.url;
 
-        const { committed, finished } = transition.rollback();
-        navigateErrorTransitionFinished = finished;
-        await committed;
+        // rollback is automatically triggered on error
+        // const { committed, finished } = transition.rollback();
+        // navigateErrorTransitionCommitted.resolve(committed);
+        // navigateErrorTransitionFinished.resolve(finished);
+
+        navigateError.resolve();
 
         showErrorToast(`Could not load ${attemptedURL}: ${e.message}`);
     });
@@ -378,6 +500,7 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     ok(!toasts.length);
 
+    // Reject after committed using currentchange, or before committed using navigate
     appHistory.addEventListener("navigate",  (event) => {
         event.transitionWhile(Promise.reject(new Error(expectedError)));
     }, { once: true });
@@ -385,24 +508,37 @@ export async function rollbackExample(appHistory: AppHistory) {
     // This should fail
 
     const errorUrl = `/thisWillError/${Math.random()}`
-    const error = await appHistory.navigate(errorUrl).finished.catch((error) => error);
 
-    // console.log(error);
+    const { committed, finished } = appHistory.navigate(errorUrl);
 
-    assert<Error>(error);
-    assert(error instanceof Error);
-    assert(error.message === expectedError);
+    // rollback is automatically triggered on error
+    // await navigateErrorTransitionCommitted.promise;
+    // await navigateErrorTransitionFinished.promise;
+
+    await navigateError.promise;
+
+    const [committedEntry, finishedError] = await Promise.all([
+        committed,
+        finished.catch((error) => error)
+    ]);
+
+    // console.log({
+    //     committedEntry,
+    //     finishedError
+    // });
+    assert<AppHistoryEntry>(committedEntry);
+
+    assert<Error>(finishedError);
+    assert(finishedError instanceof Error);
+    assert(finishedError.message === expectedError);
 
     ok(appHistory.current);
 
-    ok(navigateErrorTransitionFinished);
-    await navigateErrorTransitionFinished;
+    console.log({ current: appHistory.current.url, expectedRollbackState: expectedRollbackState.url, toasts });
 
-    // console.log({ current: appHistory.current, expectedRollbackState, toasts });
+    ok(pathname(appHistory.current?.url) === pathname(expectedRollbackState.url));
 
-    ok(appHistory.current?.url === expectedRollbackState.url);
-
-    // console.log({ toasts });
+    console.log({ toasts });
 
     ok(toasts.length);
     ok(toasts[0].includes(expectedError));
@@ -410,6 +546,10 @@ export async function rollbackExample(appHistory: AppHistory) {
 }
 
 export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
+    if (isWindowAppHistory(appHistory)) {
+        // TODO WARN investigate
+        return;
+    }
 
     function determineAction(destination: AppHistoryDestination): {
         type: string;
@@ -427,6 +567,8 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
             "/disallow": "disallow"
         } as const)[pathname] ?? "pass";
 
+        console.log({ pathname, type });
+
         // console.log({ type, destination });
         return {
             type,
@@ -441,15 +583,25 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     // TODO replace with transition usage
     let redirectFinished: Promise<AppHistoryEntry> | undefined = undefined;
-
+    const seen = new WeakSet()
     appHistory.addEventListener("navigate", e => {
+        if (seen.has(e) || seen.has(e.transitionWhile)) {
+            console.log(e, seen.has(e), seen.has(e.transitionWhile));
+            // throw new Error("Seen event multiple times");
+        }
+        console.log("Adding");
+        seen.add(e);
+        seen.add(e.transitionWhile);
         e.transitionWhile((async () => {
-            const result = await determineAction(e.destination);
+            const result = determineAction(e.destination);
 
             if (result.type === "redirect") {
+                if (isWindowAppHistory(appHistory)) {
+                    e.preventDefault();
+                }
+                console.log("Redirecting");
                 redirectFinished = appHistory.transition?.rollback().finished
                     .then(() => appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished);
-                await redirectFinished;
                 // await appHistory.transition?.rollback().finished;
                 // await appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished;
             } else if (result.type === "disallow") {
@@ -464,12 +616,14 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
         })());
     });
 
-    ok(!appHistory.current);
+    if (!isWindowAppHistory(appHistory)) {
+        ok(!appHistory.current);
+    }
 
     await appHistory.navigate("/").finished;
 
     ok(appHistory.current);
-    ok(appHistory.current?.url === "/");
+    ok(pathname(appHistory.current?.url) === "/");
     ok(allowCount === 1);
 
     const redirectTargetUrl = `/redirected/${Math.random()}`;
@@ -479,9 +633,12 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     const { committed: redirectCommitted, finished: redirectFinishedErrored } = appHistory.navigate(targetUrl.toString());
     redirectFinishedErrored.catch(error => void error);
-    await redirectCommitted;
+    await redirectCommitted.catch(error => void error);
 
     const redirectError = await redirectFinishedErrored.catch(error => error);
+
+    // console.log({ redirectError });
+
     assert(redirectError);
     assert(redirectError instanceof Error);
 
@@ -492,7 +649,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
     assert(redirectFinished);
     await redirectFinished;
 
-    ok(appHistory.current?.url === redirectTargetUrl);
+    ok(pathname(appHistory.current?.url) === redirectTargetUrl);
     ok(allowCount === 2);
 
     const expectedInitialError = `${Math.random()}`;
@@ -501,7 +658,9 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     ok(disallowCount === 0);
 
-    const initialError = await appHistory.navigate(errorTargetUrl.toString()).finished.catch(error => error);
+    const { committed: disallowCommitted, finished: disallowFinished } = appHistory.navigate(errorTargetUrl.toString());
+    await disallowCommitted.catch(error => error);
+    const initialError = await disallowFinished.catch(error => error);
 
     assert<Error>(initialError);
     assert(initialError instanceof Error);
@@ -559,7 +718,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
     const photoUrls = [...photos.values()];
 
     function getPhotoSiblings() {
-        const index = photoUrls.indexOf(appHistory.current?.url ?? "/unknown");
+        const index = photoUrls.indexOf(pathname(appHistory.current?.url ?? "/unknown"));
         if (index === -1) return [];
         return [photoUrls[index - 1], photoUrls[index + 1]];
     }
@@ -624,7 +783,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
     }
     async function loadPhoto(url: string) {
         await new Promise<void>(queueMicrotask);
-        loaded.push(url);
+        loaded.push(pathname(url));
     }
 
     appHistory.addEventListener("navigate", e => {
@@ -782,12 +941,12 @@ export async function usingInfoExample(appHistory: AppHistory) {
 
     await photoGallery.dispatchEvent({
         type: "click",
-        target: photoTargets.get(appHistory.current?.url ?? "/unknown")
+        target: photoTargets.get(pathname(appHistory.current?.url ?? "/unknown"))
     });
 
     ok(zoomies.length);
-    ok(photoTargets.get(appHistory.current?.url ?? "/unknown"))
-    ok(zoomies.includes(photoTargets.get(appHistory.current?.url ?? "/unknown") ?? {}));
+    ok(photoTargets.get(pathname(appHistory.current?.url ?? "/unknown")))
+    ok(zoomies.includes(photoTargets.get(pathname(appHistory.current?.url ?? "/unknown")) ?? {}));
 }
 
 export async function nextPreviousButtons(appHistory: AppHistory) {
@@ -812,7 +971,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
 
     previous.addEventListener("click", async () => {
         const prevPhotoInHistory = photoNumberFromURL(appHistory.entries()[(appHistory.current?.index ?? -2) - 1]?.url);
-        console.log(prevPhotoInHistory)
+        // console.log(prevPhotoInHistory)
         // console.log({ prevPhotoInHistory, matching: appState.currentPhoto - 1, nav: `/photos/${appState.currentPhoto - 1}` });
         if (prevPhotoInHistory === appState.currentPhoto - 1) {
             // console.log("BACK!");
@@ -843,15 +1002,18 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
         );
     };
 
+    let navigateFinished!: Promise<void>;
+
     addEventListener("fetch", fetchHandler);
 
     appHistory.addEventListener("navigate", event => {
         const photoNumberMaybe = photoNumberFromURL(event.destination.url);
+        console.log({ canTransition: event.canTransition, photoNumberMaybe });
         if (!(typeof photoNumberMaybe === "number" && event.canTransition)) return;
         const photoNumber: number = photoNumberMaybe;
-        event.transitionWhile(handler());
+        event.transitionWhile(navigateFinished = handler());
         async function handler() {
-
+            console.log("transitioning for ", { photoNumber });
 
             // Synchronously update app state and next/previous/permalink UI:
             appState.currentPhoto = photoNumber;
@@ -859,7 +1021,8 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
             next.disabled = appState.currentPhoto === appState.totalPhotos - 1;
             permalink.textContent = event.destination.url;
 
-            const existingSrc = localCache.get(event.destination.key);
+            const existingSrc = event.destination.key && localCache.get(event.destination.key);
+            console.log({ photoNumber, existingSrc, key: event.destination.key });
             if (typeof existingSrc === "string") {
                 currentPhoto.src = existingSrc;
                 return;
@@ -872,7 +1035,9 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
             // currentPhoto.src = URL.createObjectURL(blob);
             const src = await response.text();
             currentPhoto.src = src;
-            localCache.set(event.destination.key, src);
+            if (event.destination.key) {
+                localCache.set(event.destination.key, src);
+            }
         }
     });
 
@@ -883,6 +1048,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
 
     await appHistory.navigate("/photos/0").finished;
 
+    ok(navigateFinished);
+    await navigateFinished;
+    console.log("Current photo");
+    console.log(JSON.stringify({ src: currentPhoto.src }));
+
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/0`);
     ok(!next.disabled);
@@ -890,11 +1060,17 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
 
     await appHistory.navigate("/photos/1").finished;
 
+    ok(navigateFinished);
+    await navigateFinished;
+
+    console.log("Current photo");
+    console.log(JSON.stringify({ src: currentPhoto.src }));
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/1`);
     ok(!next.disabled);
     ok(!previous.disabled);
 
+    // log: Updated window pathname to /photos/2
     await next.dispatchEvent({
         type: "click"
     });
@@ -910,6 +1086,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     ok(next.disabled);
     ok(!previous.disabled);
 
+    // log: Updated window pathname to /photos/8
     await previous.dispatchEvent({
         type: "click"
     });
@@ -919,6 +1096,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     // Utilised navigate
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
 
+    // log: Updated window pathname to /photos/7
     await previous.dispatchEvent({
         type: "click"
     });
@@ -927,9 +1105,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     // Utilised navigate
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
 
+    // Updated window pathname to /photos/8
     await next.dispatchEvent({
         type: "click"
     });
+    // Updated window pathname to /photos/9
     await next.dispatchEvent({
         type: "click"
     });
@@ -938,8 +1118,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
 
+    // This should be 8
     const finalFetchCount = fetchCount;
+    assert(finalFetchCount === 8);
 
+    // log: Updated window pathname to /photos/8
     await previous.dispatchEvent({
         type: "click"
     });
@@ -948,6 +1131,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
 
+    // log: Updated window pathname to /photos/7
     await previous.dispatchEvent({
         type: "click"
     });
@@ -956,10 +1140,13 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
 
-    console.log({ finalFetchCount, fetchCount });
+    // console.log({ finalFetchCount, fetchCount });
 
-    ok(finalFetchCount === fetchCount);
+    if (!isWindowAppHistory(appHistory)) {
+        ok(finalFetchCount === fetchCount);
+    }
 
+    // log: Updated window pathname to /photos/8
     await next.dispatchEvent({
         type: "click"
     });
@@ -967,8 +1154,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     // Utilised forward!
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
-    ok(finalFetchCount === fetchCount);
 
+    if (!isWindowAppHistory(appHistory)) {
+        ok(finalFetchCount === fetchCount);
+    }
+    // log: Updated window pathname to /photos/9
     await next.dispatchEvent({
         type: "click"
     });
@@ -976,19 +1166,27 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     // Utilised forward!
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
-    ok(finalFetchCount === fetchCount);
+    if (!isWindowAppHistory(appHistory)) {
+        ok(finalFetchCount === fetchCount);
+    }
 
     removeEventListener("fetch", fetchHandler);
 
     function photoNumberFromURL(url?: string) {
+        console.log(JSON.stringify({ photoNumberFromURL: url, path: pathname(url) }));
         if (!url) {
             return undefined;
         }
-        const [,photoNumber] = /\/photos\/(\d+)/.exec((new URL(url, "https://example.com")).pathname) ?? [];
+        const [,photoNumber] = /\/photos\/(\d+)/.exec(pathname(url)) ?? [];
+        console.log({ url, photoNumber });
         if (photoNumber) {
             return +photoNumber;
         }
         return undefined;
     }
 
+}
+
+function pathname(url?: string): string  {
+    return new URL(url ?? "/", "https://example.com").pathname;
 }

@@ -47,8 +47,7 @@ export class SyncEventTarget extends EventTargetListeners implements SyncEventTa
                 }
             }
             if (isSignalEvent(event) && event.signal.aborted) {
-                // bye
-                return
+                throw new AbortError();
             }
         }
     }

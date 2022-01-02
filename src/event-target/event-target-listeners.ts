@@ -29,6 +29,8 @@ function isFunctionEventCallback(fn: Function): fn is EventCallback {
 
 export class EventTargetListeners implements EventTargetListeners {
 
+    [key: string]: unknown;
+
     #listeners: EventDescriptor[] = [];
     [EventTargetListenersIgnore] = new WeakSet<EventDescriptor>();
 
@@ -38,11 +40,23 @@ export class EventTargetListeners implements EventTargetListeners {
 
     [EventTargetListenersMatch](type: string | symbol) {
         const external = this[EventTargetListenersSymbol];
-        return [
+        const matched = [
             ...new Set([...(external ?? []), ...this.#listeners])
         ]
             .filter(descriptor => descriptor.type === type || descriptor.type === "*")
             .filter(descriptor => !this[EventTargetListenersIgnore].has(descriptor));
+
+        const listener: unknown = typeof type === "string" ? this[`on${type}`] : undefined;
+
+        if (typeof listener === "function" && isFunctionEventCallback(listener)) {
+            matched.push({
+                type,
+                callback: listener,
+                [EventDescriptorSymbol]: true
+            });
+        }
+
+        return matched;
     }
 
     addEventListener(type: string | symbol, callback: EventCallback, options?: EventTargetAddListenerOptions): void

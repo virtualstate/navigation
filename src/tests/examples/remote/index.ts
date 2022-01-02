@@ -1,6 +1,6 @@
 import {AppHistory as AppHistorySpec, AppHistoryEntry} from "../../../spec/app-history";
 import {AppHistory} from "../../../app-history";
-import {assert, ok} from "../../util";
+import {assert, isWindowAppHistory, ok} from "../../util";
 import {addEventListener} from "../../../event-target/global";
 import {Response} from "@opennetwork/http-representation";
 import {fetch} from "../fetch";
@@ -11,17 +11,20 @@ import {fetch} from "../fetch";
 // Also doesn't abstract between the two with a transport later like fetch, we will
 // show that later on
 export async function remoteExample(appHistory: AppHistorySpec) {
+    if (typeof window !== "undefined") return;
+
     const remote = new AppHistory();
 
     appHistory.addEventListener("currentchange", async () => {
         const { current } = appHistory;
         if (typeof current?.url !== "string") return;
-        await remote.navigate(
+        const { committed, finished } = remote.navigate(
             current.url,
             {
                 state: current.getState()
             }
-        ).finished;
+        );
+        await Promise.all([committed, finished]);
     });
 
     const expectedUrl = `/${Math.random()}`;
@@ -42,17 +45,20 @@ export async function remoteExample(appHistory: AppHistorySpec) {
 
 // Step 2, abstract across fetch
 export async function remoteFetchExample(appHistory: AppHistorySpec) {
+    if (typeof window !== "undefined") return;
+
     const remote = new AppHistory();
 
     addEventListener("fetch", async ({ request, respondWith }) => {
         const body = await request.json();
         const { pathname } = new URL(request.url);
-        await remote.navigate(
+        const { committed, finished } = remote.navigate(
             pathname,
             {
                 state: body
             }
-        ).finished;
+        );
+        await Promise.all([committed, finished]);
         return respondWith(new Response("", { status: 200 }));
     })
 

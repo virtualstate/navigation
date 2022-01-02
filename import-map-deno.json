@@ -10,10 +10,15 @@
     "@virtualstate/union": "https://cdn.skypack.dev/@virtualstate/union",
     "@virtualstate/x": "https://cdn.skypack.dev/@virtualstate/x",
     "@virtualstate/app-history": "./src/app-history.ts",
-    "@virtualstate/app-history-imported": "./src/app-history.ts",
+    "@virtualstate/app-history/polyfill": "./src/polyfill.ts",
     "@virtualstate/app-history/event-target/sync": "./src/event-target/sync-event-target.ts",
     "@virtualstate/app-history/event-target/async": "./src/event-target/async-event-target.ts",
     "@virtualstate/app-history/event-target": "./src/event-target/sync-event-target.ts",
+    "@virtualstate/app-history-imported": "./src/app-history.ts",
+    "@virtualstate/app-history-imported/polyfill": "./src/polyfill.ts",
+    "@virtualstate/app-history-imported/event-target/sync": "./src/event-target/sync-event-target.ts",
+    "@virtualstate/app-history-imported/event-target/async": "./src/event-target/async-event-target.ts",
+    "@virtualstate/app-history-imported/event-target": "./src/event-target/sync-event-target.ts",
     "dom-lite":  "https://cdn.skypack.dev/dom-lite",
     "iterable": "https://cdn.skypack.dev/iterable",
     "uuid": "./src/deno-uuid.ts",
@@ -52,6 +57,7 @@
     "./src/event-target/global": "./src/event-target/global.ts",
     "./src/event-target/descriptor": "./src/event-target/descriptor.ts",
     "./src/event-target/event": "./src/event-target/event.ts",
+    "./src/event-target/create-event": "./src/event-target/create-event.ts",
     "./src/event-target/event-target": "./src/event-target/event-target.ts",
     "./src/event-target/async-event-target": "./src/event-target/async-event-target.ts",
     "./src/event-target/sync-event-target": "./src/event-target/sync-event-target.ts",
@@ -62,6 +68,7 @@
     "./src/event-target/respond-event": "./src/event-target/respond-event.ts",
     "./src/event-target/signal-event": "./src/event-target/signal-event.ts",
     "./src/event-target/transition-event": "./src/event-target/transition-event.ts",
-    "./src/util/import-types": "./src/util/import-types.ts"
+    "./src/util/import-types": "./src/util/import-types.ts",
+    "./src/polyfill": "./src/polyfill.ts"
   }
 }

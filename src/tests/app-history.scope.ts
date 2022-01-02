@@ -1,10 +1,5 @@
 /* c8 ignore start */
-import {AppHistory} from "../app-history";
 import {AppHistoryAssertFn, assertAppHistory} from "./app-history";
-
-declare global {
-    const appHistory: AppHistory;
-}
 
 if (typeof appHistory !== "undefined") {
     try {

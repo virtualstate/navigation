@@ -15,9 +15,9 @@ import {
     AppHistoryTransitionInitialEntries, AppHistoryTransitionKnown,
     AppHistoryTransitionNavigationType, AppHistoryTransitionWhile,
     InternalAppHistoryNavigationType,
-    Rollback,
-    UpdateCurrent
+    Rollback
 } from "./app-history-transition";
+import {createEvent} from "./event-target/create-event";
 
 export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
     entries?: AppHistoryEntry[];
@@ -59,7 +59,6 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         currentIndex,
         options,
         known: initialKnown,
-        startTime,
         current,
         transition,
         transition: {
@@ -80,9 +79,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
 
     let destinationIndex = -1,
         nextIndex = currentIndex;
-    if ( navigationType === UpdateCurrent) {
-        destinationIndex = getEntryIndex(previousEntries, entry);
-    } else if (navigationType === Rollback) {
+    if (navigationType === Rollback) {
         const { index } = options ?? { index: undefined };
         if (typeof index !== "number") throw new InvalidStateError("Expected index to be provided for rollback");
         destinationIndex = index;
@@ -122,7 +119,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         }
     };
 
-    const navigate: AppHistoryNavigateEvent = {
+    const navigate: AppHistoryNavigateEvent = createEvent({
         signal,
         info: undefined,
         ...options,
@@ -137,17 +134,14 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         preventDefault: transition[AppHistoryTransitionAbort].bind(transition),
         transitionWhile,
         type: "navigate"
-    }
-    const currentChange: AppHistoryCurrentChangeEvent = {
+    });
+    const currentChange: AppHistoryCurrentChangeEvent = createEvent({
         from: current,
         type: "currentchange",
         navigationType: navigate.navigationType,
-        startTime,
         transitionWhile
-    };
-    if (navigationType === UpdateCurrent) {
-        resolvedEntries[destination.index] = entry;
-    } else if (navigationType === Rollback) {
+    });
+    if (navigationType === Rollback) {
         const { entries } = options ?? { entries: undefined };
         if (!entries) throw new InvalidStateError("Expected entries to be provided for rollback");
         resolvedEntries = entries;

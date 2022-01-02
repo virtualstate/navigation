@@ -3,6 +3,8 @@ import {
     AppHistory
 } from "../spec/app-history";
 import * as Examples from "./examples";
+import {getConfig} from "./config";
+import {isWindowAppHistory} from "./util";
 
 export interface AppHistoryAssertFn {
     (given: unknown): asserts given is () => AppHistory
@@ -36,16 +38,20 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             const localAppHistory = createAppHistory();
             assertAppHistoryLike(localAppHistory);
 
+            localAppHistory.addEventListener("navigate", (event) => {
+                if (isWindowAppHistory(localAppHistory)) {
+                    // Add a default navigation to disable network features
+                    event.transitionWhile(Promise.resolve());
+                }
+            })
+
             // Add as very first currentchange listener, to allow location change to happen
-            localAppHistory.addEventListener("currentchange", () => {
+            localAppHistory.addEventListener("currentchange", (event) => {
                 const { current } = localAppHistory;
                 if (!current) return;
                 const state = current.getState<{ title?: string }>() ?? {};
                 const { pathname } = new URL(current.url ?? "/", "https://example.com");
-                if (typeof window !== "undefined" && typeof window.history !== "undefined" && (
-                    typeof window.appHistory === "undefined" ||
-                    window.appHistory !== localAppHistory
-                )) {
+                if (typeof window !== "undefined" && typeof window.history !== "undefined" && !isWindowAppHistory(localAppHistory)) {
                     window.history.pushState(state, state.title ?? "", pathname);
                 }
                 console.log(`Updated window pathname to ${pathname}`);
@@ -55,11 +61,23 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             try {
                 console.log("START ", test.name);
                 await test(localAppHistory);
+
+                // Let the events to finish logging
+                if (typeof process !== "undefined" && process.nextTick) {
+                    await new Promise<void>(process.nextTick);
+                } else {
+                    await new Promise<void>(queueMicrotask);
+                }
+                // await new Promise(resolve => setTimeout(resolve, 20));
+
                 console.log("PASS  ", test.name);
             } catch (error) {
                 if (error !== expectedError) {
                     caught = caught || error;
-                    console.error("ERROR", test.name, error)
+                    console.error("ERROR", test.name, error);
+                    if (!getConfig().FLAGS?.includes("CONTINUE_ON_ERROR")) {
+                        break;
+                    }
                 } else {
                     console.log("PASS  ", test.name);
                 }
