@@ -303,6 +303,19 @@ const i = iframe;
 
 let locationHref = new URL("/", globalThis.window.location.href);
 
+const history = {
+  pushState(state, title, url) {
+    if (url) {
+      appHistory.navigate(url, { state });
+    } else {
+      appHistory.updateCurrent({ state });
+    }
+  },
+  back() {
+    return appHistory.back();
+  }
+}
+
 const location = {
     get href() {
         return locationHref.toString()
@@ -318,25 +331,40 @@ const location = {
     }
 }
 
-const tests = [];
+const testSteps = [];
+
+// Wait for all navigations to settle
+appHistory.addEventListener("navigate", () => {
+  const finished = appHistory.transition.finished;
+  testSteps.push(() => finished.catch(error => error));
+})
+iframe.contentWindow.appHistory.addEventListener("navigate", () => {
+  const finished = appHistory.transition.finished;
+  testSteps.push(() => finished.catch(error => error));
+})
+
+let tests = 0;
 
 function promise_test(fn) {
-  tests.push(fn);
+  testSteps.push(fn);
+  tests += 1;
 }
 function async_test(fn) {
-  tests.push(fn);
+  testSteps.push(fn);
+  tests += 1;
 }
 function test(fn) {
-  tests.push(fn);
+  testSteps.push(fn);
+  tests += 1;
 }
 function assert_true(value, message = "Expected true") {
-  console.log(value);
+  // console.log(value);
   if (value !== true) {
     throw new Error(message);
   }
 }
 function assert_equals(left, right) {
-  console.log(JSON.stringify({ left, right }));
+  // console.log(JSON.stringify({ left, right }));
   assert_true(left === right, "Expected values to equal");
 }
 
@@ -345,7 +373,13 @@ const t = {
     setTimeout(resolve, timeout);  
   },
   step_func(fn) {
-    return (...args) => fn(...args);
+    let resolve;
+    const promise = new Promise(r => { resolve = r });
+    testSteps.push(() => promise);
+    return (...args) => {
+      resolve();
+      return fn(...args);
+    }
   },
 }
 
@@ -355,13 +389,13 @@ await ${testWrapperFnName}({
   ${globalNames.join(",\n")}
 });
 
-if (!tests.length) {
+if (!testSteps.length) {
   console.error("No tests configured");
   globalThis.window.testsFailed("No tests configured");
 } else {
   try {
-    await Promise.all(tests.map(async test => test(t)));
-    globalThis.window.testsComplete();
+    await Promise.all(testSteps.map(async test => test(t)));
+    globalThis.window.testsComplete(tests);
   } catch (error) {
     globalThis.window.testsFailed(error);
     throw error;
