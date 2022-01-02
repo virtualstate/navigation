@@ -19,7 +19,7 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 console.log({ testWrapperFnName });
 
 const DEBUG = false;
-const AT_A_TIME = 20;
+const AT_A_TIME = 1;
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
@@ -237,26 +237,26 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 
                 await initialNavigationFinally;
                 
-                add_completion_callback((tests, testStatus) => {
-                    // testStatus.status === testStatus.OK
-                    const allPass = !!tests.length && tests.every(test => test.status === testStatus.OK);
-                
-                    console.log("Complete", allPass ? " PASS " : " FAIL ", testStatus.status === testStatus.OK ? " TEST STATUS OK " : " TEST STATUS NOT OK")
-                    tests.forEach(test => console.log("  ", test.status === testStatus.OK ? "PASS  " : "FAIL ", test.name, test.message));
-                    
-                    try {
-                      if (allPass) {
-                        globalThis.window.testsComplete();
-                      } else {
-                        globalThis.window.testsFailed();
-                      }
-                    } catch (e) {
-                       console.log(e);
-                        globalThis.window.testsFailed(e);
-                    }
-                    
-                    
-                });
+                // add_completion_callback((tests, testStatus) => {
+                //     // testStatus.status === testStatus.OK
+                //     const allPass = !!tests.length && tests.every(test => test.status === testStatus.OK);
+                //
+                //     console.log("Complete", allPass ? " PASS " : " FAIL ", testStatus.status === testStatus.OK ? " TEST STATUS OK " : " TEST STATUS NOT OK")
+                //     tests.forEach(test => console.log("  ", test.status === testStatus.OK ? "PASS  " : "FAIL ", test.name, test.message));
+                //    
+                //     try {
+                //       if (allPass) {
+                //         globalThis.window.testsComplete();
+                //       } else {
+                //         globalThis.window.testsFailed();
+                //       }
+                //     } catch (e) {
+                //        console.log(e);
+                //         globalThis.window.testsFailed(e);
+                //     }
+                //    
+                //    
+                // });
                 
                 const Event = CustomEvent;
                 
@@ -293,6 +293,21 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                     }
                 }
                 
+                const tests = [];
+                
+                function promise_test(fn) {
+                  tests.push(fn);
+                }
+                function test(fn) {
+                  tests.push(fn);
+                }
+                
+                const t = {
+                  step_timeout(resolve, timeout) {
+                    setTimeout(resolve, timeout);  
+                  }
+                }
+                
                 ${DEBUG ? "console.log(\"Starting tests\");" : ""}
                 
                 async function ${testWrapperFnName}() {
@@ -300,6 +315,19 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 }
                 
                 await ${testWrapperFnName}();
+                
+                if (!tests.length) {
+                  console.error("No tests configured");
+                  globalThis.window.testsFailed("No tests configured");
+                } else {
+                  try {
+                    await Promise.all(tests.map(async test => test(t)));
+                    globalThis.window.testsCompleted();
+                  } catch (error) {
+                    console.error(error);
+                    globalThis.window.testsFailed(error);
+                  }
+                }
                 
                 `;
 
