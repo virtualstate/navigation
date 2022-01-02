@@ -44,11 +44,13 @@ export function startServer(port: number) {
     }
 }
 
-async function createJavaScriptBundle(url: URL) {
+export async function createJavaScriptBundle(url: URL) {
     const cwd = resolve(dirname(new URL(import.meta.url).pathname), "../..");
     const withoutExtension = url.pathname.replace(/\.html\.js$/, "");
+    console.log({ cwd, withoutExtension });
     if (withoutExtension.includes(".")) throw new Error("Unexpected dot in path");
     const htmlPath = join(cwd, namespacePath, `${withoutExtension}.html`);
+    console.log({ cwd, withoutExtension, htmlPath });
     const html = await fs.readFile(htmlPath, "utf-8");
     if (!html) return "";
     const $ = Cheerio.load(html);
@@ -59,6 +61,7 @@ async function createJavaScriptBundle(url: URL) {
                 return $(this).attr("src")
             })
             .toArray()
+            .filter(dependency => url.searchParams.get("localDependenciesOnly") ? !dependency.startsWith("/") : true)
             .map(async (dependency): Promise<[string, string]> => [
                 dependency,
                 await fs.readFile(join(cwd, namespacePath, new URL(dependency, url.toString()).pathname), "utf-8").catch(() => "// Could not load")

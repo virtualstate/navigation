@@ -95,10 +95,10 @@ export class AsyncEventTarget extends EventTargetListeners implements AsyncEvent
                     unhandled = unhandled.filter(result => !isSignalHandled(event, result.reason))
                 }
                 if (unhandled.length === 1) {
-                    await Promise.reject(unhandled[0]);
-                    throw unhandled[0]; // We shouldn't get here
+                    await Promise.reject(unhandled[0].reason);
+                    throw unhandled[0].reason; // We shouldn't get here
                 } else if (unhandled.length > 1) {
-                    throw new AggregateError(unhandled);
+                    throw new AggregateError(unhandled.map(({ reason }) => reason));
                 }
             }
         }

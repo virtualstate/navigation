@@ -185,19 +185,27 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const handler = () => {
             return this.#immediateTransition(givenNavigationType, entry, nextTransition, options);
         };
-        const previousPromise = this.#activePromise;
-        let nextPromise;
-        // console.log({ givenNavigationType });
-        if (givenNavigationType === Rollback) {
-            nextPromise = handler().then(() => previousPromise);
-        } else {
-            if (previousPromise) {
-                nextPromise = previousPromise.then(handler);
-            } else {
-                nextPromise = handler();
-            }
-        }
-        this.#activePromise = nextPromise.catch(error => void error);
+        void handler();
+        // const previousPromise = this.#activePromise;
+        // let nextPromise;
+        // // console.log({ givenNavigationType });
+        // if (givenNavigationType === Rollback) {
+        //     nextPromise = handler().then(() => previousPromise);
+        // } else {
+        //     if (previousPromise) {
+        //         nextPromise = previousPromise.then(handler);
+        //     } else {
+        //         nextPromise = handler();
+        //     }
+        // }
+        // console.log({ previousPromise, nextPromise });
+        // const promise = nextPromise
+        //     .catch(error => void error)
+        //     .then(() => {
+        //         if (this.#activePromise === promise) {
+        //             this.#activePromise = undefined;
+        //         }
+        //     })
         this.#queueTransition(nextTransition);
         return { committed, finished };
 
@@ -287,6 +295,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                     type: "currentchange"
                 })
             );
+            committed = true;
             return entry;
         }
 
@@ -339,7 +348,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         }
 
         const syncCommit = ({ entries, index, known }: Commit) => {
-            committed = true;
             this.#entries = entries;
             if (known) {
                 this.#known = new Set([...this.#known, ...(known)])
@@ -394,6 +402,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             if (entry.sameDocument) {
                 yield transition.dispatchEvent(currentChange);
             }
+            committed = true;
             if (typeof navigationType === "string") {
                 yield entry.dispatchEvent(
                     createEvent({

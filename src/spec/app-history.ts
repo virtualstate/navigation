@@ -1,15 +1,9 @@
 /**
  * This file is derived from https://github.com/WICG/app-history/blob/7c0332b30746b14863f717404402bc49e497a2b2/app_history.d.ts
  *
- * The main changes here is the usage of optional types over null, and support for updateCurrent()?.finished;
+ * The main changes here is the usage of optional types over null, and support for updateCurrent()?.then;
  *
  * null is still included in places where properties have been marked as optional
- *
- * Property based event listeners are not invoked, e.g. the below will not work
- *
- * e.g. appHistory.oncurrentchange = () => console.log("changed!")
- *
- * Instead use addEventListener
  */
 
 import {AsyncEventTarget as EventTarget, EventCallback, Event, EventTargetListeners, EventDescriptor, EventTargetAddListenerOptions} from "../event-target";
@@ -44,11 +38,10 @@ export interface AppHistory extends EventTarget {
     back(options?: AppHistoryNavigationOptions): AppHistoryResult;
     forward(options?: AppHistoryNavigationOptions): AppHistoryResult;
 
-    // TODO, not implemented
-    // onnavigate?: ((this: AppHistory, ev: AppHistoryNavigateEvent) => unknown) | null;
-    // onnavigatesuccess?: ((this: AppHistory, ev: Event) => unknown) | null;
-    // onnavigateerror?: ((this: AppHistory, ev: ErrorEvent) => unknown) | null;
-    // oncurrentchange?: ((this: AppHistory, ev: AppHistoryCurrentChangeEvent) => unknown) | null;
+    onnavigate?: ((this: AppHistory, ev: AppHistoryNavigateEvent) => unknown) | null;
+    onnavigatesuccess?: ((this: AppHistory, ev: Event) => unknown) | null;
+    onnavigateerror?: ((this: AppHistory, ev: ErrorEvent) => unknown) | null;
+    oncurrentchange?: ((this: AppHistory, ev: AppHistoryCurrentChangeEvent) => unknown) | null;
 
     addEventListener<K extends keyof AppHistoryEventMap>(type: K, listener: (ev: AppHistoryEventMap[K]) => unknown, options?: boolean | EventTargetAddListenerOptions): void;
     addEventListener(type: string, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void;

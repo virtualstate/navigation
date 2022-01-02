@@ -13,14 +13,71 @@ import {Response} from "@opennetwork/http-representation";
 import {deferred} from "../../util/deferred";
 
 export async function initialNavigateThenBack(appHistory: AppHistory) {
+    let navigateCalled = false,
+        currentChangeCalled = false;
     appHistory.addEventListener("navigate", (event) => {
+        navigateCalled = true;
         event.transitionWhile( new Promise<void>(queueMicrotask));
     }, { once: true });
+    appHistory.addEventListener("currentchange", () => {
+        currentChangeCalled = true;
+    })
     const { committed, finished } = appHistory.navigate("/test", {
         state: {
             value: 1
         }
     });
+
+    // These are called sync after navigate is called no matter what
+    assert<true>(navigateCalled);
+    assert<true>(currentChangeCalled);
+
+    // This ties in the async update requirement
+    const updatedCurrent = appHistory.current;
+    assert<AppHistoryEntry>(updatedCurrent);
+    ok(updatedCurrent.getState<{ value: 1 }>().value === 1);
+
+    const committedEntry = await committed;
+    const finishedEntry = await finished;
+
+    ok(updatedCurrent === appHistory.current);
+    ok(finishedEntry === appHistory.current);
+    ok(committedEntry === finishedEntry);
+
+    if (!isWindowAppHistory(appHistory)) {
+        let caught;
+        if (!appHistory.canGoBack) {
+            try {
+                await appHistory.back();
+            } catch (error) {
+                // No initial back
+                caught = error;
+            }
+        }
+        assert(caught);
+    }
+}
+
+
+export async function initialNavigateThenBackAssigned(appHistory: AppHistory) {
+    let navigateCalled = false,
+        currentChangeCalled = false;
+    appHistory.onnavigate = (event) => {
+        navigateCalled = true;
+        event.transitionWhile( new Promise<void>(queueMicrotask));
+    };
+    appHistory.oncurrentchange = () => {
+        currentChangeCalled = true;
+    };
+    const { committed, finished } = appHistory.navigate("/test", {
+        state: {
+            value: 1
+        }
+    });
+
+    // These are called sync after navigate is called no matter what
+    assert<true>(navigateCalled);
+    assert<true>(currentChangeCalled);
 
     // This ties in the async update requirement
     const updatedCurrent = appHistory.current;

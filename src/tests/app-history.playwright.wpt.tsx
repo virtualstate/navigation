@@ -6,11 +6,13 @@ import fs from "fs";
 import path from "path";
 import {getConfig} from "./config";
 import * as Cheerio from "cheerio";
-import {DependenciesHTML} from "./dependencies";
+import {DependenciesHTML, DependenciesSyncHTML} from "./dependencies";
 import {Browser, Page} from "playwright";
 import {v4} from "uuid";
+import {createJavaScriptBundle} from "./app-history.server.wpt";
 
 const namespacePath = "/node_modules/wpt/app-history";
+const namespaceBundlePath = "/app-history";
 const buildPath = "/esnext";
 const resourcesInput = "/resources";
 const resourcesTarget = "/node_modules/wpt/resources";
@@ -19,7 +21,7 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 console.log({ testWrapperFnName });
 
 const DEBUG = false;
-const AT_A_TIME = 1;
+const AT_A_TIME = 20;
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
@@ -183,14 +185,24 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
     }
 
     await page.route('**/*', async (route, request) => {
-        const { pathname } = new URL(request.url());
+        const routeUrl = new URL(request.url());
+        const { pathname } = routeUrl;
 
         if (pathname.endsWith("foo.html")) {
             return route.abort();
         }
 
-        // console.log({ pathname, isResources: pathname.startsWith(resourcesInput) });
-        if (pathname.startsWith(namespacePath) || pathname.startsWith(resourcesInput) || pathname.startsWith(buildPath)) {
+        // console.log({ pathname, isResources: pathname.startsWith(resourcesInput), isBundle: pathname.startsWith(namespaceBundlePath) && pathname.endsWith(".html.js") });
+        if (pathname.startsWith(namespaceBundlePath) && pathname.endsWith(".html.js")) {
+            const contents = await createJavaScriptBundle(routeUrl);
+            return route.fulfill({
+                body: contents,
+                headers: {
+                    "Content-Type": "application/javascript",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            });
+        } else if (pathname.startsWith(namespacePath) || pathname.startsWith(resourcesInput) || pathname.startsWith(buildPath)) {
             const { pathname: file } = new URL(import.meta.url);
             let input = pathname.startsWith(resourcesInput) ? pathname.replace(resourcesInput, resourcesTarget) : pathname;
             let importTarget = path.resolve(path.join(path.dirname(file), '../..', input));
@@ -213,24 +225,38 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
             if (importTarget.endsWith(".html")) {
                 contentType = "text/html";
 
-                const $ = Cheerio.load(contents);
+                const globalNames = [
+                    "appHistory",
+                    "window",
+                    "i",
+                    "iframe",
+                    "location",
+                    "history",
+                    "promise_test",
+                    "test",
+                    "assert_true",
+                    "assert_equals",
+                    "async_test",
+                ]
 
-                const targetUrl = `http://localhost:3000/app-history${url}.js?exportAs=${testWrapperFnName}&globals=appHistory,window,i,iframe,location,history`;
+                const targetUrl = `${namespaceBundlePath}${url}.js?exportAs=${testWrapperFnName}&globals=${globalNames.join(",")}`;
 
+                // console.log({ targetUrl, namespacePath, url })
                 const scriptText = `
 globalThis.rv = [];
 
-const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
+const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1&localDependenciesOnly=1");
 
 const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
 
 let appHistoryTarget = new AppHistory();
 
 function proxyAppHistory(appHistory, get) {
-  return new Proxy(appHistoryTarget, {
+  return new Proxy(appHistory, {
     get(u, property) {
-      const value = get()[property];
-      if (typeof value === "function") return value.bind(appHistoryTarget);
+      const currentTarget = get();
+      const value = currentTarget[property];
+      if (typeof value === "function") return value.bind(currentTarget);
       return value;
     }
   });
@@ -247,7 +273,7 @@ async function navigateFinally(appHistory, url) {
     const initialNavigationFinally = new Promise((resolve) => appHistory.addEventListener(AppHistoryTransitionFinally, resolve, { once: true }));
     
     // Initialise first navigation to emulate a page loaded
-    await appHistory.navigate("/").finished;
+    await appHistory.navigate(url).finished;
     
     await initialNavigationFinally;
 }
@@ -257,7 +283,6 @@ const Event = CustomEvent;
 
 const window = {
   set onload(value) {
-  console.log("onload set");
     value();
   },
   appHistory
@@ -274,6 +299,7 @@ const iframe = {
     iframeAppHistoryTarget = new AppHistory();
   }
 };
+const i = iframe;
 
 let locationHref = new URL("/", globalThis.window.location.href);
 
@@ -297,27 +323,36 @@ const tests = [];
 function promise_test(fn) {
   tests.push(fn);
 }
+function async_test(fn) {
+  tests.push(fn);
+}
 function test(fn) {
   tests.push(fn);
+}
+function assert_true(value, message = "Expected true") {
+  console.log(value);
+  if (value !== true) {
+    throw new Error(message);
+  }
+}
+function assert_equals(left, right) {
+  console.log(JSON.stringify({ left, right }));
+  assert_true(left === right, "Expected values to equal");
 }
 
 const t = {
   step_timeout(resolve, timeout) {
     setTimeout(resolve, timeout);  
-  }
+  },
+  step_func(fn) {
+    return (...args) => fn(...args);
+  },
 }
 
 console.log("Starting tests");
 
-${testWrapperFnName}({
-  window,
-  location,
-  history: globalThis.history,
-  appHistory,
-  iframe,
-  i: iframe,
-  test,
-  promise_test
+await ${testWrapperFnName}({
+  ${globalNames.join(",\n")}
 });
 
 if (!tests.length) {
@@ -326,16 +361,16 @@ if (!tests.length) {
 } else {
   try {
     await Promise.all(tests.map(async test => test(t)));
-    globalThis.window.testsCompleted();
+    globalThis.window.testsComplete();
   } catch (error) {
-    console.error(error);
     globalThis.window.testsFailed(error);
+    throw error;
   }
 }
                 
                 `.trim();
                 contents = `
-${DependenciesHTML}
+${DependenciesSyncHTML}
 <script type="module">${scriptText}</script>
                 `.trim()
                 //
@@ -373,10 +408,15 @@ ${DependenciesHTML}
 
     try {
         await promise;
+    } catch (e) {
+        if (DEBUG) {
+            // await new Promise(() => void 0);
+            // await new Promise(resolve => setTimeout(resolve, 5000));
+        }
     } finally {
         if (DEBUG) {
             // await new Promise(() => void 0);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            // await new Promise(resolve => setTimeout(resolve, 5000));
         }
     }
 }
