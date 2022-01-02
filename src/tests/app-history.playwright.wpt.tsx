@@ -374,7 +374,7 @@ const t = {
   },
   step_func(fn) {
     let resolve, reject;
-    const promise = new Promise((resolveFn, rejectFn => { resolve = resolveFn; reject = rejectFn; });
+    const promise = new Promise((resolveFn, rejectFn) => { resolve = resolveFn; reject = rejectFn; });
     testSteps.push(() => promise);
     return (...args) => {
       try {
