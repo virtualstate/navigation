@@ -21,9 +21,16 @@ export async function initialNavigateThenBack(appHistory: AppHistory) {
             value: 1
         }
     });
+
+    // This ties in the async update requirement
+    const updatedCurrent = appHistory.current;
+    assert<AppHistoryEntry>(updatedCurrent);
+    ok(updatedCurrent.getState<{ value: 1 }>().value === 1);
+
     const committedEntry = await committed;
     const finishedEntry = await finished;
 
+    ok(updatedCurrent === appHistory.current);
     ok(finishedEntry === appHistory.current);
     ok(committedEntry === finishedEntry);
 
@@ -572,7 +579,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     const redirectError = await redirectFinishedErrored.catch(error => error);
 
-    console.log({ redirectError });
+    // console.log({ redirectError });
 
     assert(redirectError);
     assert(redirectError instanceof Error);
