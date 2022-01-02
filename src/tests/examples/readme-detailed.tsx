@@ -443,6 +443,7 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     ok(!toasts.length);
 
+    // Reject after committed using currentchange, or before committed using navigate
     appHistory.addEventListener("navigate",  (event) => {
         event.transitionWhile(Promise.reject(new Error(expectedError)));
     }, { once: true });

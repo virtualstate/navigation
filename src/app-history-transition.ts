@@ -9,7 +9,7 @@ import {
 import {AppHistoryEntry} from "./app-history-entry";
 import {deferred, Deferred} from "./util/deferred";
 import {AbortError, InvalidStateError, isAbortError, isInvalidStateError} from "./app-history-errors";
-import {AsyncEventTarget as EventTarget} from "./event-target";
+import {Event, EventTarget} from "./event-target";
 
 export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
 export const Unset = Symbol.for("@virtualstate/app-history/unset");

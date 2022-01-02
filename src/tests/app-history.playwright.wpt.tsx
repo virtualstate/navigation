@@ -45,8 +45,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
 
     const types = (await fs.promises.readdir(`.${namespacePath}`)).filter(value => !value.includes("."));
 
-
-    const urls = [
+    let urls = [
         ...(await Promise.all(
             types.map(async type => {
                 return (
@@ -58,6 +57,11 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         ))
             .flatMap(value => value)
     ];
+
+    if (DEBUG) {
+        // urls = urls.slice(0, 3);
+        urls = urls.filter(url => url.includes("transitionWhile"));
+    }
 
     console.log("STARTING:");
     urls.forEach(url => console.log(`  - ${url}`));
@@ -94,7 +98,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
                     };
                     console.log(result);
                 })
-        )
+        );
     }
 
     await fs.promises.writeFile("./coverage/wpt.results.json", JSON.stringify(result));
@@ -138,11 +142,6 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
 
             // console.log(code.split('\n').length);
 
-
-            // console.log(JSON.stringify(coverage));
-
-            console.log(matchingFn.ranges);
-
             console.log(`PASS  ${url} : ${lines} Lines`);
             urlsPass.push(url);
             pass += 1;
@@ -155,8 +154,8 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             urlsFailed.push(url);
         }
         await page.close();
+        await context.close();
     }
-
 }
 
 console.log(`PASS assertAppHistory:playwright:new AppHistory`);
@@ -176,8 +175,12 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
         return reject(reason);
     });
 
-    page.on('console', console.log);
-    page.on('pageerror', reject);
+    if (DEBUG) {
+        page.on('console', console.log);
+    } else {
+        // you can comment out this one :)
+        page.on('console', console.log);
+    }
 
     await page.route('**/*', async (route, request) => {
         const { pathname } = new URL(request.url());
@@ -212,130 +215,129 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
 
                 const $ = Cheerio.load(contents);
 
-                // Set all scripts as module
-                $("script").attr("type", "module");
-
-                const script = $("script:not([src])");
+                const targetUrl = `http://localhost:3000/app-history${url}.js?exportAs=${testWrapperFnName}&globals=appHistory,window,i,iframe,location,history`;
 
                 const scriptText = `
-                
-                globalThis.rv = [];
-                
-                const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
-                
-                const appHistory = new AppHistory();
-                
-                globalThis.appHistory = appHistory;
-                
-                appHistory.addEventListener("navigateerror", console.error);
-                
-                // This allows us to wait for the navigation to fully settle before starting 
-                const initialNavigationFinally = new Promise((resolve) => appHistory.addEventListener(AppHistoryTransitionFinally, resolve, { once: true }));
-                
-                // Initialise first navigation to emulate a page loaded
-                await appHistory.navigate("/").finished;
-                
-                await initialNavigationFinally;
-                
-                // add_completion_callback((tests, testStatus) => {
-                //     // testStatus.status === testStatus.OK
-                //     const allPass = !!tests.length && tests.every(test => test.status === testStatus.OK);
-                //
-                //     console.log("Complete", allPass ? " PASS " : " FAIL ", testStatus.status === testStatus.OK ? " TEST STATUS OK " : " TEST STATUS NOT OK")
-                //     tests.forEach(test => console.log("  ", test.status === testStatus.OK ? "PASS  " : "FAIL ", test.name, test.message));
-                //    
-                //     try {
-                //       if (allPass) {
-                //         globalThis.window.testsComplete();
-                //       } else {
-                //         globalThis.window.testsFailed();
-                //       }
-                //     } catch (e) {
-                //        console.log(e);
-                //         globalThis.window.testsFailed(e);
-                //     }
-                //    
-                //    
-                // });
-                
-                const Event = CustomEvent;
-                
-                const window = {
-                  set onload(value) {
-                    value();
-                  },
-                  appHistory
-                };
-                
-                const iframe = {
-                  contentWindow: {
-                    appHistory,
-                    DOMException: InvalidStateError
-                  }
-                };
-                
-                const i = iframe;
-                
-                let locationHref = new URL("/", globalThis.window.location.href);
-                
-                const location = {
-                    get href() {
-                        return locationHref.toString()
-                    },
-                    set href(value) {
-                        locationHref = new URL(value, locationHref.toString());
-                        const { finished, committed } = appHistory.navigate(locationHref.toString());
-                        void committed.catch(error => error);
-                        void finished.catch(error => error);
-                    },
-                    get hash() {
-                        return locationHref.hash;
-                    }
-                }
-                
-                const tests = [];
-                
-                function promise_test(fn) {
-                  tests.push(fn);
-                }
-                function test(fn) {
-                  tests.push(fn);
-                }
-                
-                const t = {
-                  step_timeout(resolve, timeout) {
-                    setTimeout(resolve, timeout);  
-                  }
-                }
-                
-                ${DEBUG ? "console.log(\"Starting tests\");" : ""}
-                
-                async function ${testWrapperFnName}() {
-                  ${script.html() ? script.html().replace("null", "undefined") : "globalThis.window.testsFailed()"}
-                }
-                
-                await ${testWrapperFnName}();
-                
-                if (!tests.length) {
-                  console.error("No tests configured");
-                  globalThis.window.testsFailed("No tests configured");
-                } else {
-                  try {
-                    await Promise.all(tests.map(async test => test(t)));
-                    globalThis.window.testsCompleted();
-                  } catch (error) {
-                    console.error(error);
-                    globalThis.window.testsFailed(error);
-                  }
-                }
-                
-                `;
+globalThis.rv = [];
 
-                script.html(scriptText);
+const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
 
-                $("*").first().before(DependenciesHTML);
+const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
 
-                contents = $.html();
+let appHistoryTarget = new AppHistory();
+
+function proxyAppHistory(appHistory, get) {
+  return new Proxy(appHistoryTarget, {
+    get(u, property) {
+      const value = get()[property];
+      if (typeof value === "function") return value.bind(appHistoryTarget);
+      return value;
+    }
+  });
+}
+
+const appHistory = proxyAppHistory(appHistoryTarget, () => appHistoryTarget);
+
+globalThis.appHistory = appHistory;
+
+appHistory.addEventListener("navigateerror", console.error);
+
+async function navigateFinally(appHistory, url) {
+    // This allows us to wait for the navigation to fully settle before starting 
+    const initialNavigationFinally = new Promise((resolve) => appHistory.addEventListener(AppHistoryTransitionFinally, resolve, { once: true }));
+    
+    // Initialise first navigation to emulate a page loaded
+    await appHistory.navigate("/").finished;
+    
+    await initialNavigationFinally;
+}
+await navigateFinally(appHistoryTarget, "/");
+
+const Event = CustomEvent;
+
+const window = {
+  set onload(value) {
+  console.log("onload set");
+    value();
+  },
+  appHistory
+};
+
+let iframeAppHistoryTarget = new AppHistory();
+await navigateFinally(iframeAppHistoryTarget, "/");
+const iframe = {
+  contentWindow: {
+    appHistory: proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget),
+    DOMException: InvalidStateError
+  },
+  remove() {
+    iframeAppHistoryTarget = new AppHistory();
+  }
+};
+
+let locationHref = new URL("/", globalThis.window.location.href);
+
+const location = {
+    get href() {
+        return locationHref.toString()
+    },
+    set href(value) {
+        locationHref = new URL(value, locationHref.toString());
+        const { finished, committed } = appHistory.navigate(locationHref.toString());
+        void committed.catch(error => error);
+        void finished.catch(error => error);
+    },
+    get hash() {
+        return locationHref.hash;
+    }
+}
+
+const tests = [];
+
+function promise_test(fn) {
+  tests.push(fn);
+}
+function test(fn) {
+  tests.push(fn);
+}
+
+const t = {
+  step_timeout(resolve, timeout) {
+    setTimeout(resolve, timeout);  
+  }
+}
+
+console.log("Starting tests");
+
+${testWrapperFnName}({
+  window,
+  location,
+  history: globalThis.history,
+  appHistory,
+  iframe,
+  i: iframe,
+  test,
+  promise_test
+});
+
+if (!tests.length) {
+  console.error("No tests configured");
+  globalThis.window.testsFailed("No tests configured");
+} else {
+  try {
+    await Promise.all(tests.map(async test => test(t)));
+    globalThis.window.testsCompleted();
+  } catch (error) {
+    console.error(error);
+    globalThis.window.testsFailed(error);
+  }
+}
+                
+                `.trim();
+                contents = `
+${DependenciesHTML}
+<script type="module">${scriptText}</script>
+                `.trim()
                 //
                 // console.log(contents);
             }
@@ -367,10 +369,15 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
 
     // console.log("Network idle");
 
-    setTimeout(reject, 60000, new Error("Timeout"));
+    setTimeout(reject, 30000, new Error("Timeout"));
 
-    await promise;
-
-
+    try {
+        await promise;
+    } finally {
+        if (DEBUG) {
+            // await new Promise(() => void 0);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+    }
 }
 /* c8 ignore end */

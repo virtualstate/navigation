@@ -43,7 +43,6 @@ import {
     createAppHistoryTransition,
     InternalAppHistoryNavigateOptions,
 } from "./create-app-history-transition";
-import {deferred} from "./util/deferred";
 import {createEvent} from "./event-target/create-event";
 
 export * from "./spec/app-history";
@@ -480,8 +479,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 }
             })
             .then(() => entry)
-
-
     }
 
     #dispose = async () => {
