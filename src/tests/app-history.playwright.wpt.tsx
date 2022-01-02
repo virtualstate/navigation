@@ -373,12 +373,22 @@ const t = {
     setTimeout(resolve, timeout);  
   },
   step_func(fn) {
-    let resolve;
-    const promise = new Promise(r => { resolve = r });
+    let resolve, reject;
+    const promise = new Promise((resolveFn, rejectFn => { resolve = resolveFn; reject = rejectFn; });
     testSteps.push(() => promise);
     return (...args) => {
-      resolve();
-      return fn(...args);
+      try {
+        const result = fn(...args);
+        if (result && "then" in result) {
+           return result.then(resolve, reject).then(() => result);
+        } else {
+           resolve();
+        }
+        return result;
+      } catch (error) {
+        reject(error);
+        throw error;
+      }
     }
   },
 }
