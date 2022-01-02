@@ -10,7 +10,7 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
  ### Test Coverage
 
- ![Web Platform Tests 159/159](https://img.shields.io/badge/Web%20Platform%20Tests-159%2F159-brightgreen) ![95.03%25 lines covered](https://img.shields.io/badge/lines-95.03%25-brightgreen) ![95.03%25 statements covered](https://img.shields.io/badge/statements-95.03%25-brightgreen) ![93.94%25 functions covered](https://img.shields.io/badge/functions-93.94%25-brightgreen) ![84.68%25 branches covered](https://img.shields.io/badge/branches-84.68%25-brightgreen)
+ ![Web Platform Tests 159/159](https://img.shields.io/badge/Web%20Platform%20Tests-159%2F159-brightgreen) ![95.32%25 lines covered](https://img.shields.io/badge/lines-95.32%25-brightgreen) ![95.32%25 statements covered](https://img.shields.io/badge/statements-95.32%25-brightgreen) ![94.08%25 functions covered](https://img.shields.io/badge/functions-94.08%25-brightgreen) ![85.07%25 branches covered](https://img.shields.io/badge/branches-85.07%25-brightgreen)
 
 [//]: # (badges)
 

@@ -128,6 +128,9 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
         this.#options = init;
         this.finished = this[AppHistoryTransitionFinishedDeferred].promise;
         this.committed = this[AppHistoryTransitionCommittedDeferred].promise;
+        // Auto catching abort
+        void this.finished.catch(error => error);
+        void this.committed.catch(error => error);
         this.from = init.from;
         this.navigationType = init.navigationType;
         this[AppHistoryTransitionFinishedEntries] = init[AppHistoryTransitionFinishedEntries];
@@ -181,7 +184,11 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
                 );
                 this.addEventListener(
                     AppHistoryTransitionAbort,
-                    () => this[AppHistoryTransitionRejected](new AbortError())
+                    () => {
+                        if (!this[AppHistoryTransitionIsFinished]) {
+                            return this[AppHistoryTransitionRejected](new AbortError())
+                        }
+                    }
                 )
             }
 
@@ -334,6 +341,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
     }
 
     [AppHistoryTransitionAbort]() {
+        if (this.#abortController.signal.aborted) return;
         this.#abortController.abort();
         this.dispatchEvent({
             type: AppHistoryTransitionAbort,

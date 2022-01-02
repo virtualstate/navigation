@@ -185,7 +185,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         const handler = () => {
             return this.#immediateTransition(givenNavigationType, entry, nextTransition, options);
         };
-        void handler();
+        void handler().catch(error => void error);
         // const previousPromise = this.#activePromise;
         // let nextPromise;
         // // console.log({ givenNavigationType });
@@ -314,6 +314,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 for (const promise of iterable) {
                     if (promise && "then" in promise) {
                         promises.push(promise);
+                        void promise.catch(error => error);
                     }
                     if (committed) {
                         return asyncTransition();
@@ -348,6 +349,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         }
 
         const syncCommit = ({ entries, index, known }: Commit) => {
+            if (transition.signal.aborted) return;
             this.#entries = entries;
             if (known) {
                 this.#known = new Set([...this.#known, ...(known)])
@@ -355,9 +357,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             this.#currentIndex = index;
         }
 
-        const asyncCommit = async (commit: Commit) => {
+        const asyncCommit = (commit: Commit) => {
             syncCommit(commit);
-            await transition.dispatchEvent(
+            return transition.dispatchEvent(
                 createEvent(
                     {
                         type: AppHistoryTransitionCommit,
@@ -466,25 +468,25 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                         transition,
                         entry
                     });
-                } else {
-                    await dispose();
-                    await transition.dispatchEvent({
-                        type: AppHistoryTransitionFinally,
-                        transition,
-                        entry
-                    });
-                    await transition[AppHistoryTransitionWait]();
-                    if (this.#activeTransition === transition) {
-                        this.#activeTransition = undefined;
-                    }
-                    if (entry.sameDocument && typeof navigationType === "string") {
-                        performance.mark(`same-document-navigation-finish:${entry.id}`);
-                        performance.measure(
-                            `same-document-navigation:${entry.url}`,
-                            `same-document-navigation:${entry.id}`,
-                            `same-document-navigation-finish:${entry.id}`
-                        );
-                    }
+                }
+
+                await dispose();
+                await transition.dispatchEvent({
+                    type: AppHistoryTransitionFinally,
+                    transition,
+                    entry
+                });
+                await transition[AppHistoryTransitionWait]();
+                if (this.#activeTransition === transition) {
+                    this.#activeTransition = undefined;
+                }
+                if (entry.sameDocument && typeof navigationType === "string") {
+                    performance.mark(`same-document-navigation-finish:${entry.id}`);
+                    performance.measure(
+                        `same-document-navigation:${entry.url}`,
+                        `same-document-navigation:${entry.id}`,
+                        `same-document-navigation-finish:${entry.id}`
+                    );
                 }
             })
             .then(() => entry)
