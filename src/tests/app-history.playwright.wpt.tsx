@@ -21,7 +21,7 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 console.log({ testWrapperFnName });
 
 const DEBUG = false;
-const AT_A_TIME = 20;
+const AT_A_TIME = 60;
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
@@ -168,8 +168,8 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
 
     void promise.catch(error => error);
 
-    await page.exposeFunction("testsComplete", () => {
-        console.log(`Playwright tests complete tests for ${browserName} ${browser.version()}`)
+    await page.exposeFunction("testsComplete", (details: unknown) => {
+        console.log(`Playwright tests complete tests for ${browserName} ${browser.version()}`, details)
         return resolve();
     });
     await page.exposeFunction("testsFailed", (reason: unknown) => {
@@ -234,9 +234,13 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                     "history",
                     "promise_test",
                     "test",
-                    "assert_true",
-                    "assert_equals",
+                    // "assert_true",
+                    // "assert_false",
+                    // "assert_equals",
+                    // "assert_not_equals",
+                    // "assert_unreached",
                     "async_test",
+                    "promise_rejects_dom"
                 ]
 
                 const targetUrl = `${namespaceBundlePath}${url}.js?exportAs=${testWrapperFnName}&globals=${globalNames.join(",")}`;
@@ -245,7 +249,7 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 const scriptText = `
 globalThis.rv = [];
 
-const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1&localDependenciesOnly=1");
+const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
 
 const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
 
@@ -293,11 +297,17 @@ await navigateFinally(iframeAppHistoryTarget, "/");
 const iframe = {
   contentWindow: {
     appHistory: proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget),
-    DOMException: InvalidStateError
+    DOMException: InvalidStateError,
+    set onload(value) {
+      value();
+    },
   },
   remove() {
     iframeAppHistoryTarget = new AppHistory();
-  }
+  },
+  set onload(value) {
+    value();
+  },
 };
 const i = iframe;
 
@@ -343,36 +353,86 @@ iframe.contentWindow.appHistory.addEventListener("navigate", () => {
   testSteps.push(() => finished.catch(error => error));
 })
 
-let tests = 0;
+const details = {
+  tests: 0,
+  assert_true: 0,
+  assert_false: 0,
+  assert_equals: 0,
+  assert_not_equals: 0,
+  step_timeout: 0,
+  step_func: 0,
+  step_func_done: 0,
+  promise_rejects_dom: 0,
+  done: 0
+}
 
 function promise_test(fn) {
   testSteps.push(fn);
-  tests += 1;
+  details.tests += 1;
 }
 function async_test(fn) {
   testSteps.push(fn);
-  tests += 1;
+  details.tests += 1;
 }
 function test(fn) {
   testSteps.push(fn);
-  tests += 1;
+  details.tests += 1;
 }
 function assert_true(value, message = "Expected true") {
+  details.assert_true += 1;
   // console.log(value);
   if (value !== true) {
     throw new Error(message);
   }
 }
+function assert_false(value, message = "Expected false") {
+  details.assert_false += 1;
+  // console.log(value);
+  if (value !== false) {
+    throw new Error(message);
+  }
+}
 function assert_equals(left, right) {
+  details.assert_equals += 1;
   // console.log(JSON.stringify({ left, right }));
-  assert_true(left === right, "Expected values to equal");
+  if (left !== right) {
+    throw new Error("Expected values to equal");
+  }
+}
+function assert_not_equals(left, right) {
+  details.assert_not_equals += 1;
+  // console.log(JSON.stringify({ left, right }));
+  if (left === right) {
+    throw new Error("Expected values to not equal");
+  }
+}
+
+async function promise_rejects_dom(test, name, promise) {
+  details.promise_rejects_dom += 1;
+  let caught;
+  try {
+    await promise;
+  } catch (error) {
+    caught = error;
+  }
+  if (!caught) {
+    throw new Error("Expected promise rejection");
+  }
+}
+
+function assert_unreached() {
+  const error = new Error("Did not expect to reach here");
+  testSteps.push(() => Promise.reject(error));
+  throw error;
 }
 
 const t = {
   step_timeout(resolve, timeout) {
+    details.step_timeout += 1;
     setTimeout(resolve, timeout);  
   },
   step_func(fn) {
+    details.step_func += 1;
     let resolve, reject;
     const promise = new Promise((resolveFn, rejectFn) => { resolve = resolveFn; reject = rejectFn; });
     testSteps.push(() => promise);
@@ -391,6 +451,14 @@ const t = {
       }
     }
   },
+  step_func_done(fn) {
+    details.step_func_done += 1;
+    return t.step_func(fn);
+  },
+  done(fn) {
+    details.done += 1;
+    return t.step_func(fn);
+  }
 }
 
 console.log("Starting tests");
@@ -405,9 +473,9 @@ if (!testSteps.length) {
 } else {
   try {
     await Promise.all(testSteps.map(async test => test(t)));
-    globalThis.window.testsComplete(tests);
+    globalThis.window.testsComplete(JSON.stringify(details));
   } catch (error) {
-    globalThis.window.testsFailed(error);
+    globalThis.window.testsFailed(error.toString());
     throw error;
   }
 }
@@ -452,11 +520,6 @@ ${DependenciesSyncHTML}
 
     try {
         await promise;
-    } catch (e) {
-        if (DEBUG) {
-            // await new Promise(() => void 0);
-            // await new Promise(resolve => setTimeout(resolve, 5000));
-        }
     } finally {
         if (DEBUG) {
             // await new Promise(() => void 0);
