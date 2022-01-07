@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NO_COVERAGE_BADGE_UPDATE: 1
-      FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST,PLAYWRIGHT,CONTINUE_ON_ERROR,SPEC_BROWSER
+      FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST,PLAYWRIGHT,CONTINUE_ON_ERROR
     steps:
       - uses: actions/checkout@v2
         with:
