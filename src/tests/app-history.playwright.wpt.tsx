@@ -348,7 +348,8 @@ const details = {
   step_func: 0,
   step_func_done: 0,
   promise_rejects_dom: 0,
-  done: 0
+  done: 0,
+  unreached_func: 0
 }
 
 function promise_test(fn) {
@@ -443,6 +444,10 @@ const t = {
   done(fn) {
     details.done += 1;
     return t.step_func(fn);
+  },
+  unreached_func(message) {
+    details.unreached_func += 1;
+    return () => tests.push(() => Promise.reject(new Error(message)));
   }
 }
 
