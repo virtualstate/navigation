@@ -1,9 +1,8 @@
-name: spec-browser-test-actions
+name: test-actions
 on: [push, pull_request]
 
 jobs:
   test:
-    timeout-minutes: 15
     runs-on: ubuntu-latest
     env:
       NO_COVERAGE_BADGE_UPDATE: 1
