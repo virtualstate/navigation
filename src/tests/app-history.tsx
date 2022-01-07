@@ -51,8 +51,12 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
                 if (!current) return;
                 const state = current.getState<{ title?: string }>() ?? {};
                 const { pathname } = new URL(current.url ?? "/", "https://example.com");
-                if (typeof window !== "undefined" && typeof window.history !== "undefined" && !isWindowAppHistory(localAppHistory)) {
-                    window.history.pushState(state, state.title ?? "", pathname);
+                try {
+                    if (typeof window !== "undefined" && typeof window.history !== "undefined" && !isWindowAppHistory(localAppHistory)) {
+                        window.history.pushState(state, state.title ?? "", pathname);
+                    }
+                } catch (e) {
+                    console.warn("Failed to push state", e);
                 }
                 console.log(`Updated window pathname to ${pathname}`);
             });

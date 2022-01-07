@@ -1,6 +1,6 @@
 {
   "name": "@virtualstate/app-history",
-  "version": "1.0.1-alpha.82",
+  "version": "1.0.1-alpha.84",
   "main": "./esnext/index.js",
   "module": "./esnext/index.js",
   "types": "./esnext/index.d.ts",
@@ -97,6 +97,7 @@
     "prepublishOnly": "npm run build",
     "test": "yarn build && node --enable-source-maps esnext/tests/index.js",
     "test:deno": "yarn build && deno run --allow-read --allow-net --import-map=import-map-deno.json esnext/tests/index.js",
+    "test:deno:r": "yarn build && deno run -r --allow-read --allow-net --import-map=import-map-deno.json esnext/tests/index.js",
     "test:inspect": "yarn build && node --enable-source-maps --inspect-brk esnext/tests/index.js",
     "coverage": "yarn build && c8 node esnext/tests/index.js && yarn postbuild"
   }

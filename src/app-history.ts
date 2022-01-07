@@ -40,7 +40,7 @@ import {
 } from "./app-history-transition";
 import {
     AppHistoryTransitionResult,
-    createAppHistoryTransition,
+    createAppHistoryTransition, EventAbortController,
     InternalAppHistoryNavigateOptions,
 } from "./create-app-history-transition";
 import {createEvent} from "./event-target/create-event";
@@ -382,6 +382,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 navigate,
             } = transitionResult;
 
+            const navigateAbort = navigate[EventAbortController].abort.bind(navigate[EventAbortController]);
+            transition.signal.addEventListener("abort", navigateAbort, { once: true });
+
             if (typeof navigationType === "string" || navigationType === Rollback) {
                 const promise = current?.dispatchEvent(
                     createEvent({
@@ -423,6 +426,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 entry
             });
             yield transition[AppHistoryTransitionWait]();
+            transition.signal.removeEventListener("abort", navigateAbort);
             yield transition.dispatchEvent({
                 type: AppHistoryTransitionFinish,
                 transition,
