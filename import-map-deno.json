@@ -74,6 +74,8 @@
     "./src/event-target/transition-event": "./src/event-target/transition-event.ts",
     "./src/util/import-types": "./src/util/import-types.ts",
     "./src/polyfill": "./src/polyfill.ts",
+    "./src/location": "./src/location.ts",
+    "./src/history": "./src/history.ts",
     "./esnext/util/parse-dom-deno.js": "./src/util/parse-dom-deno.ts",
     "./esnext/util/parse-dom.js": "./src/util/parse-dom-deno.ts",
     "cheerio": "./scripts/nop/index.js"
