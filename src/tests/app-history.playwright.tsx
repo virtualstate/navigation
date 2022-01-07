@@ -61,6 +61,8 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
                         "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
                         "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
                         "@virtualstate/app-history/event-target": `https://cdn.skypack.dev/@virtualstate/app-history/event-target/${eventTarget}`,
+                        "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+                        "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
                     }}
                 />)
             ),

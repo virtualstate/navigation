@@ -25,6 +25,8 @@ export const Dependencies = h("script", { type: "importmap" }, h(DependenciesCon
         "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
         "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
         "@virtualstate/app-history/event-target": "https://cdn.skypack.dev/@virtualstate/app-history/event-target/async-event-target",
+        "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+        "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
     }
 }));
 export const DependenciesHTML = await toString(Dependencies);
@@ -34,6 +36,8 @@ export const DependenciesSync = h("script", { type: "importmap" }, h(Dependencie
         "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
         "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
         "@virtualstate/app-history/event-target": "https://cdn.skypack.dev/@virtualstate/app-history/event-target/sync-event-target",
+        "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+        "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
     }
 }));
 export const DependenciesSyncHTML = await toString(DependenciesSync);
