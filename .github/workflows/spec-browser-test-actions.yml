@@ -1,13 +1,12 @@
-name: spec-browser-test-actions
+name: test-actions
 on: [push, pull_request]
 
 jobs:
   test:
-    timeout-minutes: 15
     runs-on: ubuntu-latest
     env:
       NO_COVERAGE_BADGE_UPDATE: 1
-      FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST,PLAYWRIGHT,CONTINUE_ON_ERROR
+      FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST,PLAYWRIGHT,CONTINUE_ON_ERROR,SPEC_BROWSER
     steps:
       - uses: actions/checkout@v2
         with:
