@@ -4,7 +4,7 @@ import {WritableProps} from "./util/writable";
 import {
     AppHistoryCurrentChangeEvent,
     AppHistoryDestination,
-    AppHistoryNavigateEvent,
+    AppHistoryNavigateEvent as AppHistoryNavigateEventPrototype,
     AppHistoryNavigateOptions,
     AppHistoryNavigationType
 } from "./spec/app-history";
@@ -18,6 +18,17 @@ import {
     Rollback
 } from "./app-history-transition";
 import {createEvent} from "./event-target/create-event";
+
+export const EventAbortController = Symbol.for("@virtualstate/app-history/event/abortController");
+
+export interface AbortControllerEvent {
+    [EventAbortController]: AbortController
+}
+
+
+export interface AppHistoryNavigateEvent extends AppHistoryNavigateEventPrototype, AbortControllerEvent {
+
+}
 
 export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
     entries?: AppHistoryEntry[];
@@ -119,8 +130,10 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         }
     };
 
+    const navigateController = new AbortController();
     const navigate: AppHistoryNavigateEvent = createEvent({
-        signal,
+        [EventAbortController]: navigateController,
+        signal: navigateController.signal,
         info: undefined,
         ...options,
         canTransition: true,

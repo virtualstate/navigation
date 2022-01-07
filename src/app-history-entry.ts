@@ -6,10 +6,7 @@ import {
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {EventTargetListeners} from "./event-target";
-
-const { v4 } = await import("uuid").catch(() => undefined).then((mod) => mod ?? ({ v4(): string {
-    return `0101010-0101010-${Math.random()}`.replace(".", "");
-}}));
+import { v4 } from "./util/uuid-or-random";
 
 export const AppHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
 export const AppHistoryEntryKnownAs = Symbol.for("@virtualstate/app-history/entry/knownAs");

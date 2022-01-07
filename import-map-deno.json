@@ -47,6 +47,7 @@
     "./src/create-app-history-transition": "./src/create-app-history-transition.ts",
     "./src/util/deferred": "./src/util/deferred.ts",
     "./src/util/deno-uuid": "./src/util/deno-uuid.ts",
+    "./src/util/uuid": "./src/util/uuid.ts",
     "./src/index": "./src/index.ts",
     "./src/util/writable": "./src/util/writable.ts",
     "./src": "./src/index.ts",
