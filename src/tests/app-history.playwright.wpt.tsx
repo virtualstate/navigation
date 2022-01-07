@@ -251,7 +251,7 @@ globalThis.rv = [];
 
 const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
 
-const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
+const { AppHistory, InvalidStateError, AppHistoryTransitionFinally, AppLocation, AppAppHistory } = await import("/esnext/index.js");
 
 let appHistoryTarget = new AppHistory();
 
@@ -267,6 +267,12 @@ function proxyAppHistory(appHistory, get) {
 }
 
 const appHistory = proxyAppHistory(appHistoryTarget, () => appHistoryTarget);
+const location = new AppLocation({
+  appHistory
+});
+const history = new AppAppHistory({
+  appHistory
+});
 
 globalThis.appHistory = appHistory;
 
@@ -293,11 +299,20 @@ const window = {
 };
 
 let iframeAppHistoryTarget = new AppHistory();
+const iframeAppHistory = proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget);
 await navigateFinally(iframeAppHistoryTarget, "/");
+const iframeLocation = new AppLocation({
+  appHistory: iframeAppHistory
+});
+const iframeHistory = new AppAppHistory({
+  appHistory: iframeAppHistory
+});
 const iframe = {
   contentWindow: {
-    appHistory: proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget),
+    appHistory: iframeAppHistory,
     DOMException: InvalidStateError,
+    history: iframeHistory,
+    location: iframeLocation,
     set onload(value) {
       value();
     },
@@ -310,36 +325,6 @@ const iframe = {
   },
 };
 const i = iframe;
-
-let locationHref = new URL("/", globalThis.window.location.href);
-
-const history = {
-  pushState(state, title, url) {
-    if (url) {
-      appHistory.navigate(url, { state });
-    } else {
-      appHistory.updateCurrent({ state });
-    }
-  },
-  back() {
-    return appHistory.back();
-  }
-}
-
-const location = {
-    get href() {
-        return locationHref.toString()
-    },
-    set href(value) {
-        locationHref = new URL(value, locationHref.toString());
-        const { finished, committed } = appHistory.navigate(locationHref.toString());
-        void committed.catch(error => error);
-        void finished.catch(error => error);
-    },
-    get hash() {
-        return locationHref.hash;
-    }
-}
 
 const testSteps = [];
 
