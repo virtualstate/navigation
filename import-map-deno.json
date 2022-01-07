@@ -20,12 +20,14 @@
     "@virtualstate/app-history-imported/event-target/async": "./src/event-target/async-event-target.ts",
     "@virtualstate/app-history-imported/event-target": "./src/event-target/sync-event-target.ts",
     "dom-lite":  "https://cdn.skypack.dev/dom-lite",
-    "iterable": "https://cdn.skypack.dev/iterable",
-    "uuid": "./src/deno-uuid.ts",
+    "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+    "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+    "uuid": "./src/util/deno-uuid.ts",
     "whatwg-url": "https://cdn.skypack.dev/whatwg-url",
     "abort-controller": "https://cdn.skypack.dev/abort-controller",
     "deno:std/uuid/mod": "https://deno.land/std@0.113.0/uuid/mod.ts",
     "deno:std/uuid/v4": "https://deno.land/std@0.113.0/uuid/v4.ts",
+    "deno:deno_dom/deno-dom-wasm.ts": "https://deno.land/x/deno_dom/deno-dom-wasm.ts",
     "./src/tests/examples": "./src/tests/examples/index.ts",
     "./src/tests/examples/jsx": "./src/tests/examples/jsx.tsx",
     "./src/tests/examples/fetch": "./src/tests/examples/fetch.ts",
@@ -47,7 +49,9 @@
     "./src/create-app-history-transition": "./src/create-app-history-transition.ts",
     "./src/util/deferred": "./src/util/deferred.ts",
     "./src/util/deno-uuid": "./src/util/deno-uuid.ts",
-    "./src/util/uuid": "./src/util/uuid.ts",
+    "./src/util/uuid-or-random": "./src/util/uuid-or-random.ts",
+    "./src/util/parse-dom-deno": "./src/util/parse-dom-deno.ts",
+    "./src/util/parse-dom": "./src/util/parse-dom-deno.ts",
     "./src/index": "./src/index.ts",
     "./src/util/writable": "./src/util/writable.ts",
     "./src": "./src/index.ts",
@@ -69,6 +73,9 @@
     "./src/event-target/signal-event": "./src/event-target/signal-event.ts",
     "./src/event-target/transition-event": "./src/event-target/transition-event.ts",
     "./src/util/import-types": "./src/util/import-types.ts",
-    "./src/polyfill": "./src/polyfill.ts"
+    "./src/polyfill": "./src/polyfill.ts",
+    "./esnext/util/parse-dom-deno.js": "./src/util/parse-dom-deno.ts",
+    "./esnext/util/parse-dom.js": "./src/util/parse-dom-deno.ts",
+    "cheerio": "./scripts/nop/index.js"
   }
 }

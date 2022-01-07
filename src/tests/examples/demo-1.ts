@@ -5,6 +5,7 @@ import {addEventListener} from "../../event-target/global";
 import {Response} from "@opennetwork/http-representation";
 import {ok} from "../util";
 import {v4} from "../../util/uuid-or-random";
+import {parseDOM} from "../../util/parse-dom";
 
 const SUBPAGE_MARKER = v4();
 
@@ -82,6 +83,8 @@ export async function demo1(appHistory: AppHistory) {
         el.style.contain = "paint";
     }
 
+    appHistory.addEventListener("navigateerror", console.error);
+
     appHistory.addEventListener("navigate", e => {
         console.log(e);
 
@@ -91,6 +94,7 @@ export async function demo1(appHistory: AppHistory) {
 
         e.transitionWhile((async () => {
             e.signal.addEventListener("abort", () => {
+                // console.log(e.signal);
                 const newMain = document.createElement("main");
                 newMain.textContent = "You pressed the browser stop button!";
                 document.querySelector("main").replaceWith(newMain);
@@ -110,7 +114,7 @@ export async function demo1(appHistory: AppHistory) {
             // }
 
             const body = await (await fetch(e.destination.url, { signal: e.signal })).text();
-            const { title, main } = getResult(body);
+            const { title, main } = await getResult(body);
 
             document.title = title;
             document.querySelector("main").replaceWith(main);
@@ -121,19 +125,8 @@ export async function demo1(appHistory: AppHistory) {
         })());
     });
 
-    function getResult(htmlString: string) {
-        let innerHTML = "",
-            title = "";
-        if (typeof DOMParser !== "undefined") {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlString, "text/html");
-            innerHTML = doc.querySelector("main").innerHTML;
-            title = doc.title;
-        } else {
-            const $ = Cheerio.load(htmlString);
-            title = $("title").text() ?? "";
-            innerHTML = $("main").html() ?? "";
-        }
+    async function getResult(htmlString: string) {
+        const { innerHTML, title } = await parseDOM(htmlString, "main");
         const main = createElement("main");
         main.innerHTML = innerHTML;
         return { title, main };
