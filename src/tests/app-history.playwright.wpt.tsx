@@ -251,7 +251,7 @@ globalThis.rv = [];
 
 const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
 
-const { AppHistory, InvalidStateError, AppHistoryTransitionFinally, AppLocation, AppAppHistory } = await import("/esnext/index.js");
+const { AppHistory, InvalidStateError, AppHistoryTransitionFinally, AppHistorySync } = await import("/esnext/index.js");
 
 let appHistoryTarget = new AppHistory();
 
@@ -267,13 +267,12 @@ function proxyAppHistory(appHistory, get) {
 }
 
 const appHistory = proxyAppHistory(appHistoryTarget, () => appHistoryTarget);
-const location = new AppLocation({
-  appHistory
-});
-const history = new AppAppHistory({
-  appHistory
-});
-
+const location = (
+  new AppHistorySync({
+    appHistory
+  })
+),
+  history = location;
 globalThis.appHistory = appHistory;
 
 appHistory.addEventListener("navigateerror", console.error);
@@ -301,12 +300,12 @@ const window = {
 let iframeAppHistoryTarget = new AppHistory();
 const iframeAppHistory = proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget);
 await navigateFinally(iframeAppHistoryTarget, "/");
-const iframeLocation = new AppLocation({
-  appHistory: iframeAppHistory
-});
-const iframeHistory = new AppAppHistory({
-  appHistory: iframeAppHistory
-});
+const iframeLocation (
+  new AppHistorySync({
+    appHistory
+  })
+),
+  iframeHistory = iframeLocation;
 const iframe = {
   contentWindow: {
     appHistory: iframeAppHistory,

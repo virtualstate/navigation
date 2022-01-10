@@ -133,7 +133,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#createAppHistoryEntry({
             ...entry,
             index: entry?.index ?? undefined,
-            state: options?.state ?? entry?.getState(),
+            state: options?.state ?? entry?.getState() ?? {},
             navigationType: entry?.[AppHistoryEntryNavigationType] ?? (typeof options?.navigationType === "string" ? options.navigationType : "replace"),
             ...options,
             get [AppHistoryEntryKnownAs]() {

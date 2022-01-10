@@ -10,6 +10,7 @@ import {AppHistoryEntry} from "./app-history-entry";
 import {deferred, Deferred} from "./util/deferred";
 import {AbortError, InvalidStateError, isAbortError, isInvalidStateError} from "./app-history-errors";
 import {Event, EventTarget} from "./event-target";
+import {AbortController} from "abort-controller";
 
 export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
 export const Unset = Symbol.for("@virtualstate/app-history/unset");

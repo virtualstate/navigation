@@ -65,6 +65,10 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             try {
                 console.log("START ", test.name);
                 await test(localAppHistory);
+                const finished = localAppHistory.transition?.finished;
+                if (finished) {
+                    await finished.catch(error => void error);
+                }
 
                 // Let the events to finish logging
                 if (typeof process !== "undefined" && process.nextTick) {
