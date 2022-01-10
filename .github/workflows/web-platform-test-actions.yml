@@ -2,7 +2,7 @@ name: web-platform-test-actions
 on: [push, pull_request]
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
     env:
       NO_COVERAGE_BADGE_UPDATE: 1
