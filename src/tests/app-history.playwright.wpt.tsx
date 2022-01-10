@@ -300,7 +300,7 @@ const window = {
 let iframeAppHistoryTarget = new AppHistory();
 const iframeAppHistory = proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget);
 await navigateFinally(iframeAppHistoryTarget, "/");
-const iframeLocation (
+const iframeLocation = (
   new AppHistorySync({
     appHistory
   })
