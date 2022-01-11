@@ -317,7 +317,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
             function syncTransition() {
                 for (const promise of iterable) {
-                    if (promise && "then" in promise) {
+                    if (promise && typeof promise === "object" && "then" in promise) {
                         promises.push(promise);
                         void promise.catch(error => error);
                     }

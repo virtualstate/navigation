@@ -403,8 +403,9 @@ window.open = (url, target) => {
 const a = new EventTarget();
 a.href = ${JSON.stringify($("a[href]")?.attr("href") || "#1")};
 a.click = (e) => {
-  let targetAppHistory = appHistory;
-  return targetAppHistory.navigate(new URL(a.href, targetAppHistory.current.url).toString(), e);
+  let targetAppHistory = appHistory,
+    targetLocation = location;
+  return targetAppHistory.navigate(new URL(a.href, targetLocation.href).toString(), e);
 }
 
 const form = new EventTarget();
@@ -518,7 +519,7 @@ const t = {
     return (...args) => {
       try {
         const result = fn(...args);
-        if (result && "then" in result) {
+        if (result && typeof result === "object" && "then" in result) {
            return result.then(resolve, reject).then(() => result);
         } else {
            resolve();
