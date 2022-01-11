@@ -67,6 +67,7 @@ export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHisto
          * Note that in general, unless the state value is a primitive, entry.getState() !== entry.getState(), since a fresh copy is returned each time.
          */
         if (
+            typeof state === "undefined" ||
             typeof state === "number" ||
             typeof state === "boolean" ||
             typeof state === "symbol" ||

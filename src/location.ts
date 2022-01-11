@@ -1,4 +1,6 @@
-import {AppHistory, AppHistoryResult} from "./spec/app-history";
+import {AppHistory, AppHistoryEntry, AppHistoryResult} from "./spec/app-history";
+import {AppHistoryTransitionCommittedDeferred} from "./app-history-transition";
+import {Deferred} from "./util/deferred";
 
 export interface AppHistoryLocationOptions {
     appHistory: AppHistory;
@@ -36,6 +38,25 @@ export class AppHistoryLocation implements Location {
     constructor(options: AppHistoryLocationOptions) {
         this.#options = options;
         this.#appHistory = options.appHistory;
+
+        const reset = () => {
+            this.#transitioningURL = undefined;
+            this.#initialURL = undefined;
+        };
+
+        this.#appHistory.addEventListener("navigate", () => {
+            const transition = this.#appHistory.transition;
+            if (transition && isCommittedAvailable(transition)) {
+                transition[AppHistoryTransitionCommittedDeferred]
+                    .promise
+                    .then(reset, reset)
+            }
+            function isCommittedAvailable(transition: object): transition is { [AppHistoryTransitionCommittedDeferred]: Deferred<AppHistoryEntry> } {
+                return AppHistoryTransitionCommittedDeferred in transition;
+            }
+        })
+
+        this.#appHistory.addEventListener("currentchange", reset);
     }
 
     readonly ancestorOrigins: DOMStringList;

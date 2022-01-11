@@ -28,7 +28,7 @@ export async function syncLocationExample(appHistory: AppHistory) {
 }
 
 export async function syncHistoryExample(appHistory: AppHistory) {
-    const sync = new AppHistorySync({ appHistory }),
+    const sync = new AppHistorySync({appHistory}),
         history: History = sync;
 
     const expected = `expected${Math.random()}`;
@@ -43,19 +43,19 @@ export async function syncHistoryExample(appHistory: AppHistory) {
     ok(appHistory.current.url === expectedUrl.toString());
 
     await appHistory.navigate("/1").finished;
-    ok(history.state[expected] !== expected);
+    ok(history.state?.[expected] !== expected);
     await appHistory.navigate("/2").finished;
     await appHistory.navigate("/3").finished;
 
     history.back();
 
     await finished(appHistory);
-    ok(history.state[expected] !== expected);
+    ok(history.state?.[expected] !== expected);
 
     history.back();
 
     await finished(appHistory);
-    ok(history.state[expected] !== expected);
+    ok(history.state?.[expected] !== expected);
 
     history.back();
 
@@ -67,7 +67,7 @@ export async function syncHistoryExample(appHistory: AppHistory) {
     history.forward();
 
     await finished(appHistory);
-    ok(history.state[expected] !== expected);
+    ok(history.state?.[expected] !== expected);
 
     history.go(-1);
 
@@ -77,7 +77,7 @@ export async function syncHistoryExample(appHistory: AppHistory) {
     history.go(1);
 
     await finished(appHistory);
-    ok(history.state[expected] !== expected);
+    ok(history.state?.[expected] !== expected);
 
     history.go(-1);
 
@@ -88,10 +88,6 @@ export async function syncHistoryExample(appHistory: AppHistory) {
 
     await finished(appHistory);
     ok(history.state[expected] === expected);
-
-
-
-
 }
 
 async function finished(appHistory: AppHistory) {
