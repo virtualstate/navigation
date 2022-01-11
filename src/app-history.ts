@@ -275,9 +275,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             transition,
             known: this.#known
         });
-        void this.#activeTransition?.finished.catch(error => error);
-        void this.#activeTransition?.[AppHistoryTransitionFinishedDeferred].promise.catch(error => error);
-        void this.#activeTransition?.[AppHistoryTransitionCommittedDeferred].promise.catch(error => error);
+        void this.#activeTransition?.finished?.catch(error => error);
+        void this.#activeTransition?.[AppHistoryTransitionFinishedDeferred]?.promise?.catch(error => error);
+        void this.#activeTransition?.[AppHistoryTransitionCommittedDeferred]?.promise?.catch(error => error);
         this.#activeTransition?.[AppHistoryTransitionAbort]();
         this.#activeTransition = transition;
 

@@ -21,10 +21,12 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 console.log({ testWrapperFnName });
 
 const DEBUG = getConfig().FLAGS?.includes("DEBUG") || false;
+const DEVTOOLS = getConfig().FLAGS?.includes("DEVTOOLS") || false;
 const ONLY_FAILED = getConfig().FLAGS?.includes("ONLY_FAILED") || false;
 const INCLUDE_SERVICE_WORKER = getConfig().FLAGS?.includes("INCLUDE_SERVICE_WORKER") || false;
-const AT_A_TIME = 60;
-const TEST_RESULTS_PATH = "./node_modules/.wpt.test-results.json"
+const AT_A_TIME = DEBUG ? 1 : 60;
+const TEST_RESULTS_PATH = "./node_modules/.wpt.test-results.json";
+const ONLY = getConfig().ONLY;
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
@@ -39,8 +41,8 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
     }
 
     const browser = await browserLauncher.launch({
-        headless: !DEBUG,
-        devtools: DEBUG,
+        headless: !DEVTOOLS,
+        devtools: DEVTOOLS,
         args: [
             ...args
         ]
@@ -63,7 +65,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             .flatMap(value => value)
     ];
 
-    if (DEBUG) {
+    if (!ONLY && DEBUG) {
         // urls = urls.slice(0, 3);
         urls = urls.filter(url => url.includes("transitionWhile"));
     }
@@ -82,7 +84,11 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         urlsFailed: string[] = [],
         urlsSkipped: string[] = [];
 
-    if (ONLY_FAILED) {
+    if (ONLY) {
+        console.log(ONLY);
+        // urlsSkipped.push(...urls.filter(url => url !== ONLY))
+        urls = urls.filter(url => url === ONLY);
+    } else if (ONLY_FAILED) {
         const state = await readState();
         if (Array.isArray(state.urlsFailed)) {
             urls = state.urlsFailed;
@@ -92,7 +98,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         }
     }
 
-    if (!INCLUDE_SERVICE_WORKER) {
+    if (!INCLUDE_SERVICE_WORKER && !ONLY) {
         urlsSkipped.push(...urls.filter(url => url.includes("service-worker")))
         urls = urls.filter(url => !url.includes("service-worker"));
     }
@@ -385,12 +391,16 @@ const testSteps = [];
 
 // Wait for all navigations to settle
 appHistory.addEventListener("navigate", () => {
-  const finished = appHistory.transition.finished;
-  testSteps.push(() => finished.catch(error => error));
+  const finished = appHistory.transition?.finished;
+  if (finished) {
+    testSteps.push(() => finished.catch(error => error));
+  }
 })
 iframe.contentWindow.appHistory.addEventListener("navigate", () => {
-  const finished = appHistory.transition.finished;
-  testSteps.push(() => finished.catch(error => error));
+  const finished = appHistory.transition?.finished;
+  if (finished) {
+    testSteps.push(() => finished.catch(error => error));
+  }
 })
 
 window.open = (url, target) => {
@@ -567,7 +577,7 @@ if (!testSteps.length) {
     await Promise.all(testSteps.map(async test => test(t)));
     globalThis.window.testsComplete(JSON.stringify(details));
   } catch (error) {
-    globalThis.window.testsFailed(error.toString());
+    globalThis.window.testsFailed(error.toString() + " " + error.stack);
     throw error;
   }
 }

@@ -127,11 +127,11 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
             init[AppHistoryTransitionCommittedDeferred] ?? this[AppHistoryTransitionCommittedDeferred];
 
         this.#options = init;
-        this.finished = this[AppHistoryTransitionFinishedDeferred].promise;
-        this.committed = this[AppHistoryTransitionCommittedDeferred].promise;
+        const finished = this.finished = this[AppHistoryTransitionFinishedDeferred].promise;
+        const committed = this.committed = this[AppHistoryTransitionCommittedDeferred].promise;
         // Auto catching abort
-        void this.finished.catch(error => error);
-        void this.committed.catch(error => error);
+        void finished.catch(error => error);
+        void committed.catch(error => error);
         this.from = init.from;
         this.navigationType = init.navigationType;
         this[AppHistoryTransitionFinishedEntries] = init[AppHistoryTransitionFinishedEntries];
@@ -284,7 +284,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
 
                     // console.log("Rollback", navigationType);
                     // console.warn("Rolling back immediately due to internal error", error);
-                    await this.rollback().finished;
+                    await this.rollback()?.finished;
                     // console.log("Rollback complete", navigationType);
                 } catch (error) {
                     // console.error("Failed to rollback", error);

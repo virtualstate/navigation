@@ -153,7 +153,7 @@ export class AppHistoryLocation implements Location {
     }
 
     #setUrlValue = (key: WritableURLKey, value: string) => {
-        const currentUrlString = (this.#url ?? "").toString();
+        const currentUrlString = (this.#url ?? "/").toString();
         const nextUrl = new URL(currentUrlString, "https://html.spec.whatwg.org/");
         nextUrl[key] = value;
         const nextUrlString = nextUrl.toString();
@@ -215,7 +215,10 @@ export class AppHistoryLocation implements Location {
         this.#initialURL = undefined;
         if (!result) return;
         const { committed, finished } = result;
-        await Promise.all([committed, finished]);
+        await Promise.all([
+            committed || Promise.resolve(undefined),
+            finished || Promise.resolve(undefined)
+        ]);
     }
 
     #triggerIfUrlChanged = () => {
