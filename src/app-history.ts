@@ -7,12 +7,10 @@ import {
 import {
     AppHistory as AppHistoryPrototype,
     AppHistoryEventMap,
-    AppHistoryNavigateOptions,
-    AppHistoryNavigationOptions,
     AppHistoryReloadOptions,
     AppHistoryResult,
     AppHistoryUpdateCurrentOptions,
-    AppHistoryTransition as AppHistoryTransitionPrototype, AppHistoryCurrentChangeEvent
+    AppHistoryTransition as AppHistoryTransitionPrototype, AppHistoryCurrentChangeEvent, AppHistoryNavigationOptions
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
@@ -45,6 +43,7 @@ import {
     AppHistoryTransitionResult,
     createAppHistoryTransition, EventAbortController,
     InternalAppHistoryNavigateOptions,
+    AppHistoryNavigateOptions
 } from "./create-app-history-transition";
 import {createEvent} from "./event-target/create-event";
 

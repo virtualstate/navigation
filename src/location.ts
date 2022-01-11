@@ -190,8 +190,10 @@ export class AppHistoryLocation implements Location {
         return this.#awaitFinished(result);
     }
 
-    #awaitFinished = async ({ committed, finished }: AppHistoryResult) => {
+    #awaitFinished = async (result?: AppHistoryResult) => {
         this.#initialURL = undefined;
+        if (!result) return;
+        const { committed, finished } = result;
         await Promise.all([committed, finished]);
     }
 

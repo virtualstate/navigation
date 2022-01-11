@@ -5,7 +5,7 @@ import {
     AppHistoryCurrentChangeEvent,
     AppHistoryDestination,
     AppHistoryNavigateEvent as AppHistoryNavigateEventPrototype,
-    AppHistoryNavigateOptions,
+    AppHistoryNavigateOptions as AppHistoryNavigateOptionsPrototype,
     AppHistoryNavigationType
 } from "./spec/app-history";
 import {AppHistoryEntry} from "./app-history-entry";
@@ -19,12 +19,23 @@ import {
 } from "./app-history-transition";
 import {createEvent} from "./event-target/create-event";
 
+export const AppHistoryFormData = Symbol.for("@virtualstate/app-history/formData");
+export const AppHistoryCanTransition = Symbol.for("@virtualstate/app-history/canTransition");
+export const AppHistoryHashChange = Symbol.for("@virtualstate/app-history/hashChange");
+export const AppHistoryUserInitiated = Symbol.for("@virtualstate/app-history/userInitiated");
+
+export interface AppHistoryNavigateOptions extends AppHistoryNavigateOptionsPrototype {
+    [AppHistoryFormData]?: FormData;
+    [AppHistoryCanTransition]?: boolean;
+    [AppHistoryHashChange]?: boolean;
+    [AppHistoryUserInitiated]?: boolean;
+}
+
 export const EventAbortController = Symbol.for("@virtualstate/app-history/event/abortController");
 
 export interface AbortControllerEvent {
     [EventAbortController]: AbortController
 }
-
 
 export interface AppHistoryNavigateEvent extends AppHistoryNavigateEventPrototype, AbortControllerEvent {
 
@@ -75,8 +86,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         transition: {
             [AppHistoryTransitionInitialEntries]: previousEntries,
             [AppHistoryTransitionEntry]: entry,
-            [AppHistoryTransitionWhile]: transitionWhile,
-            signal
+            [AppHistoryTransitionWhile]: transitionWhile
         }
     } = context;
     let {
@@ -136,13 +146,13 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         signal: navigateController.signal,
         info: undefined,
         ...options,
-        canTransition: true,
-        formData: undefined,
-        hashChange: false,
+        canTransition: options?.[AppHistoryCanTransition] ?? true,
+        formData: options?.[AppHistoryFormData] ?? undefined,
+        hashChange: options?.[AppHistoryHashChange] ?? false,
         navigationType: options?.navigationType ?? (
             typeof navigationType === "string" ? navigationType : "replace"
         ),
-        userInitiated: false,
+        userInitiated: options?.[AppHistoryUserInitiated] ?? false,
         destination,
         preventDefault: transition[AppHistoryTransitionAbort].bind(transition),
         transitionWhile,

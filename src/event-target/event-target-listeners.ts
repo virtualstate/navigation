@@ -31,14 +31,14 @@ export class EventTargetListeners implements EventTargetListeners {
 
     [key: string]: unknown;
 
-    #listeners: EventDescriptor[] = [];
-    [EventTargetListenersIgnore] = new WeakSet<EventDescriptor>();
+    #listeners?: EventDescriptor[] = [];
+    [EventTargetListenersIgnore]?: WeakSet<EventDescriptor> = new WeakSet<EventDescriptor>();
 
     get [EventTargetListenersSymbol](): EventDescriptor[] | undefined {
         return [...this.#listeners];
     }
 
-    [EventTargetListenersMatch](type: string | symbol) {
+    [EventTargetListenersMatch]?(type: string | symbol) {
         const external = this[EventTargetListenersSymbol];
         const matched = [
             ...new Set([...(external ?? []), ...this.#listeners])

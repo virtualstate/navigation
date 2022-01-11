@@ -20,8 +20,11 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 
 console.log({ testWrapperFnName });
 
-const DEBUG = false;
+const DEBUG = getConfig().FLAGS?.includes("DEBUG") || false;
+const ONLY_FAILED = getConfig().FLAGS?.includes("ONLY_FAILED") || false;
+const INCLUDE_SERVICE_WORKER = getConfig().FLAGS?.includes("INCLUDE_SERVICE_WORKER") || false;
 const AT_A_TIME = 60;
+const TEST_RESULTS_PATH = "./node_modules/.wpt.test-results.json"
 
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
@@ -76,7 +79,23 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         linesPass = 0,
         linesPassCovered = 0,
         urlsPass: string[] = [],
-        urlsFailed: string[] = [];
+        urlsFailed: string[] = [],
+        urlsSkipped: string[] = [];
+
+    if (ONLY_FAILED) {
+        const state = await readState();
+        if (Array.isArray(state.urlsFailed)) {
+            urls = state.urlsFailed;
+            if (Array.isArray(state.urlsPass)) {
+                urlsPass.push(...state.urlsPass);
+            }
+        }
+    }
+
+    if (!INCLUDE_SERVICE_WORKER) {
+        urlsSkipped.push(...urls.filter(url => url.includes("service-worker")))
+        urls = urls.filter(url => !url.includes("service-worker"));
+    }
 
     let result = {};
 
@@ -112,6 +131,23 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
     urlsPass.forEach(url => console.log(`  - ${url}`));
     console.log("\nFAILED:");
     urlsFailed.forEach(url => console.log(`  - ${url}`));
+    if (urlsSkipped.length) {
+        console.log("\nSKIPPED:");
+        urlsSkipped.forEach(url => console.log(`  - ${url}`));
+    }
+
+    await writeState({
+        urlsPass,
+        urlsFailed
+    });
+
+    async function writeState(state: Record<string, unknown>) {
+        await fs.promises.writeFile(TEST_RESULTS_PATH, JSON.stringify(state, undefined, "  "));
+    }
+
+    async function readState() {
+        return fs.promises.readFile(TEST_RESULTS_PATH, "utf-8").then(JSON.parse).catch(() => ({}));
+    }
 
     async function withUrl(url: string) {
         total += 1;
@@ -225,6 +261,9 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
             if (importTarget.endsWith(".html")) {
                 contentType = "text/html";
 
+                const html = await fs.promises.readFile(importTarget, "utf-8").catch(() => "");
+                const $ = Cheerio.load(html);
+
                 const globalNames = [
                     "appHistory",
                     "window",
@@ -234,13 +273,17 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                     "history",
                     "promise_test",
                     "test",
+                    "test_driver",
                     // "assert_true",
                     // "assert_false",
                     // "assert_equals",
                     // "assert_not_equals",
                     // "assert_unreached",
                     "async_test",
-                    "promise_rejects_dom"
+                    "promise_rejects_dom",
+                    "a",
+                    "form",
+                    "submit",
                 ]
 
                 const targetUrl = `${namespaceBundlePath}${url}.js?exportAs=${testWrapperFnName}&globals=${globalNames.join(",")}`;
@@ -251,7 +294,15 @@ globalThis.rv = [];
 
 const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
 
-const { AppHistory, InvalidStateError, AppHistoryTransitionFinally, AppHistorySync } = await import("/esnext/index.js");
+const { 
+  AppHistory, 
+  InvalidStateError, 
+  AppHistoryTransitionFinally, 
+  AppHistorySync, 
+  EventTarget, 
+  AppHistoryUserInitiated, 
+  AppHistoryFormData
+  } = await import("/esnext/index.js");
 
 let appHistoryTarget = new AppHistory();
 
@@ -294,7 +345,12 @@ const window = {
   set onload(value) {
     value();
   },
-  appHistory
+  appHistory,
+  stop() {
+    if (appHistory.transition) {
+      return appHistory.transition.rollback();
+    }
+  }
 };
 
 let iframeAppHistoryTarget = new AppHistory();
@@ -336,6 +392,44 @@ iframe.contentWindow.appHistory.addEventListener("navigate", () => {
   const finished = appHistory.transition.finished;
   testSteps.push(() => finished.catch(error => error));
 })
+
+window.open = (url, target) => {
+  if (target === "i" || target === "iframe") {
+    return iframe.contentWindow.appHistory.navigate(url);
+  }
+}
+
+
+const a = new EventTarget();
+a.href = ${JSON.stringify($("a[href]")?.attr("href") || "#1")};
+a.click = (e) => {
+  let targetAppHistory = appHistory;
+  return targetAppHistory.navigate(new URL(a.href, targetAppHistory.current.url).toString(), e);
+}
+
+const form = new EventTarget();
+form.action = ${JSON.stringify($("form[action]")?.attr("action") || "")};
+form.method = ${JSON.stringify($("form[method]")?.attr("method") || "post")};
+form.target = ${JSON.stringify($("form[target]")?.attr("target") || "")};
+form.submit = (e) => {
+  let targetAppHistory = appHistory,
+    targetLocation = location;
+  if (form.target === "i" || form.target === "iframe") {
+    targetAppHistory = iframe.contentWindow.appHistory;
+    targetLocation = iframe.contentWindow.location;
+  }
+  const action = form.action ? new URL(form.action, targetLocation.href).toString() : targetLocation.href;
+  return targetAppHistory.navigate(action, {
+    ...e,
+    [AppHistoryFormData]: new FormData()
+  });
+}
+
+const submit = new EventTarget();
+submit.type = "submit";
+submit.click = (e) => {
+  return form.submit(e);
+}
 
 const details = {
   tests: 0,
@@ -447,6 +541,14 @@ const t = {
   unreached_func(message) {
     details.unreached_func += 1;
     return () => tests.push(() => Promise.reject(new Error(message)));
+  }
+}
+
+const test_driver = {
+  click(element) {
+    return element.click({
+      [AppHistoryUserInitiated]: true
+    });
   }
 }
 
