@@ -27,7 +27,7 @@ const INCLUDE_SERVICE_WORKER = getConfig().FLAGS?.includes("INCLUDE_SERVICE_WORK
 const AT_A_TIME = DEBUG ? 1 : 60;
 const TEST_RESULTS_PATH = "./node_modules/.wpt.test-results.json";
 const ONLY = getConfig().ONLY;
-
+const DEVTOOLS_SLOW_MO: number | undefined = undefined;
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
 ] as const
@@ -45,7 +45,8 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         devtools: DEVTOOLS,
         args: [
             ...args
-        ]
+        ],
+        slowMo: DEVTOOLS ? DEVTOOLS_SLOW_MO : undefined
     });
 
     console.log(`Running WPT playwright tests for ${browserName} ${browser.version()}`)
@@ -298,7 +299,7 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 const scriptText = `
 globalThis.rv = [];
 
-const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1");
+const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1&debugger=${DEVTOOLS ? "1" : ""}");
 
 const { 
   AppHistory, 
@@ -309,6 +310,10 @@ const {
   AppHistoryUserInitiated, 
   AppHistoryFormData
   } = await import("/esnext/index.js");
+
+// if (${DEVTOOLS}) {
+//   await new Promise(resolve => setTimeout(resolve, 2500));
+// }
 
 let appHistoryTarget = new AppHistory();
 
@@ -346,10 +351,18 @@ async function navigateFinally(appHistory, url) {
 await navigateFinally(appHistoryTarget, "/");
 
 const Event = CustomEvent;
-
+const windowEvents = new EventTarget();
+let firstLoad = false;
 const window = {
   set onload(value) {
-    value();
+    if (!firstLoad) {
+      console.log("first window onload");
+      value();
+      firstLoad = false;
+    } else {
+      console.log("next window onload");
+      windowEvents.addEventListener("load", value, { once: true });
+    }
   },
   appHistory,
   stop() {
@@ -368,6 +381,7 @@ const iframeLocation = (
   })
 ),
   iframeHistory = iframeLocation;
+const iframeEvents = new EventTarget();
 const iframe = {
   contentWindow: {
     appHistory: iframeAppHistory,
@@ -375,32 +389,58 @@ const iframe = {
     history: iframeHistory,
     location: iframeLocation,
     set onload(value) {
-      value();
+      iframeEvents.addEventListener("load", value, { once: true });
     },
   },
   remove() {
     iframeAppHistoryTarget = new AppHistory();
   },
   set onload(value) {
-    value();
+    iframeEvents.addEventListener("load", (e) => {
+      console.log("load", e);
+      return value(e)
+    }, { once: true });
   },
+  set src(value) {
+    run().then(() => console.log("navigated")).catch(console.log)
+  
+    async function run() {
+      const url = value.toString();
+      await iframe.contentWindow.appHistory.navigate(url)
+        .finished;
+    }
+  }
 };
 const i = iframe;
 
 const testSteps = [];
 
 // Wait for all navigations to settle
-appHistory.addEventListener("navigate", () => {
+appHistory.addEventListener("currentchange", () => {
   const finished = appHistory.transition?.finished;
   if (finished) {
-    testSteps.push(() => finished.catch(error => error));
+    testSteps.push(async () => {
+      try {
+        await finished;
+      } catch {}
+    });
   }
 })
 iframe.contentWindow.appHistory.addEventListener("navigate", () => {
-  const finished = appHistory.transition?.finished;
-  if (finished) {
-    testSteps.push(() => finished.catch(error => error));
+  console.log("navigate iframe");
+  const handler = (e) => {
+    if (e.type === "navigatesuccess") { 
+        console.log("dispatch load");
+        iframeEvents.dispatchEvent({ type: "load" });
+    } else {
+        console.log("dispatch error");
+        iframeEvents.dispatchEvent({ type: "error" });
+    }
+    iframe.contentWindow.appHistory.removeEventListener("navigatesuccess", handler, { once: true });
+    iframe.contentWindow.appHistory.removeEventListener("navigateerror", handler, { once: true });
   }
+  iframe.contentWindow.appHistory.addEventListener("navigatesuccess", handler, { once: true });
+  iframe.contentWindow.appHistory.addEventListener("navigateerror", handler, { once: true });
 })
 
 window.open = (url, target) => {
@@ -575,8 +615,10 @@ if (!testSteps.length) {
 } else {
   try {
     await Promise.all(testSteps.map(async test => test(t)));
+    if (${DEVTOOLS}) console.log("PASS");
     globalThis.window.testsComplete(JSON.stringify(details));
   } catch (error) {
+    if (${DEVTOOLS}) console.log("FAIL", error);
     globalThis.window.testsFailed(error.toString() + " " + error.stack);
     throw error;
   }
@@ -623,8 +665,8 @@ ${DependenciesSyncHTML}
     try {
         await promise;
     } finally {
-        if (DEBUG) {
-            // await new Promise(() => void 0);
+        if (DEVTOOLS) {
+            await new Promise(() => void 0);
             // await new Promise(resolve => setTimeout(resolve, 5000));
         }
     }
