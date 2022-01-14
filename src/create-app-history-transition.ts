@@ -21,13 +21,13 @@ import {createEvent} from "./event-target/create-event";
 
 export const AppHistoryFormData = Symbol.for("@virtualstate/app-history/formData");
 export const AppHistoryCanTransition = Symbol.for("@virtualstate/app-history/canTransition");
-export const AppHistoryHashChange = Symbol.for("@virtualstate/app-history/hashChange");
 export const AppHistoryUserInitiated = Symbol.for("@virtualstate/app-history/userInitiated");
+
+const baseUrl = "https://html.spec.whatwg.org/";
 
 export interface AppHistoryNavigateOptions extends AppHistoryNavigateOptionsPrototype {
     [AppHistoryFormData]?: FormData;
     [AppHistoryCanTransition]?: boolean;
-    [AppHistoryHashChange]?: boolean;
     [AppHistoryUserInitiated]?: boolean;
 }
 
@@ -127,6 +127,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
     // console.log({ navigationType, entry, options });
 
     if (!entry.url) {
+        console.trace({ navigationType, entry, options });
         throw new InvalidStateError("Expected entry url");
     }
 
@@ -140,6 +141,20 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         }
     };
 
+    let hashChange = false;
+
+    const currentUrlInstance = new URL(current?.url ?? "/", baseUrl);
+    const destinationUrlInstance = new URL(destination.url, baseUrl);
+    const currentHash = currentUrlInstance.hash;
+    const destinationHash = destinationUrlInstance.hash;
+    if (currentHash !== destinationHash) {
+        const currentUrlInstanceWithoutHash = new URL(currentUrlInstance.toString());
+        currentUrlInstanceWithoutHash.hash = "";
+        const destinationUrlInstanceWithoutHash = new URL(destinationUrlInstance.toString());
+        destinationUrlInstanceWithoutHash.hash = "";
+        hashChange = currentUrlInstanceWithoutHash.toString() === destinationUrlInstanceWithoutHash.toString();
+    }
+
     const navigateController = new AbortController();
     const navigate: AppHistoryNavigateEvent = createEvent({
         [EventAbortController]: navigateController,
@@ -148,7 +163,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         ...options,
         canTransition: options?.[AppHistoryCanTransition] ?? true,
         formData: options?.[AppHistoryFormData] ?? undefined,
-        hashChange: options?.[AppHistoryHashChange] ?? false,
+        hashChange,
         navigationType: options?.navigationType ?? (
             typeof navigationType === "string" ? navigationType : "replace"
         ),

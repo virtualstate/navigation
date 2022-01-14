@@ -9,14 +9,18 @@ export async function urlPatternExample(appHistory: AppHistory) {
     const body: EventTarget & { innerHTML?: string } = new EventTarget();
     body.innerHTML = "";
 
-    appHistory.addEventListener("navigate", ({ destination }) => {
-        const identifiedTest = new URLPattern({
-            pathname: "/test/:id"
-        });
-        if (identifiedTest.test({ pathname: destination.url })) {
-            body.innerHTML = destination.getState<{ innerHTML: string }>().innerHTML;
-        } else {
-            throw new Error(unexpectedPage);
+    appHistory.addEventListener("navigate", ({ destination, transitionWhile }) => {
+        return transitionWhile(handler())
+
+        async function handler() {
+            const identifiedTest = new URLPattern({
+                pathname: "/test/:id"
+            });
+            if (identifiedTest.test(destination.url)) {
+                body.innerHTML = destination.getState<{ innerHTML: string }>().innerHTML;
+            } else {
+                throw new Error(unexpectedPage);
+            }
         }
     });
 
@@ -42,4 +46,6 @@ export async function urlPatternExample(appHistory: AppHistory) {
     }).finished;
 
     ok(body.innerHTML === `${expectedHTML}.2`);
+
+    console.log({ body }, appHistory);
 }

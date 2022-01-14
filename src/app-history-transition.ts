@@ -287,7 +287,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
                     await this.rollback()?.finished;
                     // console.log("Rollback complete", navigationType);
                 } catch (error) {
-                    // console.error("Failed to rollback", error);
+                    console.error("Failed to rollback", error);
                     throw new InvalidStateError("Failed to rollback, please raise an issue at https://github.com/virtualstate/app-history/issues");
                 }
             }
