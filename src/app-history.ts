@@ -7,12 +7,10 @@ import {
 import {
     AppHistory as AppHistoryPrototype,
     AppHistoryEventMap,
-    AppHistoryNavigateOptions,
-    AppHistoryNavigationOptions,
     AppHistoryReloadOptions,
     AppHistoryResult,
     AppHistoryUpdateCurrentOptions,
-    AppHistoryTransition as AppHistoryTransitionPrototype, AppHistoryCurrentChangeEvent
+    AppHistoryTransition as AppHistoryTransitionPrototype, AppHistoryCurrentChangeEvent, AppHistoryNavigationOptions
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
@@ -36,16 +34,26 @@ import {
     AppHistoryTransitionWhile,
     AppHistoryTransitionStartDeadline,
     AppHistoryTransitionCommit,
-    AppHistoryTransitionFinish, AppHistoryTransitionAbort, AppHistoryTransitionIsOngoing
+    AppHistoryTransitionFinish,
+    AppHistoryTransitionAbort,
+    AppHistoryTransitionIsOngoing,
+    AppHistoryTransitionFinishedDeferred, AppHistoryTransitionCommittedDeferred
 } from "./app-history-transition";
 import {
     AppHistoryTransitionResult,
     createAppHistoryTransition, EventAbortController,
     InternalAppHistoryNavigateOptions,
+    AppHistoryNavigateOptions
 } from "./create-app-history-transition";
 import {createEvent} from "./event-target/create-event";
 
 export * from "./spec/app-history";
+
+export interface AppHistoryOptions {
+    initialUrl?: URL | string;
+}
+
+const baseUrl = "https://html.spec.whatwg.org/";
 
 export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implements AppHistoryPrototype {
 
@@ -61,6 +69,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     // #upcomingNonTraverseTransition: AppHistoryTransition;
 
     #knownTransitions = new WeakSet();
+    #initialUrl: string;
 
     get canGoBack() {
        return !!this.#entries[this.#currentIndex - 1];
@@ -80,6 +89,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     get transition(): AppHistoryTransitionPrototype | undefined {
         return this.#activeTransition;
     };
+
+    constructor(options?: AppHistoryOptions) {
+        super();
+        const initialUrl = options?.initialUrl ?? "/";
+        this.#initialUrl = (typeof initialUrl === "string" ? new URL(initialUrl, baseUrl) : initialUrl).toString();
+    }
 
     back(options?: AppHistoryNavigationOptions): AppHistoryResult {
         if (!this.canGoBack) throw new InvalidStateError("Cannot go back");
@@ -115,9 +130,11 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     }
 
     navigate(url: string, options?: AppHistoryNavigateOptions): AppHistoryResult {
+        const nextUrl = new URL(url, this.#initialUrl).toString();
+        console.log({ nextUrl });
         const navigationType = options?.replace ? "replace" : "push";
         const entry = this.#createAppHistoryEntry({
-            url,
+            url: nextUrl,
             ...options,
             navigationType
         });
@@ -133,7 +150,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         return this.#createAppHistoryEntry({
             ...entry,
             index: entry?.index ?? undefined,
-            state: options?.state ?? entry?.getState(),
+            state: options?.state ?? entry?.getState() ?? {},
             navigationType: entry?.[AppHistoryEntryNavigationType] ?? (typeof options?.navigationType === "string" ? options.navigationType : "replace"),
             ...options,
             get [AppHistoryEntryKnownAs]() {
@@ -266,13 +283,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
         let committed = false;
 
         const { current } = this;
-        const transitionResult = createAppHistoryTransition({
-            current,
-            currentIndex: this.#currentIndex,
-            options,
-            transition,
-            known: this.#known
-        });
+        void this.#activeTransition?.finished?.catch(error => error);
+        void this.#activeTransition?.[AppHistoryTransitionFinishedDeferred]?.promise?.catch(error => error);
+        void this.#activeTransition?.[AppHistoryTransitionCommittedDeferred]?.promise?.catch(error => error);
         this.#activeTransition?.[AppHistoryTransitionAbort]();
         this.#activeTransition = transition;
 
@@ -304,6 +317,14 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             if (givenNavigationType === Unset) {
                 return unsetTransition();
             }
+            
+            const transitionResult = createAppHistoryTransition({
+                current,
+                currentIndex: this.#currentIndex,
+                options,
+                transition,
+                known: this.#known
+            });
 
             const microtask = new Promise<void>(queueMicrotask);
             let promises: Promise<unknown>[] = [];
@@ -312,7 +333,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
             function syncTransition() {
                 for (const promise of iterable) {
-                    if (promise && "then" in promise) {
+                    if (promise && typeof promise === "object" && "then" in promise) {
                         promises.push(promise);
                         void promise.catch(error => error);
                     }

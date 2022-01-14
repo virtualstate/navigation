@@ -31,20 +31,20 @@ export class EventTargetListeners implements EventTargetListeners {
 
     [key: string]: unknown;
 
-    #listeners: EventDescriptor[] = [];
-    [EventTargetListenersIgnore] = new WeakSet<EventDescriptor>();
+    #listeners?: EventDescriptor[] = [];
+    [EventTargetListenersIgnore]?: WeakSet<EventDescriptor> = new WeakSet<EventDescriptor>();
 
     get [EventTargetListenersSymbol](): EventDescriptor[] | undefined {
-        return [...this.#listeners];
+        return [...(this.#listeners ?? [])];
     }
 
-    [EventTargetListenersMatch](type: string | symbol) {
+    [EventTargetListenersMatch]?(type: string | symbol) {
         const external = this[EventTargetListenersSymbol];
         const matched = [
-            ...new Set([...(external ?? []), ...this.#listeners])
+            ...new Set([...(external ?? []), ...(this.#listeners ?? [])])
         ]
             .filter(descriptor => descriptor.type === type || descriptor.type === "*")
-            .filter(descriptor => !this[EventTargetListenersIgnore].has(descriptor));
+            .filter(descriptor => !this[EventTargetListenersIgnore]?.has(descriptor));
 
         const listener: unknown = typeof type === "string" ? this[`on${type}`] : undefined;
 
@@ -64,7 +64,7 @@ export class EventTargetListeners implements EventTargetListeners {
     addEventListener(type: string, callback: EventCallback, options?: EventTargetAddListenerOptions) {
         const listener: EventListener = {
             ...options,
-            isListening: () => !!this.#listeners.find(matchEventCallback(type, callback)),
+            isListening: () => !!this.#listeners?.find(matchEventCallback(type, callback)),
             descriptor: {
                 [EventDescriptorSymbol]: true,
                 ...options,
@@ -76,7 +76,7 @@ export class EventTargetListeners implements EventTargetListeners {
         if (listener.isListening()) {
             return
         }
-        this.#listeners.push(listener.descriptor)
+        this.#listeners?.push(listener.descriptor)
     }
 
     removeEventListener(type: string | symbol, callback: Function, options?: unknown): void
@@ -84,18 +84,18 @@ export class EventTargetListeners implements EventTargetListeners {
         if (!isFunctionEventCallback(callback)) {
             return
         }
-        const externalListeners = this[EventTargetListenersSymbol] ?? this.#listeners;
+        const externalListeners = this[EventTargetListenersSymbol] ?? this.#listeners ?? [];
         const externalIndex = externalListeners.findIndex(matchEventCallback(type, callback, options));
         if (externalIndex === -1) {
             return;
         }
-        const index = this.#listeners.findIndex(matchEventCallback(type, callback, options))
+        const index = this.#listeners?.findIndex(matchEventCallback(type, callback, options)) ?? -1
         if (index !== -1) {
-            this.#listeners.splice(index, 1);
+            this.#listeners?.splice(index, 1);
         }
         const descriptor = externalListeners[externalIndex];
         if (descriptor) {
-            this[EventTargetListenersIgnore].add(descriptor);
+            this[EventTargetListenersIgnore]?.add(descriptor);
         }
     }
 
@@ -104,7 +104,7 @@ export class EventTargetListeners implements EventTargetListeners {
         if (callback && !isFunctionEventCallback(callback)) {
             return false;
         }
-        const foundIndex = this.#listeners.findIndex(matchEventCallback(type, callback))
+        const foundIndex = this.#listeners?.findIndex(matchEventCallback(type, callback)) ?? -1
         return foundIndex > -1
     }
 }

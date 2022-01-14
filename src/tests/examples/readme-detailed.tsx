@@ -43,19 +43,19 @@ export async function initialNavigateThenBack(appHistory: AppHistory) {
     ok(updatedCurrent === appHistory.current);
     ok(finishedEntry === appHistory.current);
     ok(committedEntry === finishedEntry);
-
-    if (!isWindowAppHistory(appHistory)) {
-        let caught;
-        if (!appHistory.canGoBack) {
-            try {
-                await appHistory.back();
-            } catch (error) {
-                // No initial back
-                caught = error;
-            }
-        }
-        assert(caught);
-    }
+    //
+    // if (!isWindowAppHistory(appHistory)) {
+    //     let caught;
+    //     if (!appHistory.canGoBack) {
+    //         try {
+    //             await appHistory.back();
+    //         } catch (error) {
+    //             // No initial back
+    //             caught = error;
+    //         }
+    //     }
+    //     assert(caught);
+    // }
 }
 
 

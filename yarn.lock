@@ -5209,6 +5209,11 @@ urix@^0.1.0:
   resolved "https://registry.npmjs.org/urix/-/urix-0.1.0.tgz#da937f7a62e21fec1fd18d49b35c2935067a6c72"
   integrity sha1-2pN/emLiH+wf0Y1Js1wpNQZ6bHI=
 
+urlpattern-polyfill@^1.0.0-rc2:
+  version "1.0.0-rc2"
+  resolved "https://registry.npmjs.org/urlpattern-polyfill/-/urlpattern-polyfill-1.0.0-rc2.tgz#f2cd0f24f3fade1939d8e7f6735d1f6cb0e1de78"
+  integrity sha512-EH9NRgPZHXE00CkUfT8BXkpN3zuuAfrS1+GcKqDOUyIwI+a2LwV/jtuHaxMWFzFT/x3/uvR/J5G0hEO4KWwj6A==
+
 use@^3.1.0:
   version "3.1.1"
   resolved "https://registry.npmjs.org/use/-/use-3.1.1.tgz#d50c8cac79a19fbc20f2911f56eb973f4e10070f"
@@ -5350,6 +5355,10 @@ word-wrap@~1.2.3:
   version "1.2.3"
   resolved "https://registry.npmjs.org/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
+
+"wpt@https://github.com/web-platform-tests/wpt.git":
+  version "0.0.0"
+  resolved "https://github.com/web-platform-tests/wpt.git#e31b68f19b97c7e7040e40334f96802bf9b77f6d"
 
 wrap-ansi@^6.2.0:
   version "6.2.0"

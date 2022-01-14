@@ -19,7 +19,7 @@ export class SyncEventTarget extends EventTargetListeners implements SyncEventTa
     }
 
     dispatchEvent(event: Event) {
-        const listeners = this[EventTargetListenersMatch](event.type);
+        const listeners = this[EventTargetListenersMatch]?.(event.type) ?? [];
 
         // Don't even dispatch an aborted event
         if (isSignalEvent(event) && event.signal.aborted) {
