@@ -101,6 +101,31 @@ appHistory.addEventListener("navigate", async ({ destination, transitionWhile })
 });
 ```
 
+## URLPattern
+
+You can match `destination.url` using [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API)
+
+```typescript
+import {AppHistory} from "./app-history";
+import {URLPattern} from "urlpattern-polyfill";
+
+const appHistory = new AppHistory();
+
+appHistory.addEventListener("navigate", async ({destination, transitionWhile}) => {
+    const pattern = new URLPattern({ pathname: "/books/:id" });
+    const match = pattern.exec(destination.url);
+    if (match) {
+        transitionWhile(transition());
+    }
+
+    async function transition() {
+        console.log("load book", match.pathname.groups.id)
+    }
+});
+
+appHistory.navigate("/book/1");
+```
+
 ## State
 
 ```typescript
@@ -139,7 +164,7 @@ await appHistory.updateCurrent({
 
 This can be achieved various ways, but if your application completely utilises
 the app history interface, then you can directly use `pushState` to immediately
-update the window's url. 
+update the window's url.
 
 This does not take into account the browser's native back/forward functionality,
 which would need to be investigated further.
@@ -160,4 +185,3 @@ appHistory.addEventListener("currentchange", () => {
     }
 })
 ```
-

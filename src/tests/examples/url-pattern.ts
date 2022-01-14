@@ -49,3 +49,22 @@ export async function urlPatternExample(appHistory: AppHistory) {
 
     console.log({ body }, appHistory);
 }
+
+export async function urlPatternLoadBooksExample(appHistory: AppHistory) {
+    const booksPattern = new URLPattern({ pathname: "/books/:id" });
+    let bookId;
+    appHistory.addEventListener("navigate", async ({destination, transitionWhile}) => {
+        const match = booksPattern.exec(destination.url);
+        if (match) {
+            transitionWhile(transition());
+        }
+
+        async function transition() {
+            console.log("load book", match.pathname.groups.id)
+            bookId = match.pathname.groups.id;
+        }
+    });
+    const id = `${Math.random()}`;
+    await appHistory.navigate(`/books/${id}`).finished;
+    assert(id === bookId);
+}
