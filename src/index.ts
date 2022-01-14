@@ -9,7 +9,6 @@ export { EventTarget } from "./event-target";
 export {
     AppHistoryFormData,
     AppHistoryCanTransition,
-    AppHistoryHashChange,
     AppHistoryUserInitiated,
     AppHistoryNavigateOptions
 } from "./create-app-history-transition";

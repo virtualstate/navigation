@@ -17,6 +17,7 @@ export const Unset = Symbol.for("@virtualstate/app-history/unset");
 
 export type InternalAppHistoryNavigationType =
     | AppHistoryNavigationType
+    | "default"
     | typeof Rollback
     | typeof Unset;
 
@@ -247,6 +248,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
     }
 
     #onError = (event: Event & { error: unknown }) => {
+        console.error(event.error);
         return this[AppHistoryTransitionRejected](event.error);
     }
 

@@ -95,7 +95,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
             } catch (e) {
                 console.warn("Failed to push state", e);
             }
-            console.log(`Updated window pathname to ${pathname}`);
+            console.log(`Updated window to ${current.url}`);
         });
 
 

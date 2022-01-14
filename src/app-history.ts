@@ -10,7 +10,9 @@ import {
     AppHistoryReloadOptions,
     AppHistoryResult,
     AppHistoryUpdateCurrentOptions,
-    AppHistoryTransition as AppHistoryTransitionPrototype, AppHistoryCurrentChangeEvent, AppHistoryNavigationOptions
+    AppHistoryTransition as AppHistoryTransitionPrototype,
+    AppHistoryCurrentChangeEvent,
+    AppHistoryNavigationOptions
 } from "./spec/app-history";
 import {AppHistoryEventTarget} from "./app-history-event-target";
 import {InvalidStateError} from "./app-history-errors";
@@ -41,13 +43,21 @@ import {
 } from "./app-history-transition";
 import {
     AppHistoryTransitionResult,
-    createAppHistoryTransition, EventAbortController,
+    createAppHistoryTransition,
+    EventAbortController,
     InternalAppHistoryNavigateOptions,
-    AppHistoryNavigateOptions
+    AppHistoryNavigateOptions,
+    isAppHistoryNavigationType
 } from "./create-app-history-transition";
 import {createEvent} from "./event-target/create-event";
 
 export * from "./spec/app-history";
+
+export interface AppHistoryOptions {
+    initialUrl?: URL | string;
+}
+
+const baseUrl = "https://html.spec.whatwg.org/";
 
 export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implements AppHistoryPrototype {
 
@@ -63,6 +73,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     // #upcomingNonTraverseTransition: AppHistoryTransition;
 
     #knownTransitions = new WeakSet();
+    #initialUrl: string;
 
     get canGoBack() {
        return !!this.#entries[this.#currentIndex - 1];
@@ -82,6 +93,12 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     get transition(): AppHistoryTransitionPrototype | undefined {
         return this.#activeTransition;
     };
+
+    constructor(options?: AppHistoryOptions) {
+        super();
+        const initialUrl = options?.initialUrl ?? "/";
+        this.#initialUrl = (typeof initialUrl === "string" ? new URL(initialUrl, baseUrl) : initialUrl).toString();
+    }
 
     back(options?: AppHistoryNavigationOptions): AppHistoryResult {
         if (!this.canGoBack) throw new InvalidStateError("Cannot go back");
@@ -117,17 +134,21 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     }
 
     navigate(url: string, options?: AppHistoryNavigateOptions): AppHistoryResult {
-        const navigationType = options?.replace ? "replace" : "push";
+        const nextUrl = new URL(url, this.#initialUrl).toString();
+        const navigationType: InternalAppHistoryNavigationType = options?.replace ? "replace" : "default";
+        const nextOptions: InternalAppHistoryNavigateOptions = {
+            ...options
+        };
         const entry = this.#createAppHistoryEntry({
-            url,
-            ...options,
-            navigationType
+            url: nextUrl,
+            ...nextOptions,
+            navigationType: isAppHistoryNavigationType(navigationType) ? navigationType : "push"
         });
         return this.#pushEntry(
             navigationType,
             entry,
             undefined,
-            options
+            nextOptions
         );
     }
 
@@ -172,7 +193,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     #commitTransition = (givenNavigationType: InternalAppHistoryNavigationType, entry: AppHistoryEntry,  transition?: AppHistoryTransition, options?: InternalAppHistoryNavigateOptions) => {
         const nextTransition: AppHistoryTransition = transition ?? new AppHistoryTransition({
             from: entry,
-            navigationType: typeof givenNavigationType === "string" ? givenNavigationType : "replace",
+            navigationType: isAppHistoryNavigationType(givenNavigationType) ? givenNavigationType : "push",
             rollback: (options) => {
                 return this.#rollback(nextTransition, options);
             },
@@ -355,7 +376,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
 
         const syncCommit = ({ entries, index, known }: Commit) => {
             if (transition.signal.aborted) return;
-            this.#entries = entries;
+            this.#entries = entries.filter(Boolean);
             if (known) {
                 this.#known = new Set([...this.#known, ...(known)])
             }

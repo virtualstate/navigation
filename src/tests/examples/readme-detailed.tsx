@@ -1013,7 +1013,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
         const photoNumber: number = photoNumberMaybe;
         event.transitionWhile(navigateFinished = handler());
         async function handler() {
-            console.log("transitioning for ", { photoNumber });
+            console.log("transitioning for ", { photoNumber, event });
 
             // Synchronously update app state and next/previous/permalink UI:
             appState.currentPhoto = photoNumber;
@@ -1140,7 +1140,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
 
-    // console.log({ finalFetchCount, fetchCount });
+    console.log({ finalFetchCount, fetchCount });
 
     if (!isWindowAppHistory(appHistory)) {
         ok(finalFetchCount === fetchCount);

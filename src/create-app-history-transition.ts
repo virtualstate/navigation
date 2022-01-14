@@ -21,13 +21,11 @@ import {createEvent} from "./event-target/create-event";
 
 export const AppHistoryFormData = Symbol.for("@virtualstate/app-history/formData");
 export const AppHistoryCanTransition = Symbol.for("@virtualstate/app-history/canTransition");
-export const AppHistoryHashChange = Symbol.for("@virtualstate/app-history/hashChange");
 export const AppHistoryUserInitiated = Symbol.for("@virtualstate/app-history/userInitiated");
 
 export interface AppHistoryNavigateOptions extends AppHistoryNavigateOptionsPrototype {
     [AppHistoryFormData]?: FormData;
     [AppHistoryCanTransition]?: boolean;
-    [AppHistoryHashChange]?: boolean;
     [AppHistoryUserInitiated]?: boolean;
 }
 
@@ -75,6 +73,8 @@ function getEntryIndex(entries: AppHistoryEntry[], entry: AppHistoryEntry) {
     // TODO find an entry if it has changed id
     return -1;
 }
+
+const baseUrl = "https://html.spec.whatwg.org/";
 
 export function createAppHistoryTransition(context: AppHistoryTransitionContext): AppHistoryTransitionResult {
     const {
@@ -140,6 +140,20 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         }
     };
 
+    let hashChange = false;
+
+    const currentUrlInstance = new URL(current?.url ?? "/", baseUrl);
+    const destinationUrlInstance = new URL(destination.url, baseUrl);
+    const currentHash = currentUrlInstance.hash;
+    const destinationHash = destinationUrlInstance.hash;
+    if (currentHash !== destinationHash) {
+        const currentUrlInstanceWithoutHash = new URL(currentUrlInstance.toString());
+        currentUrlInstanceWithoutHash.hash = "";
+        const destinationUrlInstanceWithoutHash = new URL(destinationUrlInstance.toString());
+        destinationUrlInstanceWithoutHash.hash = "";
+        hashChange = currentUrlInstanceWithoutHash.toString() === destinationUrlInstanceWithoutHash.toString();
+    }
+
     const navigateController = new AbortController();
     const navigate: AppHistoryNavigateEvent = createEvent({
         [EventAbortController]: navigateController,
@@ -148,10 +162,8 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         ...options,
         canTransition: options?.[AppHistoryCanTransition] ?? true,
         formData: options?.[AppHistoryFormData] ?? undefined,
-        hashChange: options?.[AppHistoryHashChange] ?? false,
-        navigationType: options?.navigationType ?? (
-            typeof navigationType === "string" ? navigationType : "replace"
-        ),
+        hashChange,
+        navigationType: isAppHistoryNavigationType(navigationType) ? navigationType : "push",
         userInitiated: options?.[AppHistoryUserInitiated] ?? false,
         destination,
         preventDefault: transition[AppHistoryTransitionAbort].bind(transition),
@@ -196,4 +208,8 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         navigate,
         navigationType
     };
+}
+
+export function isAppHistoryNavigationType(value: InternalAppHistoryNavigationType): value is AppHistoryNavigationType {
+    return typeof value === "string" && value !== "default";
 }

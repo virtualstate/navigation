@@ -40,8 +40,8 @@ export class AppHistoryLocation implements Location {
         this.#appHistory = options.appHistory;
 
         const reset = () => {
-            this.#transitioningURL = undefined;
-            this.#initialURL = undefined;
+            this.#transitioningUrl = undefined;
+            this.#initialUrl = undefined;
         };
 
         this.#appHistory.addEventListener("navigate", () => {
@@ -63,19 +63,19 @@ export class AppHistoryLocation implements Location {
 
     #urls = new WeakMap<object, URL>();
 
-    #transitioningURL: URL | undefined;
+    #transitioningUrl: URL | undefined;
 
-    #initialURL: URL | undefined;
+    #initialUrl: URL | undefined;
 
     get #url() {
-        if (this.#transitioningURL) {
-            return this.#transitioningURL;
+        if (this.#transitioningUrl) {
+            return this.#transitioningUrl;
         }
         const { current } = this.#appHistory;
         if (!current) {
             const initialUrl = this.#options.initialUrl ?? "/";
-            this.#initialURL = typeof initialUrl === "string" ? new URL(initialUrl, baseUrl) : initialUrl;
-            return this.#initialURL;
+            this.#initialUrl = typeof initialUrl === "string" ? new URL(initialUrl, baseUrl) : initialUrl;
+            return this.#initialUrl;
         }
         const existing = this.#urls.get(current);
         if (existing) return existing;
@@ -197,12 +197,12 @@ export class AppHistoryLocation implements Location {
     }
 
     #transitionURL = async (url: URL | string, fn: (url: URL) => AppHistoryResult) => {
-        const instance = this.#transitioningURL = typeof url === "string" ? new URL(url, this.#url.toString()) : url;
+        const instance = this.#transitioningUrl = typeof url === "string" ? new URL(url, this.#url.toString()) : url;
         try {
             await this.#awaitFinished(fn(instance));
         } finally {
-            if (this.#transitioningURL === instance) {
-                this.#transitioningURL = undefined;
+            if (this.#transitioningUrl === instance) {
+                this.#transitioningUrl = undefined;
             }
         }
     }
@@ -212,7 +212,7 @@ export class AppHistoryLocation implements Location {
     }
 
     #awaitFinished = async (result?: AppHistoryResult) => {
-        this.#initialURL = undefined;
+        this.#initialUrl = undefined;
         if (!result) return;
         const { committed, finished } = result;
         await Promise.all([
