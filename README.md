@@ -56,7 +56,7 @@ import { AppHistory } from "@virtualstate/app-history";
 ## Navigation
 
 ```typescript
-import { AppHistory } from "./app-history";
+import { AppHistory } from "@virtualstate/app-history";
 
 const appHistory = new AppHistory();
 
@@ -73,7 +73,7 @@ await appHistory.navigate("/awaited").finished;
 ## Waiting for events
 
 ```typescript
-import { AppHistory } from "./app-history";
+import { AppHistory } from "@virtualstate/app-history";
 
 const appHistory = new AppHistory();
 
@@ -91,7 +91,7 @@ await appHistory.navigate("/disallow").finished; // Rejects
 ## Transitions
 
 ```typescript
-import { AppHistory } from "./app-history";
+import { AppHistory } from "@virtualstate/app-history";
 import { loadPhotoIntoCache } from "./cache";
 
 const appHistory = new AppHistory();
@@ -106,7 +106,7 @@ appHistory.addEventListener("navigate", async ({ destination, transitionWhile })
 You can match `destination.url` using [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API)
 
 ```typescript
-import {AppHistory} from "./app-history";
+import {AppHistory} from "@virtualstate/app-history";
 import {URLPattern} from "urlpattern-polyfill";
 
 const appHistory = new AppHistory();
@@ -130,7 +130,7 @@ appHistory.navigate("/book/1");
 
 ```typescript
 
-import { AppHistory } from "./app-history";
+import { AppHistory } from "@virtualstate/app-history";
 
 const appHistory = new AppHistory();
 
@@ -170,7 +170,7 @@ This does not take into account the browser's native back/forward functionality,
 which would need to be investigated further.
 
 ```typescript
-import { AppHistory } from "./app-history";
+import { AppHistory } from "@virtualstate/app-history";
 
 const appHistory = new AppHistory();
 const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
