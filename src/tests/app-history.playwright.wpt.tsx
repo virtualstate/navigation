@@ -315,7 +315,9 @@ const {
 //   await new Promise(resolve => setTimeout(resolve, 2500));
 // }
 
-let appHistoryTarget = new AppHistory();
+let appHistoryTarget = new AppHistory({
+  initialUrl: globalThis.window.location.href
+});
 
 function proxyAppHistory(appHistory, get) {
   return new Proxy(appHistory, {
@@ -372,7 +374,9 @@ const window = {
   }
 };
 
-let iframeAppHistoryTarget = new AppHistory();
+let iframeAppHistoryTarget = new AppHistory({
+  initialUrl: globalThis.window.location.href
+});
 const iframeAppHistory = proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget);
 await navigateFinally(iframeAppHistoryTarget, "/");
 const iframeLocation = (
@@ -393,7 +397,9 @@ const iframe = {
     },
   },
   remove() {
-    iframeAppHistoryTarget = new AppHistory();
+    iframeAppHistoryTarget = new AppHistory({
+      initialUrl: globalThis.window.location.href
+    });
   },
   set onload(value) {
     iframeEvents.addEventListener("load", (e) => {
@@ -591,7 +597,7 @@ const t = {
   },
   unreached_func(message) {
     details.unreached_func += 1;
-    return () => tests.push(() => Promise.reject(new Error(message)));
+    return () => testSteps.push(() => Promise.reject(new Error(message)));
   }
 }
 
