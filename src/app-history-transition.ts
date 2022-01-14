@@ -241,9 +241,13 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
     }
 
     #onCommitPromise = () => {
-        this[AppHistoryTransitionCommittedDeferred].resolve(
-            this[AppHistoryTransitionEntry]
-        );
+        if (this.signal.aborted) {
+        } else {
+            this[AppHistoryTransitionCommittedDeferred].resolve(
+                this[AppHistoryTransitionEntry]
+            );
+        }
+
     }
 
     #onError = (event: Event & { error: unknown }) => {
@@ -265,7 +269,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
 
         // console.log({ navigationType, reason, entry: this[AppHistoryTransitionEntry] });
 
-        if (!(isInvalidStateError(reason) || isAbortError(reason)) && (typeof navigationType === "string" || navigationType === Rollback)) {
+        if ((typeof navigationType === "string" || navigationType === Rollback)) {
             // console.log("navigateerror", { reason, z: isInvalidStateError(reason) });
             await this.dispatchEvent({
                 type: "navigateerror",
@@ -279,7 +283,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
             });
             // console.log("navigateerror finished");
 
-            if (navigationType !== Rollback) {
+            if (navigationType !== Rollback && !(isInvalidStateError(reason) || isAbortError(reason))) {
                 try {
 
                     // console.log("Rollback", navigationType);
@@ -287,7 +291,7 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
                     await this.rollback()?.finished;
                     // console.log("Rollback complete", navigationType);
                 } catch (error) {
-                    console.error("Failed to rollback", error);
+                    // console.error("Failed to rollback", error);
                     throw new InvalidStateError("Failed to rollback, please raise an issue at https://github.com/virtualstate/app-history/issues");
                 }
             }

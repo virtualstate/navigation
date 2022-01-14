@@ -475,20 +475,8 @@ export async function rollbackExample(appHistory: AppHistory) {
     let navigateError = deferred();
 
     appHistory.addEventListener("navigateerror", e => {
-        const transition = appHistory.transition;
-        console.log("Navigate error inner", { transition });
-        if (!transition) return;
-
-        const attemptedURL = transition.from.url;
-
-        // rollback is automatically triggered on error
-        // const { committed, finished } = transition.rollback();
-        // navigateErrorTransitionCommitted.resolve(committed);
-        // navigateErrorTransitionFinished.resolve(finished);
-
         navigateError.resolve();
-
-        showErrorToast(`Could not load ${attemptedURL}: ${e.message}`);
+        showErrorToast(`Could not load: ${e.message}`);
     });
 
     // Should be successful, no failing navigator yet
@@ -542,7 +530,6 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     ok(toasts.length);
     ok(toasts[0].includes(expectedError));
-    ok(toasts[0].includes(errorUrl));
 }
 
 export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {

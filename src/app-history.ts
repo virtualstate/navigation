@@ -87,7 +87,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
     };
 
     get transition(): AppHistoryTransitionPrototype | undefined {
-        return this.#activeTransition;
+        const transition = this.#activeTransition;
+        // Never let an aborted transition leak, it doesn't need to be accessed any more
+        return transition?.signal.aborted ? undefined : transition;
     };
 
     constructor(options?: AppHistoryOptions) {
