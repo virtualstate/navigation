@@ -5,7 +5,7 @@ import {
     AppHistoryCurrentChangeEvent,
     AppHistoryDestination,
     AppHistoryNavigateEvent as AppHistoryNavigateEventPrototype,
-    AppHistoryNavigateOptions,
+    AppHistoryNavigateOptions as AppHistoryNavigateOptionsPrototype,
     AppHistoryNavigationType
 } from "./spec/app-history";
 import {AppHistoryEntry} from "./app-history-entry";
@@ -19,12 +19,23 @@ import {
 } from "./app-history-transition";
 import {createEvent} from "./event-target/create-event";
 
+export const AppHistoryFormData = Symbol.for("@virtualstate/app-history/formData");
+export const AppHistoryCanTransition = Symbol.for("@virtualstate/app-history/canTransition");
+export const AppHistoryUserInitiated = Symbol.for("@virtualstate/app-history/userInitiated");
+
+const baseUrl = "https://html.spec.whatwg.org/";
+
+export interface AppHistoryNavigateOptions extends AppHistoryNavigateOptionsPrototype {
+    [AppHistoryFormData]?: FormData;
+    [AppHistoryCanTransition]?: boolean;
+    [AppHistoryUserInitiated]?: boolean;
+}
+
 export const EventAbortController = Symbol.for("@virtualstate/app-history/event/abortController");
 
 export interface AbortControllerEvent {
     [EventAbortController]: AbortController
 }
-
 
 export interface AppHistoryNavigateEvent extends AppHistoryNavigateEventPrototype, AbortControllerEvent {
 
@@ -75,8 +86,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         transition: {
             [AppHistoryTransitionInitialEntries]: previousEntries,
             [AppHistoryTransitionEntry]: entry,
-            [AppHistoryTransitionWhile]: transitionWhile,
-            signal
+            [AppHistoryTransitionWhile]: transitionWhile
         }
     } = context;
     let {
@@ -117,6 +127,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
     // console.log({ navigationType, entry, options });
 
     if (!entry.url) {
+        console.trace({ navigationType, entry, options });
         throw new InvalidStateError("Expected entry url");
     }
 
@@ -130,19 +141,33 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         }
     };
 
+    let hashChange = false;
+
+    const currentUrlInstance = new URL(current?.url ?? "/", baseUrl);
+    const destinationUrlInstance = new URL(destination.url, baseUrl);
+    const currentHash = currentUrlInstance.hash;
+    const destinationHash = destinationUrlInstance.hash;
+    if (currentHash !== destinationHash) {
+        const currentUrlInstanceWithoutHash = new URL(currentUrlInstance.toString());
+        currentUrlInstanceWithoutHash.hash = "";
+        const destinationUrlInstanceWithoutHash = new URL(destinationUrlInstance.toString());
+        destinationUrlInstanceWithoutHash.hash = "";
+        hashChange = currentUrlInstanceWithoutHash.toString() === destinationUrlInstanceWithoutHash.toString();
+    }
+
     const navigateController = new AbortController();
     const navigate: AppHistoryNavigateEvent = createEvent({
         [EventAbortController]: navigateController,
         signal: navigateController.signal,
         info: undefined,
         ...options,
-        canTransition: true,
-        formData: undefined,
-        hashChange: false,
+        canTransition: options?.[AppHistoryCanTransition] ?? true,
+        formData: options?.[AppHistoryFormData] ?? undefined,
+        hashChange,
         navigationType: options?.navigationType ?? (
             typeof navigationType === "string" ? navigationType : "replace"
         ),
-        userInitiated: false,
+        userInitiated: options?.[AppHistoryUserInitiated] ?? false,
         destination,
         preventDefault: transition[AppHistoryTransitionAbort].bind(transition),
         transitionWhile,

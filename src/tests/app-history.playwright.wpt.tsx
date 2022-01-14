@@ -20,9 +20,14 @@ const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`
 
 console.log({ testWrapperFnName });
 
-const DEBUG = false;
-const AT_A_TIME = 20;
-
+const DEBUG = getConfig().FLAGS?.includes("DEBUG") || false;
+const DEVTOOLS = getConfig().FLAGS?.includes("DEVTOOLS") || false;
+const ONLY_FAILED = getConfig().FLAGS?.includes("ONLY_FAILED") || false;
+const INCLUDE_SERVICE_WORKER = getConfig().FLAGS?.includes("INCLUDE_SERVICE_WORKER") || false;
+const AT_A_TIME = DEBUG ? 1 : 60;
+const TEST_RESULTS_PATH = "./node_modules/.wpt.test-results.json";
+const ONLY = getConfig().ONLY;
+const DEVTOOLS_SLOW_MO: number | undefined = undefined;
 const browsers = [
     ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
 ] as const
@@ -36,11 +41,12 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
     }
 
     const browser = await browserLauncher.launch({
-        headless: !DEBUG,
-        devtools: DEBUG,
+        headless: !DEVTOOLS,
+        devtools: DEVTOOLS,
         args: [
             ...args
-        ]
+        ],
+        slowMo: DEVTOOLS ? DEVTOOLS_SLOW_MO : undefined
     });
 
     console.log(`Running WPT playwright tests for ${browserName} ${browser.version()}`)
@@ -60,7 +66,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
             .flatMap(value => value)
     ];
 
-    if (DEBUG) {
+    if (!ONLY && DEBUG) {
         // urls = urls.slice(0, 3);
         urls = urls.filter(url => url.includes("transitionWhile"));
     }
@@ -76,7 +82,27 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
         linesPass = 0,
         linesPassCovered = 0,
         urlsPass: string[] = [],
-        urlsFailed: string[] = [];
+        urlsFailed: string[] = [],
+        urlsSkipped: string[] = [];
+
+    if (ONLY) {
+        console.log(ONLY);
+        // urlsSkipped.push(...urls.filter(url => url !== ONLY))
+        urls = urls.filter(url => url === ONLY);
+    } else if (ONLY_FAILED) {
+        const state = await readState();
+        if (Array.isArray(state.urlsFailed)) {
+            urls = state.urlsFailed;
+            if (Array.isArray(state.urlsPass)) {
+                urlsPass.push(...state.urlsPass);
+            }
+        }
+    }
+
+    if (!INCLUDE_SERVICE_WORKER && !ONLY) {
+        urlsSkipped.push(...urls.filter(url => url.includes("service-worker")))
+        urls = urls.filter(url => !url.includes("service-worker"));
+    }
 
     let result = {};
 
@@ -112,6 +138,23 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
     urlsPass.forEach(url => console.log(`  - ${url}`));
     console.log("\nFAILED:");
     urlsFailed.forEach(url => console.log(`  - ${url}`));
+    if (urlsSkipped.length) {
+        console.log("\nSKIPPED:");
+        urlsSkipped.forEach(url => console.log(`  - ${url}`));
+    }
+
+    await writeState({
+        urlsPass,
+        urlsFailed
+    });
+
+    async function writeState(state: Record<string, unknown>) {
+        await fs.promises.writeFile(TEST_RESULTS_PATH, JSON.stringify(state, undefined, "  "));
+    }
+
+    async function readState() {
+        return fs.promises.readFile(TEST_RESULTS_PATH, "utf-8").then(JSON.parse).catch(() => ({}));
+    }
 
     async function withUrl(url: string) {
         total += 1;
@@ -168,8 +211,8 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
 
     void promise.catch(error => error);
 
-    await page.exposeFunction("testsComplete", () => {
-        console.log(`Playwright tests complete tests for ${browserName} ${browser.version()}`)
+    await page.exposeFunction("testsComplete", (details: unknown) => {
+        console.log(`Playwright tests complete tests for ${browserName} ${browser.version()}`, details)
         return resolve();
     });
     await page.exposeFunction("testsFailed", (reason: unknown) => {
@@ -225,6 +268,9 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
             if (importTarget.endsWith(".html")) {
                 contentType = "text/html";
 
+                const html = await fs.promises.readFile(importTarget, "utf-8").catch(() => "");
+                const $ = Cheerio.load(html);
+
                 const globalNames = [
                     "appHistory",
                     "window",
@@ -234,9 +280,17 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                     "history",
                     "promise_test",
                     "test",
-                    "assert_true",
-                    "assert_equals",
+                    "test_driver",
+                    // "assert_true",
+                    // "assert_false",
+                    // "assert_equals",
+                    // "assert_not_equals",
+                    // "assert_unreached",
                     "async_test",
+                    "promise_rejects_dom",
+                    "a",
+                    "form",
+                    "submit",
                 ]
 
                 const targetUrl = `${namespaceBundlePath}${url}.js?exportAs=${testWrapperFnName}&globals=${globalNames.join(",")}`;
@@ -245,11 +299,25 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 const scriptText = `
 globalThis.rv = [];
 
-const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1&localDependenciesOnly=1");
+const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1&debugger=${DEVTOOLS ? "1" : ""}");
 
-const { AppHistory, InvalidStateError, AppHistoryTransitionFinally } = await import("/esnext/index.js");
+const { 
+  AppHistory, 
+  InvalidStateError, 
+  AppHistoryTransitionFinally, 
+  AppHistorySync, 
+  EventTarget, 
+  AppHistoryUserInitiated, 
+  AppHistoryFormData
+  } = await import("/esnext/index.js");
 
-let appHistoryTarget = new AppHistory();
+// if (${DEVTOOLS}) {
+//   await new Promise(resolve => setTimeout(resolve, 2500));
+// }
+
+let appHistoryTarget = new AppHistory({
+  initialUrl: globalThis.window.location.href
+});
 
 function proxyAppHistory(appHistory, get) {
   return new Proxy(appHistory, {
@@ -263,7 +331,12 @@ function proxyAppHistory(appHistory, get) {
 }
 
 const appHistory = proxyAppHistory(appHistoryTarget, () => appHistoryTarget);
-
+const location = (
+  new AppHistorySync({
+    appHistory
+  })
+),
+  history = location;
 globalThis.appHistory = appHistory;
 
 appHistory.addEventListener("navigateerror", console.error);
@@ -280,107 +353,260 @@ async function navigateFinally(appHistory, url) {
 await navigateFinally(appHistoryTarget, "/");
 
 const Event = CustomEvent;
-
+const windowEvents = new EventTarget();
+let firstLoad = false;
 const window = {
   set onload(value) {
-    value();
+    if (!firstLoad) {
+      console.log("first window onload");
+      value();
+      firstLoad = false;
+    } else {
+      console.log("next window onload");
+      windowEvents.addEventListener("load", value, { once: true });
+    }
   },
-  appHistory
+  appHistory,
+  stop() {
+    if (appHistory.transition) {
+      return appHistory.transition.rollback();
+    }
+  }
 };
 
-let iframeAppHistoryTarget = new AppHistory();
+let iframeAppHistoryTarget = new AppHistory({
+  initialUrl: globalThis.window.location.href
+});
+const iframeAppHistory = proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget);
 await navigateFinally(iframeAppHistoryTarget, "/");
+const iframeLocation = (
+  new AppHistorySync({
+    appHistory
+  })
+),
+  iframeHistory = iframeLocation;
+const iframeEvents = new EventTarget();
 const iframe = {
   contentWindow: {
-    appHistory: proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget),
-    DOMException: InvalidStateError
+    appHistory: iframeAppHistory,
+    DOMException: InvalidStateError,
+    history: iframeHistory,
+    location: iframeLocation,
+    set onload(value) {
+      iframeEvents.addEventListener("load", value, { once: true });
+    },
   },
   remove() {
-    iframeAppHistoryTarget = new AppHistory();
+    iframeAppHistoryTarget = new AppHistory({
+      initialUrl: globalThis.window.location.href
+    });
+  },
+  set onload(value) {
+    iframeEvents.addEventListener("load", (e) => {
+      console.log("load", e);
+      return value(e)
+    }, { once: true });
+  },
+  set src(value) {
+    run().then(() => console.log("navigated")).catch(console.log)
+  
+    async function run() {
+      const url = value.toString();
+      await iframe.contentWindow.appHistory.navigate(url)
+        .finished;
+    }
   }
 };
 const i = iframe;
 
-let locationHref = new URL("/", globalThis.window.location.href);
-
-const history = {
-  pushState(state, title, url) {
-    if (url) {
-      appHistory.navigate(url, { state });
-    } else {
-      appHistory.updateCurrent({ state });
-    }
-  },
-  back() {
-    return appHistory.back();
-  }
-}
-
-const location = {
-    get href() {
-        return locationHref.toString()
-    },
-    set href(value) {
-        locationHref = new URL(value, locationHref.toString());
-        const { finished, committed } = appHistory.navigate(locationHref.toString());
-        void committed.catch(error => error);
-        void finished.catch(error => error);
-    },
-    get hash() {
-        return locationHref.hash;
-    }
-}
-
 const testSteps = [];
 
 // Wait for all navigations to settle
-appHistory.addEventListener("navigate", () => {
-  const finished = appHistory.transition.finished;
-  testSteps.push(() => finished.catch(error => error));
+appHistory.addEventListener("currentchange", () => {
+  const finished = appHistory.transition?.finished;
+  if (finished) {
+    testSteps.push(async () => {
+      try {
+        await finished;
+      } catch {}
+    });
+  }
 })
 iframe.contentWindow.appHistory.addEventListener("navigate", () => {
-  const finished = appHistory.transition.finished;
-  testSteps.push(() => finished.catch(error => error));
+  console.log("navigate iframe");
+  const handler = (e) => {
+    if (e.type === "navigatesuccess") { 
+        console.log("dispatch load");
+        iframeEvents.dispatchEvent({ type: "load" });
+    } else {
+        console.log("dispatch error");
+        iframeEvents.dispatchEvent({ type: "error" });
+    }
+    iframe.contentWindow.appHistory.removeEventListener("navigatesuccess", handler, { once: true });
+    iframe.contentWindow.appHistory.removeEventListener("navigateerror", handler, { once: true });
+  }
+  iframe.contentWindow.appHistory.addEventListener("navigatesuccess", handler, { once: true });
+  iframe.contentWindow.appHistory.addEventListener("navigateerror", handler, { once: true });
 })
 
-let tests = 0;
+window.open = (url, target) => {
+  if (target === "i" || target === "iframe") {
+    return iframe.contentWindow.appHistory.navigate(url);
+  }
+}
+
+
+const a = new EventTarget();
+a.href = ${JSON.stringify($("a[href]")?.attr("href") || "#1")};
+a.click = (e) => {
+  let targetAppHistory = appHistory,
+    targetLocation = location;
+  return targetAppHistory.navigate(new URL(a.href, targetLocation.href).toString(), e);
+}
+
+const form = new EventTarget();
+form.action = ${JSON.stringify($("form[action]")?.attr("action") || "")};
+form.method = ${JSON.stringify($("form[method]")?.attr("method") || "post")};
+form.target = ${JSON.stringify($("form[target]")?.attr("target") || "")};
+form.submit = (e) => {
+  let targetAppHistory = appHistory,
+    targetLocation = location;
+  if (form.target === "i" || form.target === "iframe") {
+    targetAppHistory = iframe.contentWindow.appHistory;
+    targetLocation = iframe.contentWindow.location;
+  }
+  const action = form.action ? new URL(form.action, targetLocation.href).toString() : targetLocation.href;
+  return targetAppHistory.navigate(action, {
+    ...e,
+    [AppHistoryFormData]: new FormData()
+  });
+}
+
+const submit = new EventTarget();
+submit.type = "submit";
+submit.click = (e) => {
+  return form.submit(e);
+}
+
+const details = {
+  tests: 0,
+  assert_true: 0,
+  assert_false: 0,
+  assert_equals: 0,
+  assert_not_equals: 0,
+  step_timeout: 0,
+  step_func: 0,
+  step_func_done: 0,
+  promise_rejects_dom: 0,
+  done: 0,
+  unreached_func: 0
+}
 
 function promise_test(fn) {
   testSteps.push(fn);
-  tests += 1;
+  details.tests += 1;
 }
 function async_test(fn) {
   testSteps.push(fn);
-  tests += 1;
+  details.tests += 1;
 }
 function test(fn) {
   testSteps.push(fn);
-  tests += 1;
+  details.tests += 1;
 }
 function assert_true(value, message = "Expected true") {
+  details.assert_true += 1;
   // console.log(value);
   if (value !== true) {
     throw new Error(message);
   }
 }
+function assert_false(value, message = "Expected false") {
+  details.assert_false += 1;
+  // console.log(value);
+  if (value !== false) {
+    throw new Error(message);
+  }
+}
 function assert_equals(left, right) {
+  details.assert_equals += 1;
   // console.log(JSON.stringify({ left, right }));
-  assert_true(left === right, "Expected values to equal");
+  if (left !== right) {
+    throw new Error("Expected values to equal");
+  }
+}
+function assert_not_equals(left, right) {
+  details.assert_not_equals += 1;
+  // console.log(JSON.stringify({ left, right }));
+  if (left === right) {
+    throw new Error("Expected values to not equal");
+  }
+}
+
+async function promise_rejects_dom(test, name, promise) {
+  details.promise_rejects_dom += 1;
+  let caught;
+  try {
+    await promise;
+  } catch (error) {
+    caught = error;
+  }
+  if (!caught) {
+    throw new Error("Expected promise rejection");
+  }
+}
+
+function assert_unreached() {
+  const error = new Error("Did not expect to reach here");
+  testSteps.push(() => Promise.reject(error));
+  throw error;
 }
 
 const t = {
   step_timeout(resolve, timeout) {
+    details.step_timeout += 1;
     setTimeout(resolve, timeout);  
   },
   step_func(fn) {
-    let resolve;
-    const promise = new Promise(r => { resolve = r });
+    details.step_func += 1;
+    let resolve, reject;
+    const promise = new Promise((resolveFn, rejectFn) => { resolve = resolveFn; reject = rejectFn; });
     testSteps.push(() => promise);
     return (...args) => {
-      resolve();
-      return fn(...args);
+      try {
+        const result = fn(...args);
+        if (result && typeof result === "object" && "then" in result) {
+           return result.then(resolve, reject).then(() => result);
+        } else {
+           resolve();
+        }
+        return result;
+      } catch (error) {
+        reject(error);
+        throw error;
+      }
     }
   },
+  step_func_done(fn) {
+    details.step_func_done += 1;
+    return t.step_func(fn);
+  },
+  done(fn) {
+    details.done += 1;
+    return t.step_func(fn);
+  },
+  unreached_func(message) {
+    details.unreached_func += 1;
+    return () => testSteps.push(() => Promise.reject(new Error(message)));
+  }
+}
+
+const test_driver = {
+  click(element) {
+    return element.click({
+      [AppHistoryUserInitiated]: true
+    });
+  }
 }
 
 console.log("Starting tests");
@@ -395,9 +621,11 @@ if (!testSteps.length) {
 } else {
   try {
     await Promise.all(testSteps.map(async test => test(t)));
-    globalThis.window.testsComplete(tests);
+    if (${DEVTOOLS}) console.log("PASS");
+    globalThis.window.testsComplete(JSON.stringify(details));
   } catch (error) {
-    globalThis.window.testsFailed(error);
+    if (${DEVTOOLS}) console.log("FAIL", error);
+    globalThis.window.testsFailed(error.toString() + " " + error.stack);
     throw error;
   }
 }
@@ -442,14 +670,9 @@ ${DependenciesSyncHTML}
 
     try {
         await promise;
-    } catch (e) {
-        if (DEBUG) {
-            // await new Promise(() => void 0);
-            // await new Promise(resolve => setTimeout(resolve, 5000));
-        }
     } finally {
-        if (DEBUG) {
-            // await new Promise(() => void 0);
+        if (DEVTOOLS) {
+            await new Promise(() => void 0);
             // await new Promise(resolve => setTimeout(resolve, 5000));
         }
     }

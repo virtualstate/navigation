@@ -111,7 +111,7 @@ ${dependencies
     const globalsDestructure = `{${globalNames.join(", ")}}`;
 
     const scriptHarness = `
-export function ${fnName}(${globalsDestructure}) {
+export function ${fnName}(${globalsDestructure}) {${url.searchParams.get("debugger") ? "\nconsole.log('debugger start');debugger;\n" : ""}
     ${scriptsJoined}
 }
     `.trim();

@@ -21,7 +21,7 @@ export interface AsyncEventTarget extends EventTargetListeners {
 
 export class AsyncEventTarget extends EventTargetListeners implements AsyncEventTarget {
 
-    readonly [EventTargetListenersThis]: unknown
+    readonly [EventTargetListenersThis]?: unknown
 
     constructor(thisValue: unknown = undefined) {
         super();
@@ -29,7 +29,7 @@ export class AsyncEventTarget extends EventTargetListeners implements AsyncEvent
     }
 
     async dispatchEvent(event: Event) {
-        const listeners = this[EventTargetListenersMatch](event.type);
+        const listeners = this[EventTargetListenersMatch]?.(event.type) ?? [];
 
         // Don't even dispatch an aborted event
         if (isSignalEvent(event) && event.signal.aborted) {

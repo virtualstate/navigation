@@ -1,7 +1,10 @@
-import {AppHistory, AppHistoryResult} from "./spec/app-history";
+import {AppHistory, AppHistoryEntry, AppHistoryResult} from "./spec/app-history";
+import {AppHistoryTransitionCommittedDeferred} from "./app-history-transition";
+import {Deferred} from "./util/deferred";
 
-export interface AppLocationOptions {
+export interface AppHistoryLocationOptions {
     appHistory: AppHistory;
+    initialUrl?: URL | string;
 }
 
 type WritableURLKey =
@@ -15,27 +18,68 @@ type WritableURLKey =
     | "search"
 
 export const AppLocationCheckChange = Symbol.for("@virtualstate/app-history/location/checkChange");
+export const AppLocationAwaitFinished = Symbol.for("@virtualstate/app-history/location/awaitFinished");
+export const AppLocationTransitionURL = Symbol.for("@virtualstate/app-history/location/transitionURL");
 
-export class AppLocation implements Location {
+export interface AppHistoryLocation extends Location {
 
-    readonly #options: AppLocationOptions;
+}
+
+const baseUrl = "https://html.spec.whatwg.org/";
+
+/**
+ * @experimental
+ */
+export class AppHistoryLocation implements Location {
+
+    readonly #options: AppHistoryLocationOptions;
     readonly #appHistory: AppHistory;
 
-    constructor(options: AppLocationOptions) {
+    constructor(options: AppHistoryLocationOptions) {
         this.#options = options;
         this.#appHistory = options.appHistory;
+
+        const reset = () => {
+            this.#transitioningURL = undefined;
+            this.#initialURL = undefined;
+        };
+
+        this.#appHistory.addEventListener("navigate", () => {
+            const transition = this.#appHistory.transition;
+            if (transition && isCommittedAvailable(transition)) {
+                transition[AppHistoryTransitionCommittedDeferred]
+                    .promise
+                    .then(reset, reset)
+            }
+            function isCommittedAvailable(transition: object): transition is { [AppHistoryTransitionCommittedDeferred]: Deferred<AppHistoryEntry> } {
+                return AppHistoryTransitionCommittedDeferred in transition;
+            }
+        })
+
+        this.#appHistory.addEventListener("currentchange", reset);
     }
 
     readonly ancestorOrigins: DOMStringList;
 
     #urls = new WeakMap<object, URL>();
 
+    #transitioningURL: URL | undefined;
+
+    #initialURL: URL | undefined;
+
     get #url() {
+        if (this.#transitioningURL) {
+            return this.#transitioningURL;
+        }
         const { current } = this.#appHistory;
-        if (!current) return undefined;
+        if (!current) {
+            const initialUrl = this.#options.initialUrl ?? "/";
+            this.#initialURL = typeof initialUrl === "string" ? new URL(initialUrl, baseUrl) : initialUrl;
+            return this.#initialURL;
+        }
         const existing = this.#urls.get(current);
         if (existing) return existing;
-        const next = new URL(current.url);
+        const next = new URL(current.url, baseUrl);
         this.#urls.set(current, next);
         return next;
     }
@@ -116,16 +160,18 @@ export class AppLocation implements Location {
         if (currentUrlString === nextUrlString) {
             return;
         }
-        void this.#awaitFinished(
-            this.#appHistory.navigate(nextUrlString)
+        void this.#transitionURL(
+            nextUrl,
+            () => this.#appHistory.navigate(nextUrlString)
         );
     }
 
     replace(url: string | URL): Promise<void>
     replace(url: string | URL): void
     async replace(url: string | URL): Promise<void> {
-        return this.#awaitFinished(
-            this.#appHistory.navigate(url.toString(), {
+        return this.#transitionURL(
+            url,
+            (url) => this.#appHistory.navigate(url.toString(), {
                 replace: true
             })
         );
@@ -140,21 +186,49 @@ export class AppLocation implements Location {
     assign(url: string | URL): Promise<void>
     assign(url: string | URL): void
     async assign(url: string | URL): Promise<void> {
-        return this.#awaitFinished(
-            this.#appHistory.navigate(url.toString())
-        );
+        await this.#transitionURL(
+            url,
+            (url) => this.#appHistory.navigate(url.toString())
+        )
     }
 
-    #awaitFinished = async ({ committed, finished }: AppHistoryResult) => {
-        await Promise.all([committed, finished]);
+    protected [AppLocationTransitionURL](url: URL | string, fn: (url: URL) => AppHistoryResult) {
+        return this.#transitionURL(url, fn);
+    }
+
+    #transitionURL = async (url: URL | string, fn: (url: URL) => AppHistoryResult) => {
+        const instance = this.#transitioningURL = typeof url === "string" ? new URL(url, this.#url.toString()) : url;
+        try {
+            await this.#awaitFinished(fn(instance));
+        } finally {
+            if (this.#transitioningURL === instance) {
+                this.#transitioningURL = undefined;
+            }
+        }
+    }
+
+    protected [AppLocationAwaitFinished](result: AppHistoryResult) {
+        return this.#awaitFinished(result);
+    }
+
+    #awaitFinished = async (result?: AppHistoryResult) => {
+        this.#initialURL = undefined;
+        if (!result) return;
+        const { committed, finished } = result;
+        await Promise.all([
+            committed || Promise.resolve(undefined),
+            finished || Promise.resolve(undefined)
+        ]);
     }
 
     #triggerIfUrlChanged = () => {
-        const currentUrl = this.#url.toString();
+        const current = this.#url;
+        const currentUrl = current.toString();
         const expectedUrl = this.#appHistory.current.url;
         if (currentUrl !== expectedUrl) {
-            return this.#awaitFinished(
-                this.#appHistory.navigate(currentUrl)
+            return this.#transitionURL(
+                current,
+                () => this.#appHistory.navigate(currentUrl)
             );
         }
     }
