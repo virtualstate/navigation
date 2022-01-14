@@ -16,9 +16,9 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
 ## Install 
 
-### Snowpack
+### Skypack
 
-- [Package Registry Link - Snowpack](https://www.skypack.dev/view/@virtualstate/app-history)
+- [Package Registry Link - Skypack](https://www.skypack.dev/view/@virtualstate/app-history)
 
 ```typescript
 const { AppHistory } = await import("https://cdn.skypack.dev/@virtualstate/app-history");
