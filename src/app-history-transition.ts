@@ -41,6 +41,7 @@ export const AppHistoryTransitionPromises = Symbol.for("@virtualstate/app-histor
 
 export const AppHistoryTransitionWhile = Symbol.for("@virtualstate/app-history/transition/while");
 export const AppHistoryTransitionIsOngoing = Symbol.for("@virtualstate/app-history/transition/isOngoing");
+export const AppHistoryTransitionIsPending = Symbol.for("@virtualstate/app-history/transition/isPending");
 export const AppHistoryTransitionWait = Symbol.for("@virtualstate/app-history/transition/wait");
 
 export const AppHistoryTransitionPromiseResolved = Symbol.for("@virtualstate/app-history/transition/promise/resolved");
@@ -82,6 +83,10 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
 
     readonly [AppHistoryTransitionFinishedDeferred] = deferred<AppHistoryEntry>();
     readonly [AppHistoryTransitionCommittedDeferred] = deferred<AppHistoryEntry>();
+
+    get [AppHistoryTransitionIsPending]() {
+        return !!this.#promises.size;
+    }
 
     get [AppHistoryTransitionNavigationType](): InternalAppHistoryNavigationType {
         return this.#options[AppHistoryTransitionNavigationType];
@@ -337,10 +342,12 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
             throw new Error();
         }
         this[AppHistoryTransitionPromiseResolved](...captured);
-        // console.log({ promises: this.#promises.size, matching: captured.filter(c => this.#promises.has(c)) })
-        if (this.#promises.size) {
+
+        if (this[AppHistoryTransitionIsPending]) {
             return this[AppHistoryTransitionWait]();
         }
+
+        await this[AppHistoryTransitionFinish]();
 
         return this[AppHistoryTransitionEntry];
     }
@@ -352,6 +359,19 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
             type: AppHistoryTransitionAbort,
             transition: this,
             entry: this[AppHistoryTransitionEntry]
+        })
+    }
+
+    [AppHistoryTransitionFinish] = async () => {
+        if (this[AppHistoryTransitionIsFinished]) {
+            return;
+        }
+
+        await this.dispatchEvent({
+            type: AppHistoryTransitionFinish,
+            transition: this,
+            entry: this[AppHistoryTransitionEntry],
+            transitionWhile: this[AppHistoryTransitionWhile]
         })
     }
 

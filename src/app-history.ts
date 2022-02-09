@@ -37,7 +37,7 @@ import {
     AppHistoryTransitionFinish,
     AppHistoryTransitionAbort,
     AppHistoryTransitionIsOngoing,
-    AppHistoryTransitionFinishedDeferred, AppHistoryTransitionCommittedDeferred
+    AppHistoryTransitionFinishedDeferred, AppHistoryTransitionCommittedDeferred, AppHistoryTransitionIsPending
 } from "./app-history-transition";
 import {
     AppHistoryTransitionResult,
@@ -450,12 +450,7 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
             });
             yield transition[AppHistoryTransitionWait]();
             transition.signal.removeEventListener("abort", navigateAbort);
-            yield transition.dispatchEvent({
-                type: AppHistoryTransitionFinish,
-                transition,
-                entry,
-                transitionWhile: transition[AppHistoryTransitionWhile]
-            });
+            yield transition[AppHistoryTransitionFinish]();
             if (typeof navigationType === "string") {
                 yield transition.dispatchEvent(
                     createEvent({
@@ -463,8 +458,6 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                         transitionWhile: transition[AppHistoryTransitionWhile]
                     })
                 );
-            }
-            if (typeof navigationType === "string") {
                 yield transition.dispatchEvent(
                     createEvent({
                         type: "navigatesuccess",
@@ -473,7 +466,9 @@ export class AppHistory extends AppHistoryEventTarget<AppHistoryEventMap> implem
                 );
             }
             // If we have more length here, we have added more transition
-            yield transition[AppHistoryTransitionWait]();
+            if (transition[AppHistoryTransitionIsPending]) {
+                yield Promise.reject(new InvalidStateError("Unexpected pending promises after finish"));
+            }
         }
 
         const maybeSyncTransition = () => {
