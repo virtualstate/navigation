@@ -325,31 +325,37 @@ export class AppHistoryTransition extends EventTarget implements AppHistoryTrans
 
     [AppHistoryTransitionWait] = async (): Promise<AppHistoryEntry> => {
         if (!this.#promises.size) return this[AppHistoryTransitionEntry];
-        const captured = [...this.#promises];
-        const results = await Promise.all(captured);
-        const rejected = results.filter<PromiseRejectedResult>(
-            (result): result is PromiseRejectedResult => result.status === "rejected"
-        );
-        // console.log({ rejected, results, captured });
-        if (rejected.length) {
-            // TODO handle differently when there are failures, e.g. we could move navigateerror to here
-            if (rejected.length === 1) {
-                throw await Promise.reject(rejected[0].reason)
+        try {
+            const captured = [...this.#promises];
+            const results = await Promise.all(captured);
+            const rejected = results.filter<PromiseRejectedResult>(
+                (result): result is PromiseRejectedResult => result.status === "rejected"
+            );
+            // console.log({ rejected, results, captured });
+            if (rejected.length) {
+                // TODO handle differently when there are failures, e.g. we could move navigateerror to here
+                if (rejected.length === 1) {
+                    throw rejected[0].reason;
+                }
+                if (typeof AggregateError !== "undefined") {
+                    throw new AggregateError(rejected.map(({ reason }) => reason));
+                }
+                throw new Error();
             }
-            if (typeof AggregateError !== "undefined") {
-                throw new AggregateError(rejected.map(({ reason }) => reason));
+            this[AppHistoryTransitionPromiseResolved](...captured);
+
+            if (this[AppHistoryTransitionIsPending]) {
+                return this[AppHistoryTransitionWait]();
             }
-            throw new Error();
+
+            return this[AppHistoryTransitionEntry];
+        } catch (error) {
+            await this.#onError(error);
+            await Promise.reject(error);
+            throw error;
+        } finally {
+            await this[AppHistoryTransitionFinish]();
         }
-        this[AppHistoryTransitionPromiseResolved](...captured);
-
-        if (this[AppHistoryTransitionIsPending]) {
-            return this[AppHistoryTransitionWait]();
-        }
-
-        await this[AppHistoryTransitionFinish]();
-
-        return this[AppHistoryTransitionEntry];
     }
 
     [AppHistoryTransitionAbort]() {
