@@ -1,29 +1,29 @@
 /* c8 ignore start */
 import {
-    AppHistory
-} from "../spec/app-history";
+    Navigation
+} from "../spec/navigation";
 import * as Examples from "./examples";
 import {getConfig} from "./config";
-import {isWindowAppHistory} from "./util";
-import {AppHistoryAppHistory} from "../app-history-app-history";
+import {isWindowNavigation} from "./util";
+import {NavigationNavigation} from "../navigation-navigation";
 
-export interface AppHistoryAssertFn {
-    (given: unknown): asserts given is () => AppHistory
+export interface NavigationAssertFn {
+    (given: unknown): asserts given is () => Navigation
 }
 
 declare global {
     interface History {
         pushState(data: unknown, unused: string, url?: string | URL): void;
     }
-    interface AppHistory {
+    interface Navigation {
     }
     interface Window {
         readonly history: History;
-        readonly appHistory: AppHistory;
+        readonly navigation: Navigation;
     }
 }
 
-export async function assertAppHistory(createAppHistory: () => unknown): Promise<AppHistoryAssertFn> {
+export async function assertNavigation(createNavigation: () => unknown): Promise<NavigationAssertFn> {
     let caught: unknown;
 
     const tests = [
@@ -36,8 +36,8 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
     try {
         for (const test of tests) {
-            await runTests(test, createAppHistory());
-            await runWrapperTests(test, createAppHistory());
+            await runTests(test, createNavigation());
+            await runWrapperTests(test, createNavigation());
 
         }
     } catch (error) {
@@ -45,16 +45,16 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
     }
 
     return (given) => {
-        if (given !== createAppHistory) throw new Error("Expected same instance to be provided to assertion");
+        if (given !== createNavigation) throw new Error("Expected same instance to be provided to assertion");
         if (caught) throw caught;
     }
 
-    async function runWrapperTests(test: (appHistory: AppHistory) => unknown, localAppHistory: unknown) {
-        assertAppHistoryLike(localAppHistory);
-        if (!localAppHistory) throw new Error("Expected app history");
-        const target = new AppHistoryAppHistory(localAppHistory);
-        const proxied = new Proxy(localAppHistory, {
-            get(unknown: AppHistory, p): any {
+    async function runWrapperTests(test: (navigation: Navigation) => unknown, localNavigation: unknown) {
+        assertNavigationLike(localNavigation);
+        if (!localNavigation) throw new Error("Expected app history");
+        const target = new NavigationNavigation(localNavigation);
+        const proxied = new Proxy(localNavigation, {
+            get(unknown: Navigation, p): any {
                 if (isTargetKey(p)) {
                     const value = target[p];
                     if (typeof value === "function") {
@@ -72,24 +72,24 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         return runTests(test, proxied);
     }
 
-    async function runTests(test: (appHistory: AppHistory) => unknown, localAppHistory: unknown) {
-        assertAppHistoryLike(localAppHistory);
+    async function runTests(test: (navigation: Navigation) => unknown, localNavigation: unknown) {
+        assertNavigationLike(localNavigation);
 
-        localAppHistory.addEventListener("navigate", (event) => {
-            if (isWindowAppHistory(localAppHistory)) {
+        localNavigation.addEventListener("navigate", (event) => {
+            if (isWindowNavigation(localNavigation)) {
                 // Add a default navigation to disable network features
                 event.transitionWhile(Promise.resolve());
             }
         })
 
         // Add as very first currentchange listener, to allow location change to happen
-        localAppHistory.addEventListener("currentchange", (event) => {
-            const { current } = localAppHistory;
-            if (!current) return;
-            const state = current.getState<{ title?: string }>() ?? {};
-            const { pathname } = new URL(current.url ?? "/", "https://example.com");
+        localNavigation.addEventListener("currentchange", (event) => {
+            const { currentEntry } = localNavigation;
+            if (!currentEntry) return;
+            const state = currentEntry.getState<{ title?: string }>() ?? {};
+            const { pathname } = new URL(currentEntry.url ?? "/", "https://example.com");
             try {
-                if (typeof window !== "undefined" && typeof window.history !== "undefined" && !isWindowAppHistory(localAppHistory)) {
+                if (typeof window !== "undefined" && typeof window.history !== "undefined" && !isWindowNavigation(localNavigation)) {
                     window.history.pushState(state, state.title ?? "", pathname);
                 }
             } catch (e) {
@@ -101,8 +101,8 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
 
         try {
             console.log("START ", test.name);
-            await test(localAppHistory);
-            const finished = localAppHistory.transition?.finished;
+            await test(localNavigation);
+            const finished = localNavigation.transition?.finished;
             if (finished) {
                 await finished.catch(error => void error);
             }
@@ -129,7 +129,7 @@ export async function assertAppHistory(createAppHistory: () => unknown): Promise
         }
     }
 
-    async function throwError(appHistory: AppHistory): Promise<void> {
+    async function throwError(navigation: Navigation): Promise<void> {
         throw expectedError;
     }
 }
@@ -142,15 +142,15 @@ async function getPerformance(): Promise<Pick<typeof performance, "now"> | undef
     return nodePerformance;
 }
 
-function assertAppHistoryLike(appHistory: unknown): asserts appHistory is AppHistory {
-    function isLike(appHistory: unknown): appHistory is Partial<AppHistory> {
-        return !!appHistory;
+function assertNavigationLike(navigation: unknown): asserts navigation is Navigation {
+    function isLike(navigation: unknown): navigation is Partial<Navigation> {
+        return !!navigation;
     }
     const is = (
-        isLike(appHistory) &&
-        typeof appHistory.navigate === "function" &&
-        typeof appHistory.back === "function" &&
-        typeof appHistory.forward === "function"
+        isLike(navigation) &&
+        typeof navigation.navigate === "function" &&
+        typeof navigation.back === "function" &&
+        typeof navigation.forward === "function"
     );
-    if (!is) throw new Error("Expected AppHistory instance");
+    if (!is) throw new Error("Expected Navigation instance");
 }

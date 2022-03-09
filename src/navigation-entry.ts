@@ -1,23 +1,23 @@
 import {
-    AppHistoryEntry as AppHistoryEntryPrototype,
-    AppHistoryEntryEventMap,
-    AppHistoryEntryInit as AppHistoryEntryInitPrototype,
-    AppHistoryNavigationType
-} from "./spec/app-history";
-import {AppHistoryEventTarget} from "./app-history-event-target";
+    NavigationHistoryEntry as NavigationHistoryEntryPrototype,
+    NavigationHistoryEntryEventMap,
+    NavigationHistoryEntryInit as NavigationHistoryEntryInitPrototype,
+    NavigationNavigationType
+} from "./spec/navigation";
+import {NavigationEventTarget} from "./navigation-event-target";
 import {EventTargetListeners} from "./event-target";
 import { v4 } from "./util/uuid-or-random";
 
-export const AppHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
-export const AppHistoryEntryKnownAs = Symbol.for("@virtualstate/app-history/entry/knownAs");
-export const AppHistoryEntrySetState = Symbol.for("@virtualstate/app-history/entry/setState");
+export const NavigationHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
+export const NavigationHistoryEntryKnownAs = Symbol.for("@virtualstate/app-history/entry/knownAs");
+export const NavigationHistoryEntrySetState = Symbol.for("@virtualstate/app-history/entry/setState");
 
-export interface AppHistoryEntryInit<S = unknown> extends AppHistoryEntryInitPrototype<S> {
-    navigationType: AppHistoryNavigationType;
-    [AppHistoryEntryKnownAs]?: Set<string>;
+export interface NavigationHistoryEntryInit<S = unknown> extends NavigationHistoryEntryInitPrototype<S> {
+    navigationType: NavigationNavigationType;
+    [NavigationHistoryEntryKnownAs]?: Set<string>;
 }
 
-export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHistoryEntryEventMap> implements AppHistoryEntryPrototype<S> {
+export class NavigationHistoryEntry<S = unknown> extends NavigationEventTarget<NavigationHistoryEntryEventMap> implements NavigationHistoryEntryPrototype<S> {
 
     #index: number | (() => number);
     #state: S | undefined;
@@ -31,23 +31,23 @@ export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHisto
     public readonly url?: string;
     public readonly sameDocument: boolean;
 
-    get [AppHistoryEntryNavigationType]() {
+    get [NavigationHistoryEntryNavigationType]() {
         return this.#options.navigationType;
     }
 
-    get [AppHistoryEntryKnownAs]() {
-        const set = new Set(this.#options[AppHistoryEntryKnownAs]);
+    get [NavigationHistoryEntryKnownAs]() {
+        const set = new Set(this.#options[NavigationHistoryEntryKnownAs]);
         set.add(this.id);
         return set;
     }
 
-    #options: AppHistoryEntryInit<S>;
+    #options: NavigationHistoryEntryInit<S>;
 
     get [EventTargetListeners]() {
         return [...(super[EventTargetListeners] ?? []), ...(this.#options[EventTargetListeners] ?? [])];
     }
 
-    constructor(init: AppHistoryEntryInit<S>) {
+    constructor(init: NavigationHistoryEntryInit<S>) {
         super();
         this.#options = init;
         this.key = init.key || v4();
@@ -77,8 +77,8 @@ export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHisto
             return state;
         }
         if (typeof state === "function") {
-            console.warn("State passed to appHistory.navigate was a function, this may be unintentional");
-            console.warn("Unless a state value is primitive, with a standard implementation of appHistory");
+            console.warn("State passed to Navigation.navigate was a function, this may be unintentional");
+            console.warn("Unless a state value is primitive, with a standard implementation of Navigation");
             console.warn("your state value will be serialized and deserialized before this point, meaning");
             console.warn("a function would not be usable.");
         }
@@ -87,7 +87,7 @@ export class AppHistoryEntry<S = unknown> extends AppHistoryEventTarget<AppHisto
         };
     }
 
-    [AppHistoryEntrySetState](state: S) {
+    [NavigationHistoryEntrySetState](state: S) {
         this.#state = state;
     }
 

@@ -22,18 +22,18 @@ if (typeof process !== "undefined") {
 }
 
 async function runTests() {
-    await import("./app-history.class");
+    await import("./navigation.class");
     if (typeof window === "undefined" && typeof process !== "undefined") {
-        await import("./app-history.imported");
+        await import("./navigation.imported");
         if (getConfig().FLAGS?.includes("WEB_PLATFORM_TESTS")) {
-            await import("./app-history.playwright.wpt");
+            await import("./navigation.playwright.wpt");
         }
         if (getConfig().FLAGS?.includes("PLAYWRIGHT")) {
-            await import("./app-history.playwright");
+            await import("./navigation.playwright");
         }
     }
     else {
-        await import("./app-history.scope");
+        await import("./navigation.scope");
     }
 }
 

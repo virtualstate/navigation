@@ -1,5 +1,5 @@
 import * as Cheerio from "cheerio";
-import {AppHistory} from "../../spec/app-history";
+import {Navigation} from "../../spec/navigation";
 import {fetch} from "./fetch";
 import {addEventListener} from "../../event-target/global";
 import {Response} from "@opennetwork/http-representation";
@@ -9,7 +9,7 @@ import {parseDOM} from "../../util/parse-dom";
 
 const SUBPAGE_MARKER = v4();
 
-export async function demo1(appHistory: AppHistory) {
+export async function demo1(navigation: Navigation) {
 
     addSubpageEventListener();
 
@@ -83,9 +83,9 @@ export async function demo1(appHistory: AppHistory) {
         el.style.contain = "paint";
     }
 
-    appHistory.addEventListener("navigateerror", console.error);
+    navigation.addEventListener("navigateerror", console.error);
 
-    appHistory.addEventListener("navigate", e => {
+    navigation.addEventListener("navigate", e => {
         console.log(e);
 
         if (!e.canTransition || e.hashChange) {
@@ -136,7 +136,7 @@ export async function demo1(appHistory: AppHistory) {
     //     if (e.navigationType === "reload" || e.navigationType === "replace") {
     //         return "explode";
     //     }
-    //     if (e.navigationType === "traverse" && e.destination.index < appHistory.current.index) {
+    //     if (e.navigationType === "traverse" && e.destination.index < navigation.current.index) {
     //         return "reveal-right";
     //     }
     //     return "reveal-left";
@@ -149,7 +149,7 @@ export async function demo1(appHistory: AppHistory) {
         });
     }
 
-    await appHistory.navigate("subpage.html").finished;
+    await navigation.navigate("subpage.html").finished;
 
     const main = document.querySelector("main");
 
@@ -173,7 +173,7 @@ function addSubpageEventListener() {
 <title>App history demo: subpage</title>
 <link rel="stylesheet" href="style.css">
 
-<h1><a href="https://github.com/WICG/app-history/">App history</a> demo</h1>
+<h1><a href="https://github.com/WICG/navigation/">App history</a> demo</h1>
 
 <main>
   <p>I am <code>subpage.html</code>!</p>

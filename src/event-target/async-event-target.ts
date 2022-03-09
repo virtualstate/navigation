@@ -2,7 +2,7 @@ import { Event } from "./event"
 import { EventCallback } from "./callback"
 import { isParallelEvent } from "./parallel-event"
 import { isSignalEvent, isSignalHandled } from "./signal-event"
-import { AbortError } from "../app-history-errors"
+import { AbortError } from "../navigation-errors"
 import {
     EventTargetAddListenerOptions,
     EventTargetListenersMatch, EventTargetListenersThis

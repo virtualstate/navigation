@@ -1,6 +1,6 @@
 import { Event } from "./event"
 import { isSignalEvent, isSignalHandled } from "./signal-event"
-import { AbortError } from "../app-history-errors"
+import { AbortError } from "../navigation-errors"
 import {EventTargetListenersMatch, EventTargetListenersThis} from "./event-target-options"
 import { EventTargetListeners } from "./event-target-listeners"
 

@@ -1,9 +1,9 @@
-import { AppHistory } from "../../spec/app-history";
-import { AppHistorySync } from "../../history";
+import { Navigation } from "../../spec/navigation";
+import { NavigationSync } from "../../history";
 import {ok} from "../util";
 
-export async function syncLocationExample(appHistory: AppHistory) {
-    const sync = new AppHistorySync({ appHistory }),
+export async function syncLocationExample(navigation: Navigation) {
+    const sync = new NavigationSync({ navigation }),
         location: Location = sync;
 
     const expectedHash = `#hash${Math.random()}`;
@@ -11,24 +11,24 @@ export async function syncLocationExample(appHistory: AppHistory) {
     location.hash = expectedHash;
     ok(location.hash === expectedHash);
 
-    await finished(appHistory);
+    await finished(navigation);
 
     const expectedPathname = `/pathname/1/${Math.random()}`;
     location.pathname = expectedPathname;
     ok(location.pathname === expectedPathname);
 
-    await finished(appHistory);
+    await finished(navigation);
 
     const searchParams = new URLSearchParams(location.search);
     searchParams.append("test", "test");
     location.search = searchParams.toString();
     ok(new URLSearchParams(location.search).get("test") === "test");
 
-    await finished(appHistory);
+    await finished(navigation);
 }
 
-export async function syncHistoryExample(appHistory: AppHistory) {
-    const sync = new AppHistorySync({appHistory}),
+export async function syncHistoryExample(navigation: Navigation) {
+    const sync = new NavigationSync({navigation}),
         history: History = sync;
 
     const expected = `expected${Math.random()}`;
@@ -38,60 +38,60 @@ export async function syncHistoryExample(appHistory: AppHistory) {
     }, "", expectedUrl);
     ok(history.state[expected] === expected);
 
-    await finished(appHistory);
+    await finished(navigation);
 
-    ok(appHistory.current.url === expectedUrl.toString());
+    ok(navigation.currentEntry.url === expectedUrl.toString());
 
-    await appHistory.navigate("/1").finished;
+    await navigation.navigate("/1").finished;
     ok(history.state?.[expected] !== expected);
-    await appHistory.navigate("/2").finished;
-    await appHistory.navigate("/3").finished;
+    await navigation.navigate("/2").finished;
+    await navigation.navigate("/3").finished;
 
     history.back();
 
-    await finished(appHistory);
-    ok(history.state?.[expected] !== expected);
-
-    history.back();
-
-    await finished(appHistory);
+    await finished(navigation);
     ok(history.state?.[expected] !== expected);
 
     history.back();
 
-    await finished(appHistory);
+    await finished(navigation);
+    ok(history.state?.[expected] !== expected);
+
+    history.back();
+
+    await finished(navigation);
 
     ok(history.state[expected] === expected);
-    ok(appHistory.current.url === expectedUrl.toString());
+    ok(navigation.currentEntry.url === expectedUrl.toString());
 
     history.forward();
 
-    await finished(appHistory);
+    await finished(navigation);
     ok(history.state?.[expected] !== expected);
 
     history.go(-1);
 
-    await finished(appHistory);
+    await finished(navigation);
     ok(history.state[expected] === expected);
 
     history.go(1);
 
-    await finished(appHistory);
+    await finished(navigation);
     ok(history.state?.[expected] !== expected);
 
     history.go(-1);
 
-    await finished(appHistory);
+    await finished(navigation);
     ok(history.state[expected] === expected);
 
     history.go(0);
 
-    await finished(appHistory);
+    await finished(navigation);
     ok(history.state[expected] === expected);
 }
 
-async function finished(appHistory: AppHistory) {
-    ok(appHistory.transition);
-    ok(appHistory.transition.finished);
-    await appHistory.transition.finished;
+async function finished(navigation: Navigation) {
+    ok(navigation.transition);
+    ok(navigation.transition.finished);
+    await navigation.transition.finished;
 }

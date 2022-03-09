@@ -3,19 +3,12 @@ import { promises as fs } from "fs";
 import { rollup } from "rollup";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import ignore from "rollup-plugin-ignore";
-import babel from "rollup-plugin-babel";
 import { dirname, resolve } from "path";
 
 const { pathname } = new URL(import.meta.url);
 const cwd = resolve(dirname(pathname), "..")
 
 {
-
-
-  // /Volumes/Extreme/Users/fabian/src/virtualstate/esnext/tests/app-history.playwright.wpt.js
-  // /Volumes/Extreme/Users/fabian/src/virtualstate/app-history/esnext/tests/app-history.playwright.wpt.js
-
-  console.log({ cwd, path: `/Volumes/Extreme/Users/fabian/src/virtualstate/app-history/esnext/tests/app-history.playwright.wpt.js` === `${cwd}/esnext/tests/app-history.playwright.wpt.js`, p: `${cwd}/esnext/tests/app-history.playwright.wpt.js`})
 
   const bundle = await rollup({
     input: "./esnext/tests/index.js",
@@ -28,12 +21,12 @@ const cwd = resolve(dirname(pathname), "..")
         "cheerio",
         "@virtualstate/app-history",
         "@virtualstate/app-history-imported",
-        `${cwd}/esnext/tests/app-history.playwright.js`,
-        `${cwd}/esnext/tests/app-history.playwright.wpt.js`,
+        `${cwd}/esnext/tests/navigation.playwright.js`,
+        `${cwd}/esnext/tests/navigation.playwright.wpt.js`,
         `${cwd}/esnext/tests/dependencies-input.js`,
         `${cwd}/esnext/tests/dependencies.js`,
-        "./app-history.playwright.js",
-        "./app-history.playwright.wpt.js",
+        "./navigation.playwright.js",
+        "./navigation.playwright.wpt.js",
       ]),
       nodeResolve()
     ],
@@ -52,7 +45,7 @@ const cwd = resolve(dirname(pathname), "..")
     format: "cjs",
     interop: "auto",
     globals: {
-      "esnext/tests/app-history.playwright.js": "globalThis"
+      "esnext/tests/navigation.playwright.js": "globalThis"
     }
   });
 }

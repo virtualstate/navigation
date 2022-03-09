@@ -1,1 +1,1 @@
-declare module "@virtualstate/app-history-imported";
+declare module "@virtualstate/navigation-imported";

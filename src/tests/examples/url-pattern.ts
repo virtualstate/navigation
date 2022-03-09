@@ -1,15 +1,15 @@
-import {AppHistory} from "../../app-history";
+import {Navigation} from "../../navigation";
 import {URLPattern} from "urlpattern-polyfill";
 import {EventTarget} from "../../event-target";
 import {assert, ok} from "../util";
 
-export async function urlPatternExample(appHistory: AppHistory) {
+export async function urlPatternExample(navigation: Navigation) {
 
     const unexpectedPage = `${Math.random()}`;
     const body: EventTarget & { innerHTML?: string } = new EventTarget();
     body.innerHTML = "";
 
-    appHistory.addEventListener("navigate", ({ destination, transitionWhile }) => {
+    navigation.addEventListener("navigate", ({ destination, transitionWhile }) => {
         return transitionWhile(handler())
 
         async function handler() {
@@ -26,7 +26,7 @@ export async function urlPatternExample(appHistory: AppHistory) {
 
     const expectedHTML = `${Math.random()}`;
 
-    await appHistory.navigate("/test/1", {
+    await navigation.navigate("/test/1", {
         state: {
             innerHTML: expectedHTML
         }
@@ -34,12 +34,12 @@ export async function urlPatternExample(appHistory: AppHistory) {
 
     ok(body.innerHTML === expectedHTML);
 
-    const error = await appHistory.navigate('/photos/1').finished.catch(error => error);
+    const error = await navigation.navigate('/photos/1').finished.catch(error => error);
 
     assert<Error>(error);
     ok(error.message === unexpectedPage);
 
-    await appHistory.navigate("/test/2", {
+    await navigation.navigate("/test/2", {
         state: {
             innerHTML: `${expectedHTML}.2`
         }
@@ -47,13 +47,13 @@ export async function urlPatternExample(appHistory: AppHistory) {
 
     ok(body.innerHTML === `${expectedHTML}.2`);
 
-    console.log({ body }, appHistory);
+    console.log({ body }, navigation);
 }
 
-export async function urlPatternLoadBooksExample(appHistory: AppHistory) {
+export async function urlPatternLoadBooksExample(navigation: Navigation) {
     const booksPattern = new URLPattern({ pathname: "/books/:id" });
     let bookId;
-    appHistory.addEventListener("navigate", async ({destination, transitionWhile}) => {
+    navigation.addEventListener("navigate", async ({destination, transitionWhile}) => {
         const match = booksPattern.exec(destination.url);
         if (match) {
             transitionWhile(transition());
@@ -65,6 +65,6 @@ export async function urlPatternLoadBooksExample(appHistory: AppHistory) {
         }
     });
     const id = `${Math.random()}`;
-    await appHistory.navigate(`/books/${id}`).finished;
+    await navigation.navigate(`/books/${id}`).finished;
     assert(id === bookId);
 }

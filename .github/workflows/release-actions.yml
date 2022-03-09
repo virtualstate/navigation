@@ -45,9 +45,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
       - name: Package Registry Test - npm
         run: |
-          yarn add --dev @virtualstate/app-history@$(node scripts/log-version.js)
-          yarn add --dev @virtualstate/app-history-local-build@./node_modules/@virtualstate/app-history
-          export TEST_CONFIG='{"@virtualstate/app-history/test/imported/path": "@virtualstate/app-history-local-build"}'
+          yarn add --dev @virtualstate/navigation@$(node scripts/log-version.js)
+          yarn add --dev @virtualstate/navigation-local-build@./node_modules/@virtualstate/navigation
+          export TEST_CONFIG='{"@virtualstate/navigation/test/imported/path": "@virtualstate/navigation-local-build"}'
           yarn test
       - uses: actions/setup-node@v2
         with:
@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
       - name: Package Registry Test - GitHub
         run: |
-          yarn add --dev @virtualstate/app-history@$(node scripts/log-version.js)
-          yarn add --dev @virtualstate/app-history-local-build@./node_modules/@virtualstate/app-history
-          export TEST_CONFIG='{"@virtualstate/app-history/test/imported/path": "@virtualstate/app-history-local-build"}'
+          yarn add --dev @virtualstate/navigation@$(node scripts/log-version.js)
+          yarn add --dev @virtualstate/navigation-local-build@./node_modules/@virtualstate/navigation
+          export TEST_CONFIG='{"@virtualstate/navigation/test/imported/path": "@virtualstate/navigation-local-build"}'
           yarn test

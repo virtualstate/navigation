@@ -1,34 +1,34 @@
 import AbortController from "abort-controller";
-import {InvalidStateError} from "./app-history-errors";
+import {InvalidStateError} from "./navigation-errors";
 import {WritableProps} from "./util/writable";
 import {
-    AppHistoryCurrentChangeEvent,
-    AppHistoryDestination,
-    AppHistoryNavigateEvent as AppHistoryNavigateEventPrototype,
-    AppHistoryNavigateOptions as AppHistoryNavigateOptionsPrototype,
-    AppHistoryNavigationType
-} from "./spec/app-history";
-import {AppHistoryEntry} from "./app-history-entry";
+    NavigationCurrentEntryChangeEvent,
+    NavigationDestination,
+    NavigateEvent as NavigateEventPrototype,
+    NavigationNavigateOptions as NavigationNavigateOptionsPrototype,
+    NavigationNavigationType
+} from "./spec/navigation";
+import {NavigationHistoryEntry} from "./navigation-entry";
 import {
-    AppHistoryTransition, AppHistoryTransitionAbort,
-    AppHistoryTransitionEntry,
-    AppHistoryTransitionInitialEntries, AppHistoryTransitionKnown,
-    AppHistoryTransitionNavigationType, AppHistoryTransitionWhile,
-    InternalAppHistoryNavigationType,
+    NavigationTransition, NavigationTransitionAbort,
+    NavigationTransitionEntry,
+    NavigationTransitionInitialEntries, NavigationTransitionKnown,
+    NavigationTransitionNavigationType, NavigationTransitionWhile,
+    InternalNavigationNavigationType,
     Rollback
-} from "./app-history-transition";
+} from "./navigation-transition";
 import {createEvent} from "./event-target/create-event";
 
-export const AppHistoryFormData = Symbol.for("@virtualstate/app-history/formData");
-export const AppHistoryCanTransition = Symbol.for("@virtualstate/app-history/canTransition");
-export const AppHistoryUserInitiated = Symbol.for("@virtualstate/app-history/userInitiated");
+export const NavigationFormData = Symbol.for("@virtualstate/app-history/formData");
+export const NavigationCanTransition = Symbol.for("@virtualstate/app-history/canTransition");
+export const NavigationUserInitiated = Symbol.for("@virtualstate/app-history/userInitiated");
 
 const baseUrl = "https://html.spec.whatwg.org/";
 
-export interface AppHistoryNavigateOptions extends AppHistoryNavigateOptionsPrototype {
-    [AppHistoryFormData]?: FormData;
-    [AppHistoryCanTransition]?: boolean;
-    [AppHistoryUserInitiated]?: boolean;
+export interface NavigationNavigateOptions extends NavigationNavigateOptionsPrototype {
+    [NavigationFormData]?: FormData;
+    [NavigationCanTransition]?: boolean;
+    [NavigationUserInitiated]?: boolean;
 }
 
 export const EventAbortController = Symbol.for("@virtualstate/app-history/event/abortController");
@@ -37,37 +37,37 @@ export interface AbortControllerEvent {
     [EventAbortController]: AbortController
 }
 
-export interface AppHistoryNavigateEvent extends AppHistoryNavigateEventPrototype, AbortControllerEvent {
+export interface NavigateEvent extends NavigateEventPrototype, AbortControllerEvent {
 
 }
 
-export interface InternalAppHistoryNavigateOptions extends AppHistoryNavigateOptions {
-    entries?: AppHistoryEntry[];
+export interface InternalNavigationNavigateOptions extends NavigationNavigateOptions {
+    entries?: NavigationHistoryEntry[];
     index?: number;
-    known?: Set<AppHistoryEntry>;
-    navigationType?: AppHistoryNavigationType;
+    known?: Set<NavigationHistoryEntry>;
+    navigationType?: NavigationNavigationType;
 }
 
-export interface AppHistoryTransitionContext {
-    transition: AppHistoryTransition;
-    options?: InternalAppHistoryNavigateOptions;
+export interface NavigationTransitionContext {
+    transition: NavigationTransition;
+    options?: InternalNavigationNavigateOptions;
     currentIndex: number;
-    known: Set<AppHistoryEntry>;
+    known: Set<NavigationHistoryEntry>;
     startTime?: number;
-    current?: AppHistoryEntry;
+    currentEntry?: NavigationHistoryEntry;
 }
 
-export interface AppHistoryTransitionResult {
-    entries: AppHistoryEntry[];
+export interface NavigationTransitionResult {
+    entries: NavigationHistoryEntry[];
     index: number;
-    known: Set<AppHistoryEntry>;
-    destination: AppHistoryDestination;
-    navigate: AppHistoryNavigateEvent;
-    currentChange: AppHistoryCurrentChangeEvent;
-    navigationType: InternalAppHistoryNavigationType;
+    known: Set<NavigationHistoryEntry>;
+    destination: NavigationDestination;
+    navigate: NavigateEvent;
+    currentChange: NavigationCurrentEntryChangeEvent;
+    navigationType: InternalNavigationNavigationType;
 }
 
-function getEntryIndex(entries: AppHistoryEntry[], entry: AppHistoryEntry) {
+function getEntryIndex(entries: NavigationHistoryEntry[], entry: NavigationHistoryEntry) {
     const knownIndex = entry.index;
     if (knownIndex !== -1) {
         return knownIndex;
@@ -76,22 +76,22 @@ function getEntryIndex(entries: AppHistoryEntry[], entry: AppHistoryEntry) {
     return -1;
 }
 
-export function createAppHistoryTransition(context: AppHistoryTransitionContext): AppHistoryTransitionResult {
+export function createNavigationTransition(context: NavigationTransitionContext): NavigationTransitionResult {
     const {
         currentIndex,
         options,
         known: initialKnown,
-        current,
+        currentEntry,
         transition,
         transition: {
-            [AppHistoryTransitionInitialEntries]: previousEntries,
-            [AppHistoryTransitionEntry]: entry,
-            [AppHistoryTransitionWhile]: transitionWhile
+            [NavigationTransitionInitialEntries]: previousEntries,
+            [NavigationTransitionEntry]: entry,
+            [NavigationTransitionWhile]: transitionWhile
         }
     } = context;
     let {
         transition: {
-            [AppHistoryTransitionNavigationType]: navigationType
+            [NavigationTransitionNavigationType]: navigationType
         }
     } = context;
 
@@ -131,7 +131,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
         throw new InvalidStateError("Expected entry url");
     }
 
-    const destination: WritableProps<AppHistoryDestination> = {
+    const destination: WritableProps<NavigationDestination> = {
         url: entry.url,
         key: entry.key,
         index: destinationIndex,
@@ -143,7 +143,7 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
 
     let hashChange = false;
 
-    const currentUrlInstance = new URL(current?.url ?? "/", baseUrl);
+    const currentUrlInstance = new URL(currentEntry?.url ?? "/", baseUrl);
     const destinationUrlInstance = new URL(destination.url, baseUrl);
     const currentHash = currentUrlInstance.hash;
     const destinationHash = destinationUrlInstance.hash;
@@ -156,25 +156,25 @@ export function createAppHistoryTransition(context: AppHistoryTransitionContext)
     }
 
     const navigateController = new AbortController();
-    const navigate: AppHistoryNavigateEvent = createEvent({
+    const navigate: NavigateEvent = createEvent({
         [EventAbortController]: navigateController,
         signal: navigateController.signal,
         info: undefined,
         ...options,
-        canTransition: options?.[AppHistoryCanTransition] ?? true,
-        formData: options?.[AppHistoryFormData] ?? undefined,
+        canTransition: options?.[NavigationCanTransition] ?? true,
+        formData: options?.[NavigationFormData] ?? undefined,
         hashChange,
         navigationType: options?.navigationType ?? (
             typeof navigationType === "string" ? navigationType : "replace"
         ),
-        userInitiated: options?.[AppHistoryUserInitiated] ?? false,
+        userInitiated: options?.[NavigationUserInitiated] ?? false,
         destination,
-        preventDefault: transition[AppHistoryTransitionAbort].bind(transition),
+        preventDefault: transition[NavigationTransitionAbort].bind(transition),
         transitionWhile,
         type: "navigate"
     });
-    const currentChange: AppHistoryCurrentChangeEvent = createEvent({
-        from: current,
+    const currentChange: NavigationCurrentEntryChangeEvent = createEvent({
+        from: currentEntry,
         type: "currentchange",
         navigationType: navigate.navigationType,
         transitionWhile

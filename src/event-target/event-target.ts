@@ -5,8 +5,8 @@ const defaultModule =  { EventTarget: AsyncEventTarget, AsyncEventTarget, SyncEv
 let module: Record<string, unknown>;
 
 try {
-    module = await import("@virtualstate/app-history/event-target");
-    console.log("Using @virtualstate/app-history/event-target", module);
+    module = await import("@virtualstate/navigation/event-target");
+    console.log("Using @virtualstate/navigation/event-target", module);
 } catch {
     console.log("Using default");
     module = defaultModule;

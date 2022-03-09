@@ -9,10 +9,10 @@ import * as Cheerio from "cheerio";
 import {DependenciesHTML, DependenciesSyncHTML} from "./dependencies";
 import {Browser, Page} from "playwright";
 import {v4} from "uuid";
-import {createJavaScriptBundle} from "./app-history.server.wpt";
+import {createJavaScriptBundle} from "./navigation.server.wpt";
 
-const namespacePath = "/node_modules/wpt/app-history";
-const namespaceBundlePath = "/app-history";
+const namespacePath = "/node_modules/wpt/navigation";
+const namespaceBundlePath = "/navigation";
 const buildPath = "/esnext";
 const resourcesInput = "/resources";
 const resourcesTarget = "/node_modules/wpt/resources";
@@ -203,7 +203,7 @@ for (const [browserName, browserLauncher, { esm, args, FLAG }] of browsers.filte
     }
 }
 
-console.log(`PASS assertAppHistory:playwright:new AppHistory`);
+console.log(`PASS assertNavigation:playwright:new Navigation`);
 
 async function run(browserName: string, browser: Browser, page: Page, url: string) {
 
@@ -272,7 +272,7 @@ async function run(browserName: string, browser: Browser, page: Page, url: strin
                 const $ = Cheerio.load(html);
 
                 const globalNames = [
-                    "appHistory",
+                    "Navigation",
                     "window",
                     "i",
                     "iframe",
@@ -302,25 +302,25 @@ globalThis.rv = [];
 const { ${testWrapperFnName} } = await import("${targetUrl}&preferUndefined=1&debugger=${DEVTOOLS ? "1" : ""}");
 
 const { 
-  AppHistory, 
+  Navigation, 
   InvalidStateError, 
-  AppHistoryTransitionFinally, 
-  AppHistorySync, 
+  NavigationTransitionFinally, 
+  NavigationSync, 
   EventTarget, 
-  AppHistoryUserInitiated, 
-  AppHistoryFormData
+  NavigationUserInitiated, 
+  NavigationFormData
   } = await import("/esnext/index.js");
 
 // if (${DEVTOOLS}) {
 //   await new Promise(resolve => setTimeout(resolve, 2500));
 // }
 
-let appHistoryTarget = new AppHistory({
+let NavigationTarget = new Navigation({
   initialUrl: globalThis.window.location.href
 });
 
-function proxyAppHistory(appHistory, get) {
-  return new Proxy(appHistory, {
+function proxyNavigation(Navigation, get) {
+  return new Proxy(Navigation, {
     get(u, property) {
       const currentTarget = get();
       const value = currentTarget[property];
@@ -330,27 +330,27 @@ function proxyAppHistory(appHistory, get) {
   });
 }
 
-const appHistory = proxyAppHistory(appHistoryTarget, () => appHistoryTarget);
+const Navigation = proxyNavigation(NavigationTarget, () => NavigationTarget);
 const location = (
-  new AppHistorySync({
-    appHistory
+  new NavigationSync({
+    Navigation
   })
 ),
   history = location;
-globalThis.appHistory = appHistory;
+globalThis.navigation = Navigation;
 
-appHistory.addEventListener("navigateerror", console.error);
+Navigation.addEventListener("navigateerror", console.error);
 
-async function navigateFinally(appHistory, url) {
+async function navigateFinally(Navigation, url) {
     // This allows us to wait for the navigation to fully settle before starting 
-    const initialNavigationFinally = new Promise((resolve) => appHistory.addEventListener(AppHistoryTransitionFinally, resolve, { once: true }));
+    const initialNavigationFinally = new Promise((resolve) => Navigation.addEventListener(NavigationTransitionFinally, resolve, { once: true }));
     
     // Initialise first navigation to emulate a page loaded
-    await appHistory.navigate(url).finished;
+    await Navigation.navigate(url).finished;
     
     await initialNavigationFinally;
 }
-await navigateFinally(appHistoryTarget, "/");
+await navigateFinally(NavigationTarget, "/");
 
 const Event = CustomEvent;
 const windowEvents = new EventTarget();
@@ -366,29 +366,29 @@ const window = {
       windowEvents.addEventListener("load", value, { once: true });
     }
   },
-  appHistory,
+  Navigation,
   stop() {
-    if (appHistory.transition) {
-      return appHistory.transition.rollback();
+    if (Navigation.transition) {
+      return Navigation.transition.rollback();
     }
   }
 };
 
-let iframeAppHistoryTarget = new AppHistory({
+let iframeNavigationTarget = new Navigation({
   initialUrl: globalThis.window.location.href
 });
-const iframeAppHistory = proxyAppHistory(iframeAppHistoryTarget, () => iframeAppHistoryTarget);
-await navigateFinally(iframeAppHistoryTarget, "/");
+const iframeNavigation = proxyNavigation(iframeNavigationTarget, () => iframeNavigationTarget);
+await navigateFinally(iframeNavigationTarget, "/");
 const iframeLocation = (
-  new AppHistorySync({
-    appHistory
+  new NavigationSync({
+    Navigation
   })
 ),
   iframeHistory = iframeLocation;
 const iframeEvents = new EventTarget();
 const iframe = {
   contentWindow: {
-    appHistory: iframeAppHistory,
+    Navigation: iframeNavigation,
     DOMException: InvalidStateError,
     history: iframeHistory,
     location: iframeLocation,
@@ -397,7 +397,7 @@ const iframe = {
     },
   },
   remove() {
-    iframeAppHistoryTarget = new AppHistory({
+    iframeNavigationTarget = new Navigation({
       initialUrl: globalThis.window.location.href
     });
   },
@@ -412,7 +412,7 @@ const iframe = {
   
     async function run() {
       const url = value.toString();
-      await iframe.contentWindow.appHistory.navigate(url)
+      await iframe.contentWindow.navigation.navigate(url)
         .finished;
     }
   }
@@ -422,8 +422,8 @@ const i = iframe;
 const testSteps = [];
 
 // Wait for all navigations to settle
-appHistory.addEventListener("currentchange", () => {
-  const finished = appHistory.transition?.finished;
+navigation.addEventListener("currentchange", () => {
+  const finished = navigation.transition?.finished;
   if (finished) {
     testSteps.push(async () => {
       try {
@@ -432,7 +432,7 @@ appHistory.addEventListener("currentchange", () => {
     });
   }
 })
-iframe.contentWindow.appHistory.addEventListener("navigate", () => {
+iframe.contentWindow.navigation.addEventListener("navigate", () => {
   console.log("navigate iframe");
   const handler = (e) => {
     if (e.type === "navigatesuccess") { 
@@ -442,16 +442,16 @@ iframe.contentWindow.appHistory.addEventListener("navigate", () => {
         console.log("dispatch error");
         iframeEvents.dispatchEvent({ type: "error" });
     }
-    iframe.contentWindow.appHistory.removeEventListener("navigatesuccess", handler, { once: true });
-    iframe.contentWindow.appHistory.removeEventListener("navigateerror", handler, { once: true });
+    iframe.contentWindow.navigation.removeEventListener("navigatesuccess", handler, { once: true });
+    iframe.contentWindow.navigation.removeEventListener("navigateerror", handler, { once: true });
   }
-  iframe.contentWindow.appHistory.addEventListener("navigatesuccess", handler, { once: true });
-  iframe.contentWindow.appHistory.addEventListener("navigateerror", handler, { once: true });
+  iframe.contentWindow.navigation.addEventListener("navigatesuccess", handler, { once: true });
+  iframe.contentWindow.navigation.addEventListener("navigateerror", handler, { once: true });
 })
 
 window.open = (url, target) => {
   if (target === "i" || target === "iframe") {
-    return iframe.contentWindow.appHistory.navigate(url);
+    return iframe.contentWindow.navigation.navigate(url);
   }
 }
 
@@ -459,9 +459,9 @@ window.open = (url, target) => {
 const a = new EventTarget();
 a.href = ${JSON.stringify($("a[href]")?.attr("href") || "#1")};
 a.click = (e) => {
-  let targetAppHistory = appHistory,
+  let targetNavigation = Navigation,
     targetLocation = location;
-  return targetAppHistory.navigate(new URL(a.href, targetLocation.href).toString(), e);
+  return targetNavigation.navigate(new URL(a.href, targetLocation.href).toString(), e);
 }
 
 const form = new EventTarget();
@@ -469,16 +469,16 @@ form.action = ${JSON.stringify($("form[action]")?.attr("action") || "")};
 form.method = ${JSON.stringify($("form[method]")?.attr("method") || "post")};
 form.target = ${JSON.stringify($("form[target]")?.attr("target") || "")};
 form.submit = (e) => {
-  let targetAppHistory = appHistory,
+  let targetNavigation = Navigation,
     targetLocation = location;
   if (form.target === "i" || form.target === "iframe") {
-    targetAppHistory = iframe.contentWindow.appHistory;
+    targetNavigation = iframe.contentWindow.navigation;
     targetLocation = iframe.contentWindow.location;
   }
   const action = form.action ? new URL(form.action, targetLocation.href).toString() : targetLocation.href;
-  return targetAppHistory.navigate(action, {
+  return targetNavigation.navigate(action, {
     ...e,
-    [AppHistoryFormData]: new FormData()
+    [NavigationFormData]: new FormData()
   });
 }
 
@@ -604,7 +604,7 @@ const t = {
 const test_driver = {
   click(element) {
     return element.click({
-      [AppHistoryUserInitiated]: true
+      [NavigationUserInitiated]: true
     });
   }
 }

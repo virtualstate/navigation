@@ -1,10 +1,10 @@
-import {ok, assert, isWindowAppHistory} from "../util";
+import {ok, assert, isWindowNavigation} from "../util";
 import {
-    AppHistory,
-    AppHistoryCurrentChangeEvent, AppHistoryDestination,
-    AppHistoryEntry,
-    AppHistoryNavigateEvent
-} from "../../spec/app-history";
+    Navigation,
+    NavigationCurrentEntryChangeEvent, NavigationDestination,
+    NavigationHistoryEntry,
+    NavigateEvent
+} from "../../spec/navigation";
 import {AsyncEventTarget as EventTarget, Event} from "../../event-target"
 import {FetchEvent, fetch} from "./fetch"
 import {addEventListener, removeEventListener} from "../../event-target/global";
@@ -12,17 +12,17 @@ import {h} from "@virtualstate/fringe";
 import {Response} from "@opennetwork/http-representation";
 import {deferred} from "../../util/deferred";
 
-export async function initialNavigateThenBack(appHistory: AppHistory) {
+export async function initialNavigateThenBack(navigation: Navigation) {
     let navigateCalled = false,
         currentChangeCalled = false;
-    appHistory.addEventListener("navigate", (event) => {
+    navigation.addEventListener("navigate", (event) => {
         navigateCalled = true;
         event.transitionWhile( new Promise<void>(queueMicrotask));
     }, { once: true });
-    appHistory.addEventListener("currentchange", () => {
+    navigation.addEventListener("currentchange", () => {
         currentChangeCalled = true;
     })
-    const { committed, finished } = appHistory.navigate("/test", {
+    const { committed, finished } = navigation.navigate("/test", {
         state: {
             value: 1
         }
@@ -33,22 +33,22 @@ export async function initialNavigateThenBack(appHistory: AppHistory) {
     assert<true>(currentChangeCalled);
 
     // This ties in the async update requirement
-    const updatedCurrent = appHistory.current;
-    assert<AppHistoryEntry>(updatedCurrent);
+    const updatedCurrent = navigation.currentEntry;
+    assert<NavigationHistoryEntry>(updatedCurrent);
     ok(updatedCurrent.getState<{ value: 1 }>().value === 1);
 
     const committedEntry = await committed;
     const finishedEntry = await finished;
 
-    ok(updatedCurrent === appHistory.current);
-    ok(finishedEntry === appHistory.current);
+    ok(updatedCurrent === navigation.currentEntry);
+    ok(finishedEntry === navigation.currentEntry);
     ok(committedEntry === finishedEntry);
     //
-    // if (!isWindowAppHistory(appHistory)) {
+    // if (!isWindowNavigation(navigation)) {
     //     let caught;
-    //     if (!appHistory.canGoBack) {
+    //     if (!navigation.canGoBack) {
     //         try {
-    //             await appHistory.back();
+    //             await navigation.back();
     //         } catch (error) {
     //             // No initial back
     //             caught = error;
@@ -59,17 +59,17 @@ export async function initialNavigateThenBack(appHistory: AppHistory) {
 }
 
 
-export async function initialNavigateThenBackAssigned(appHistory: AppHistory) {
+export async function initialNavigateThenBackAssigned(navigation: Navigation) {
     let navigateCalled = false,
         currentChangeCalled = false;
-    appHistory.onnavigate = (event) => {
+    navigation.onnavigate = (event) => {
         navigateCalled = true;
         event.transitionWhile( new Promise<void>(queueMicrotask));
     };
-    appHistory.oncurrentchange = () => {
+    navigation.oncurrentchange = () => {
         currentChangeCalled = true;
     };
-    const { committed, finished } = appHistory.navigate("/test", {
+    const { committed, finished } = navigation.navigate("/test", {
         state: {
             value: 1
         }
@@ -80,22 +80,22 @@ export async function initialNavigateThenBackAssigned(appHistory: AppHistory) {
     assert<true>(currentChangeCalled);
 
     // This ties in the async update requirement
-    const updatedCurrent = appHistory.current;
-    assert<AppHistoryEntry>(updatedCurrent);
+    const updatedCurrent = navigation.currentEntry;
+    assert<NavigationHistoryEntry>(updatedCurrent);
     ok(updatedCurrent.getState<{ value: 1 }>().value === 1);
 
     const committedEntry = await committed;
     const finishedEntry = await finished;
 
-    ok(updatedCurrent === appHistory.current);
-    ok(finishedEntry === appHistory.current);
+    ok(updatedCurrent === navigation.currentEntry);
+    ok(finishedEntry === navigation.currentEntry);
     ok(committedEntry === finishedEntry);
 
-    if (!isWindowAppHistory(appHistory)) {
+    if (!isWindowNavigation(navigation)) {
         let caught;
-        if (!appHistory.canGoBack) {
+        if (!navigation.canGoBack) {
             try {
-                await appHistory.back();
+                await navigation.back();
             } catch (error) {
                 // No initial back
                 caught = error;
@@ -105,11 +105,11 @@ export async function initialNavigateThenBackAssigned(appHistory: AppHistory) {
     }
 }
 
-export async function routeHandlerExample(appHistory: AppHistory) {
+export async function routeHandlerExample(navigation: Navigation) {
 
     const routesTable = new Map<string, () => Promise<void>>();
 
-    function handler(event: AppHistoryNavigateEvent) {
+    function handler(event: NavigateEvent) {
         if (!event.canTransition || event.hashChange) {
             return;
         }
@@ -120,13 +120,13 @@ export async function routeHandlerExample(appHistory: AppHistory) {
             event.transitionWhile(routeHandler());
         }
     }
-    appHistory.addEventListener("navigate", handler);
+    navigation.addEventListener("navigate", handler);
     try {
         let indexed = 0;
         routesTable.set("/test", async () => {
             indexed += 1
         });
-        const { finished } = appHistory.navigate("/test", {
+        const { finished } = navigation.navigate("/test", {
             state: {
                 value: 1
             }
@@ -134,37 +134,37 @@ export async function routeHandlerExample(appHistory: AppHistory) {
         await finished;
         ok(indexed);
     } finally {
-        appHistory.removeEventListener("navigate", handler);
+        navigation.removeEventListener("navigate", handler);
     }
 
 }
 
-export async function productBackButtonClicked(appHistory: AppHistory) {
+export async function productBackButtonClicked(navigation: Navigation) {
     const backButtonEl = new EventTarget();
 
     let finishedClickNavigation = deferred<unknown>();
 
-    const startingLength = isWindowAppHistory(appHistory) ? appHistory.entries().length : 0;
+    const startingLength = isWindowNavigation(navigation) ? navigation.entries().length : 0;
 
     backButtonEl.addEventListener("click", async () => {
-        const nextIndex = (appHistory.current?.index ?? -2) - 1;
-        const previous = nextIndex < startingLength ? undefined : appHistory.entries()[nextIndex];
+        const nextIndex = (navigation.currentEntry?.index ?? -2) - 1;
+        const previous = nextIndex < startingLength ? undefined : navigation.entries()[nextIndex];
         // console.log({ previous });
         if (previous?.url === "/product-listing") {
             // console.log("Back");
-            const { finished } = appHistory.back();
+            const { finished } = navigation.back();
             finishedClickNavigation.resolve(finished);
             await finished;
         } else {
             // console.log("Navigate replace");
             // If the user arrived here by typing the URL directly:
-            const { finished } = appHistory.navigate("/product-listing", { replace: true });
+            const { finished } = navigation.navigate("/product-listing", { replace: true });
             finishedClickNavigation.resolve(finished);
             await finished;
         }
     });
 
-    ok(appHistory.entries().length === startingLength);
+    ok(navigation.entries().length === startingLength);
 
     await backButtonEl.dispatchEvent({
         type: "click"
@@ -173,24 +173,24 @@ export async function productBackButtonClicked(appHistory: AppHistory) {
     await finishedClickNavigation.promise;
     finishedClickNavigation = deferred();
 
-    ok(pathname(appHistory.current?.url) === "/product-listing");
-    if (isWindowAppHistory(appHistory)) {
+    ok(pathname(navigation.currentEntry?.url) === "/product-listing");
+    if (isWindowNavigation(navigation)) {
         // We would have replaced the initial!
-        ok(appHistory.entries().length === startingLength);
+        ok(navigation.entries().length === startingLength);
     } else {
         // Else for non spec we will have our first navigation
-        ok(appHistory.entries().length === 1);
+        ok(navigation.entries().length === 1);
     }
 
-    const { finished } = await appHistory.navigate("/product-listing/product");
+    const { finished } = await navigation.navigate("/product-listing/product");
     await finished;
 
-    ok(pathname(appHistory.current?.url) === "/product-listing/product");
-    if (isWindowAppHistory(appHistory)) {
+    ok(pathname(navigation.currentEntry?.url) === "/product-listing/product");
+    if (isWindowNavigation(navigation)) {
         // We should have navigated here, so increase the count
-        ok(appHistory.entries().length === startingLength + 1);
+        ok(navigation.entries().length === startingLength + 1);
     } else {
-        ok(appHistory.entries().length === 2);
+        ok(navigation.entries().length === 2);
     }
 
     await backButtonEl.dispatchEvent({
@@ -200,19 +200,19 @@ export async function productBackButtonClicked(appHistory: AppHistory) {
     await finishedClickNavigation.promise;
     finishedClickNavigation = deferred();
 
-    // console.log(appHistory.entries());
+    // console.log(navigation.entries());
 
-    ok(pathname(appHistory.current?.url) === "/product-listing");
+    ok(pathname(navigation.currentEntry?.url) === "/product-listing");
     // We should have gone back here, length should have stayed the same
-    if (isWindowAppHistory(appHistory)) {
-        ok(appHistory.entries().length === startingLength + 1);
+    if (isWindowNavigation(navigation)) {
+        ok(navigation.entries().length === startingLength + 1);
     } else {
-        ok(appHistory.entries().length === 2);
+        ok(navigation.entries().length === 2);
     }
 
 }
 
-export async function performanceExample(appHistory: AppHistory) {
+export async function performanceExample(navigation: Navigation) {
     // const performance = await getPerformance();
     //
     // for (const entry of performance?.getEntriesByType("same-document-navigation")) {
@@ -220,62 +220,62 @@ export async function performanceExample(appHistory: AppHistory) {
     // }
 }
 
-export async function currentReloadExample(appHistory: AppHistory) {
-    await appHistory.navigate('/').finished;
-    await appHistory.reload({ state: { ...appHistory.current?.getState<{}>(), test: 3 } }).finished;
-    ok(appHistory.current?.getState<{ test: number }>().test === 3);
+export async function currentReloadExample(navigation: Navigation) {
+    await navigation.navigate('/').finished;
+    await navigation.reload({ state: { ...navigation.currentEntry?.getState<{}>(), test: 3 } }).finished;
+    ok(navigation.currentEntry?.getState<{ test: number }>().test === 3);
 }
 
-export async function currentChangeExample(appHistory: AppHistory) {
-    let changedEvent!: AppHistoryCurrentChangeEvent;
-    appHistory.addEventListener("currentchange", event => {
+export async function currentChangeExample(navigation: Navigation) {
+    let changedEvent!: NavigationCurrentEntryChangeEvent;
+    navigation.addEventListener("currentchange", event => {
         changedEvent = event;
     });
-    if (!isWindowAppHistory(appHistory)) {
-        ok(!appHistory.current);
+    if (!isWindowNavigation(navigation)) {
+        ok(!navigation.currentEntry);
     } else {
-        ok(appHistory.current);
+        ok(navigation.currentEntry);
     }
-    await appHistory.navigate('/').finished;
-    assert<AppHistoryCurrentChangeEvent>(changedEvent);
+    await navigation.navigate('/').finished;
+    assert<NavigationCurrentEntryChangeEvent>(changedEvent);
     ok(changedEvent.navigationType);
-    if (!isWindowAppHistory(appHistory)) {
+    if (!isWindowNavigation(navigation)) {
         ok(!changedEvent.from);
     } else {
         ok(changedEvent.from);
     }
-    const initial = appHistory.current;
-    assert<AppHistoryEntry>(initial);
-    await appHistory.navigate('/1').finished;
-    assert<AppHistoryCurrentChangeEvent>(changedEvent);
+    const initial = navigation.currentEntry;
+    assert<NavigationHistoryEntry>(initial);
+    await navigation.navigate('/1').finished;
+    assert<NavigationCurrentEntryChangeEvent>(changedEvent);
     ok(changedEvent.navigationType);
-    assert<AppHistoryEntry>(changedEvent.from);
+    assert<NavigationHistoryEntry>(changedEvent.from);
     ok(changedEvent.from.id === initial.id);
 }
 
-export async function homepageGoToExample(appHistory: AppHistory) {
+export async function homepageGoToExample(navigation: Navigation) {
     const homeButton = new EventTarget();
 
-    await appHistory.navigate('/home').finished;
-    const homepageKey = appHistory.current?.key;
+    await navigation.navigate('/home').finished;
+    const homepageKey = navigation.currentEntry?.key;
     assert<string>(homepageKey);
 
     homeButton.addEventListener("click", async () => {
-        await appHistory.goTo(homepageKey).finished;
+        await navigation.goTo(homepageKey).finished;
     });
 
-    await appHistory.navigate('/other').finished;
-    ok(pathname(appHistory.current?.url) === '/other');
+    await navigation.navigate('/other').finished;
+    ok(pathname(navigation.currentEntry?.url) === '/other');
 
     await homeButton.dispatchEvent({
         type: "click"
     });
 
-    ok(pathname(appHistory.current?.url) === '/home');
+    ok(pathname(navigation.currentEntry?.url) === '/home');
 }
 
-export async function toggleExample(appHistory: AppHistory) {
-    await appHistory.navigate('/').finished;
+export async function toggleExample(navigation: Navigation) {
+    await navigation.navigate('/').finished;
 
     interface State {
         detailsOpen?: boolean;
@@ -283,8 +283,8 @@ export async function toggleExample(appHistory: AppHistory) {
 
     const detailsElement: EventTarget & { open?: boolean } = new EventTarget();
     detailsElement.addEventListener("toggle", async () => {
-        const state = appHistory.current?.getState<State>();
-        await appHistory.updateCurrent({
+        const state = navigation.currentEntry?.getState<State>();
+        await navigation.updateCurrentEntry({
             state: {
                 ...state,
                 detailsOpen: detailsElement.open ?? !state?.detailsOpen
@@ -292,24 +292,24 @@ export async function toggleExample(appHistory: AppHistory) {
         });
     });
 
-    ok(!appHistory.current?.getState<State>()?.detailsOpen);
+    ok(!navigation.currentEntry?.getState<State>()?.detailsOpen);
 
     await detailsElement.dispatchEvent({
         type: "toggle"
     });
 
-    ok(appHistory.current?.getState<State>().detailsOpen === true);
+    ok(navigation.currentEntry?.getState<State>().detailsOpen === true);
 
     await detailsElement.dispatchEvent({
         type: "toggle"
     });
 
-    ok(appHistory.current?.getState<State>().detailsOpen === false);
+    ok(navigation.currentEntry?.getState<State>().detailsOpen === false);
 
 }
 
-export async function perEntryEventsExample(appHistory: AppHistory) {
-    if (isWindowAppHistory(appHistory)) return; // navigatefrom + navigateto not yet available
+export async function perEntryEventsExample(navigation: Navigation) {
+    if (isWindowNavigation(navigation)) return; // navigatefrom + navigateto not yet available
 
     async function showPhoto(photoId: number | string) {
         interface State {
@@ -317,7 +317,7 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
             caption?: string;
         }
 
-        const { committed, finished } = appHistory.navigate(`/photos/${photoId}`, { state: { } });
+        const { committed, finished } = navigation.navigate(`/photos/${photoId}`, { state: { } });
 
         // In our app, the `navigate` handler will take care of actually showing the photo and updating the content area.
         const entry = await committed;
@@ -327,7 +327,7 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         // When we navigate away from this photo, save any changes the user made.
         entry.addEventListener("navigatefrom", async () => {
             console.log("navigatefrom");
-            const result = appHistory.updateCurrent({
+            const result = navigation.updateCurrentEntry({
                 state: {
                     dateTaken: new Date().toISOString(),
                     caption: `Photo taken on the date ${new Date().toDateString()}`
@@ -341,9 +341,9 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         let navigateBackToState!: State;
 
         // If we ever navigate back to this photo, e.g. using the browser back button or
-        // appHistory.goTo(), restore the input values.
+        // navigation.goTo(), restore the input values.
         entry.addEventListener("navigateto", () => {
-            const next = appHistory.current?.getState<State>();
+            const next = navigation.currentEntry?.getState<State>();
             if (next) {
                 navigateBackToState = next;
             }
@@ -352,7 +352,7 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         await finished;
 
         // Trigger navigatefrom
-        await appHistory.navigate("/").finished;
+        await navigation.navigate("/").finished;
 
         assert(updateCurrentEntryFinished);
         await updateCurrentEntryFinished.promise;
@@ -361,14 +361,14 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
         await updateCurrentEntryFinished;
 
         // Trigger naviagateto
-        await appHistory.goTo(entry.key).finished;
+        await navigation.goTo(entry.key).finished;
 
-        assert(appHistory.current?.key === entry.key);
+        assert(navigation.currentEntry?.key === entry.key);
 
-        const finalState = appHistory.current?.getState<State>();
+        const finalState = navigation.currentEntry?.getState<State>();
 
         console.log(finalState);
-        console.log({ finalState, navigateBackToState, current: appHistory.current });
+        console.log({ finalState, navigateBackToState, current: navigation.currentEntry });
 
         assert<State>(navigateBackToState);
         ok(navigateBackToState.dateTaken);
@@ -384,11 +384,11 @@ export async function perEntryEventsExample(appHistory: AppHistory) {
     await showPhoto('1');
 }
 
-export async function disposeExample(appHistory: AppHistory) {
+export async function disposeExample(navigation: Navigation) {
 
-    await appHistory.navigate("/").finished;
+    await navigation.navigate("/").finished;
 
-    const startingKey = appHistory.current?.key;
+    const startingKey = navigation.currentEntry?.key;
 
     assert<string>(startingKey);
 
@@ -396,31 +396,31 @@ export async function disposeExample(appHistory: AppHistory) {
     assert(values);
     console.log(JSON.stringify({ 0: values }));
 
-    const { committed: entry1Committed, finished: entry1Finished } = appHistory.navigate("/1");
+    const { committed: entry1Committed, finished: entry1Finished } = navigation.navigate("/1");
     const entry1 = await entry1Committed;
     entry1.addEventListener("dispose", () => values.push(1));
     const entry1Disposed = new Promise(resolve => entry1.addEventListener("dispose", resolve, { once: true }));
     await entry1Finished;
 
-    const { committed: entry2Committed, finished: entry2Finished } = appHistory.navigate("/2");
+    const { committed: entry2Committed, finished: entry2Finished } = navigation.navigate("/2");
     const entry2 = await entry2Committed;
     const entry2Disposed = new Promise(resolve => entry2.addEventListener("dispose", resolve, { once: true }));
     entry2.addEventListener("dispose", () => values.push(2));
 
     await entry2Finished;
 
-    const { committed: entry3Committed, finished: entry3Finished } = await appHistory.navigate("/3");
+    const { committed: entry3Committed, finished: entry3Finished } = await navigation.navigate("/3");
     const entry3 = await entry3Committed;
     const entry3Disposed = new Promise(resolve => entry3.addEventListener("dispose", resolve, { once: true }));
     entry3.addEventListener("dispose", () => values.push(3));
     await entry3Finished;
 
-    await appHistory.goTo(startingKey).finished;
-    await appHistory.navigate("/1-b").finished;
+    await navigation.goTo(startingKey).finished;
+    await navigation.navigate("/1-b").finished;
 
     await Promise.all([entry1Disposed, entry2Disposed, entry3Disposed]);
 
-    // console.log(JSON.stringify({ 3: values, entries: appHistory.entries() }));
+    // console.log(JSON.stringify({ 3: values, entries: navigation.entries() }));
 
     ok(values.includes(1));
     ok(values.includes(2));
@@ -429,10 +429,10 @@ export async function disposeExample(appHistory: AppHistory) {
 
 }
 
-export async function currentChangeMonitoringExample(appHistory: AppHistory) {
+export async function currentChangeMonitoringExample(navigation: Navigation) {
 
-    appHistory.addEventListener("currentchange", () => {
-        appHistory.current?.addEventListener("dispose", genericDisposeHandler);
+    navigation.addEventListener("currentchange", () => {
+        navigation.currentEntry?.addEventListener("dispose", genericDisposeHandler);
     });
 
     let disposedCount = 0;
@@ -441,25 +441,25 @@ export async function currentChangeMonitoringExample(appHistory: AppHistory) {
         disposedCount += 1;
     }
 
-    await appHistory.navigate("/").finished;
+    await navigation.navigate("/").finished;
 
     ok(!disposedCount);
-    await appHistory.navigate("/1").finished;
+    await navigation.navigate("/1").finished;
     ok(!disposedCount);
-    await appHistory.navigate("/2").finished;
+    await navigation.navigate("/2").finished;
     ok(!disposedCount);
 
     // Dispose first
-    await appHistory.navigate('/', { replace: true }).finished;
+    await navigation.navigate('/', { replace: true }).finished;
     // Dispose Second
-    await appHistory.navigate('/', { replace: true }).finished;
+    await navigation.navigate('/', { replace: true }).finished;
     // Should be back at start
 
     ok(disposedCount === 2);
 }
 
-export async function rollbackExample(appHistory: AppHistory) {
-    if (isWindowAppHistory(appHistory)) return; // Does not work as expected
+export async function rollbackExample(navigation: Navigation) {
+    if (isWindowNavigation(navigation)) return; // Does not work as expected
 
     const expectedError = `Error.${Math.random()}`;
     const toasts: string[] = [];
@@ -474,22 +474,22 @@ export async function rollbackExample(appHistory: AppHistory) {
     //     navigateErrorTransitionCommitted = deferred<unknown>();
     let navigateError = deferred();
 
-    appHistory.addEventListener("navigateerror", e => {
+    navigation.addEventListener("navigateerror", e => {
         navigateError.resolve();
         showErrorToast(`Could not load: ${e.message}`);
     });
 
     // Should be successful, no failing navigator yet
-    await appHistory.navigate("/").finished;
+    await navigation.navigate("/").finished;
 
     ok(!toasts.length);
 
-    const expectedRollbackState = await appHistory.navigate(`/${Math.random()}`).finished;
+    const expectedRollbackState = await navigation.navigate(`/${Math.random()}`).finished;
 
     ok(!toasts.length);
 
     // Reject after committed using currentchange, or before committed using navigate
-    appHistory.addEventListener("navigate",  (event) => {
+    navigation.addEventListener("navigate",  (event) => {
         event.transitionWhile(Promise.reject(new Error(expectedError)));
     }, { once: true });
 
@@ -497,7 +497,7 @@ export async function rollbackExample(appHistory: AppHistory) {
 
     const errorUrl = `/thisWillError/${Math.random()}`
 
-    const { committed, finished } = appHistory.navigate(errorUrl);
+    const { committed, finished } = navigation.navigate(errorUrl);
 
     // rollback is automatically triggered on error
     // await navigateErrorTransitionCommitted.promise;
@@ -514,17 +514,17 @@ export async function rollbackExample(appHistory: AppHistory) {
     //     committedEntry,
     //     finishedError
     // });
-    assert<AppHistoryEntry>(committedEntry);
+    assert<NavigationHistoryEntry>(committedEntry);
 
     assert<Error>(finishedError);
     assert(finishedError instanceof Error);
     assert(finishedError.message === expectedError);
 
-    ok(appHistory.current);
+    ok(navigation.currentEntry);
 
-    console.log({ current: appHistory.current.url, expectedRollbackState: expectedRollbackState.url, toasts });
+    console.log({ current: navigation.currentEntry.url, expectedRollbackState: expectedRollbackState.url, toasts });
 
-    ok(pathname(appHistory.current?.url) === pathname(expectedRollbackState.url));
+    ok(pathname(navigation.currentEntry?.url) === pathname(expectedRollbackState.url));
 
     console.log({ toasts });
 
@@ -532,13 +532,13 @@ export async function rollbackExample(appHistory: AppHistory) {
     ok(toasts[0].includes(expectedError));
 }
 
-export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
-    if (isWindowAppHistory(appHistory)) {
+export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
+    if (isWindowNavigation(navigation)) {
         // TODO WARN investigate
         return;
     }
 
-    function determineAction(destination: AppHistoryDestination): {
+    function determineAction(destination: NavigationDestination): {
         type: string;
         destinationURL: string;
         destinationState: unknown;
@@ -569,9 +569,9 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
     let disallowCount = 0;
 
     // TODO replace with transition usage
-    let redirectFinished: Promise<AppHistoryEntry> | undefined = undefined;
+    let redirectFinished: Promise<NavigationHistoryEntry> | undefined = undefined;
     const seen = new WeakSet()
-    appHistory.addEventListener("navigate", e => {
+    navigation.addEventListener("navigate", e => {
         if (seen.has(e) || seen.has(e.transitionWhile)) {
             console.log(e, seen.has(e), seen.has(e.transitionWhile));
             // throw new Error("Seen event multiple times");
@@ -583,14 +583,14 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
             const result = determineAction(e.destination);
 
             if (result.type === "redirect") {
-                if (isWindowAppHistory(appHistory)) {
+                if (isWindowNavigation(navigation)) {
                     e.preventDefault();
                 }
                 console.log("Redirecting");
-                redirectFinished = appHistory.transition?.rollback().finished
-                    .then(() => appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished);
-                // await appHistory.transition?.rollback().finished;
-                // await appHistory.navigate(result.destinationURL, { state: result.destinationState }).finished;
+                redirectFinished = navigation.transition?.rollback().finished
+                    .then(() => navigation.navigate(result.destinationURL, { state: result.destinationState }).finished);
+                // await navigation.transition?.rollback().finished;
+                // await navigation.navigate(result.destinationURL, { state: result.destinationState }).finished;
             } else if (result.type === "disallow") {
                 disallowCount += 1;
                 throw new Error(result.disallowReason);
@@ -603,14 +603,14 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
         })());
     });
 
-    if (!isWindowAppHistory(appHistory)) {
-        ok(!appHistory.current);
+    if (!isWindowNavigation(navigation)) {
+        ok(!navigation.currentEntry);
     }
 
-    await appHistory.navigate("/").finished;
+    await navigation.navigate("/").finished;
 
-    ok(appHistory.current);
-    ok(pathname(appHistory.current?.url) === "/");
+    ok(navigation.currentEntry);
+    ok(pathname(navigation.currentEntry?.url) === "/");
     ok(allowCount === 1);
 
     const redirectTargetUrl = `/redirected/${Math.random()}`;
@@ -618,7 +618,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
     const targetUrl = new URL("/redirect", "https://example.com");
     targetUrl.searchParams.set("target", redirectTargetUrl);
 
-    const { committed: redirectCommitted, finished: redirectFinishedErrored } = appHistory.navigate(targetUrl.toString());
+    const { committed: redirectCommitted, finished: redirectFinishedErrored } = navigation.navigate(targetUrl.toString());
     redirectFinishedErrored.catch(error => void error);
     await redirectCommitted.catch(error => void error);
 
@@ -630,13 +630,13 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
     assert(redirectError instanceof Error);
 
     // TODO pending transition here would allow us to see the new navigation changes
-    // const pendingTransition = appHistory.transition;
+    // const pendingTransition = navigation.transition;
     // ok(pendingTransition);
     // await pendingTransition;
     assert(redirectFinished);
     await redirectFinished;
 
-    ok(pathname(appHistory.current?.url) === redirectTargetUrl);
+    ok(pathname(navigation.currentEntry?.url) === redirectTargetUrl);
     ok(allowCount === 2);
 
     const expectedInitialError = `${Math.random()}`;
@@ -645,7 +645,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
     ok(disallowCount === 0);
 
-    const { committed: disallowCommitted, finished: disallowFinished } = appHistory.navigate(errorTargetUrl.toString());
+    const { committed: disallowCommitted, finished: disallowFinished } = navigation.navigate(errorTargetUrl.toString());
     await disallowCommitted.catch(error => error);
     const initialError = await disallowFinished.catch(error => error);
 
@@ -661,7 +661,7 @@ export async function singlePageAppRedirectsAndGuards(appHistory: AppHistory) {
 
 }
 
-export async function navigationExamples(appHistory: AppHistory) {
+export async function navigationExamples(navigation: Navigation) {
     const url = `/${Math.random()}`;
     const stateSymbol = Symbol();
     const infoSymbol = Symbol();
@@ -671,26 +671,26 @@ export async function navigationExamples(appHistory: AppHistory) {
     // Performs a navigation to the given URL, but replace the current history entry
     // instead of pushing a new one.
     // (equivalent to `location.replace(url)`)
-    await appHistory.navigate(url, { replace: true }).finished;
+    await navigation.navigate(url, { replace: true }).finished;
 
     // Replace the URL and state at the same time.
-    await appHistory.navigate(url, { replace: true, state }).finished;
+    await navigation.navigate(url, { replace: true, state }).finished;
 
     // You can still pass along info:
-    await appHistory.navigate(url, { replace: true, state, info }).finished;
+    await navigation.navigate(url, { replace: true, state, info }).finished;
 
     // Just like location.reload().
-    await appHistory.reload().finished;
+    await navigation.reload().finished;
 
     // Leave the state as-is, but pass some info.
-    await appHistory.reload({ info }).finished;
+    await navigation.reload({ info }).finished;
 
     // Overwrite the state with a new value.
-    await appHistory.reload({ state, info }).finished;
+    await navigation.reload({ state, info }).finished;
 
 }
 
-export async function usingInfoExample(appHistory: AppHistory) {
+export async function usingInfoExample(navigation: Navigation) {
 
     const photoGallery = new EventTarget();
     const document = new EventTarget();
@@ -705,7 +705,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
     const photoUrls = [...photos.values()];
 
     function getPhotoSiblings() {
-        const index = photoUrls.indexOf(pathname(appHistory.current?.url ?? "/unknown"));
+        const index = photoUrls.indexOf(pathname(navigation.currentEntry?.url ?? "/unknown"));
         if (index === -1) return [];
         return [photoUrls[index - 1], photoUrls[index + 1]];
     }
@@ -740,18 +740,18 @@ export async function usingInfoExample(appHistory: AppHistory) {
     document.addEventListener("keydown", async (event) => {
         if (event.key === "ArrowLeft" && hasPreviousPhoto()) {
             const url = getPreviousPhotoURL();
-            await appHistory.navigate(url, { info: { via: "go-left", thumbnail: photoTargets.get(url) } }).finished;
+            await navigation.navigate(url, { info: { via: "go-left", thumbnail: photoTargets.get(url) } }).finished;
         }
         if (event.key === "ArrowRight" && hasNextPhoto()) {
             const url = getNextPhotoURL();
-            await appHistory.navigate(url, { info: { via: "go-right", thumbnail: photoTargets.get(url) } }).finished;
+            await navigation.navigate(url, { info: { via: "go-right", thumbnail: photoTargets.get(url) } }).finished;
         }
     });
 
     photoGallery.addEventListener("click", async ({ target }: Event & { target?: unknown }) => {
         const url = getPhotoURL(target);
         if (!url) return;
-        await appHistory.navigate(url, { info: { via: "gallery", thumbnail: target } }).finished;
+        await navigation.navigate(url, { info: { via: "gallery", thumbnail: target } }).finished;
     });
 
     let lefts = 0,
@@ -773,7 +773,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
         loaded.push(pathname(url));
     }
 
-    appHistory.addEventListener("navigate", e => {
+    navigation.addEventListener("navigate", e => {
         e.transitionWhile((async () => {
             if (isPhotoNavigation(e)) {
                 const { thumbnail, via } = e.info;
@@ -808,7 +808,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
     ok(!hasPreviousPhoto());
     ok(!hasNextPhoto());
 
-    await appHistory.navigate(photoUrls[middleIndex], {
+    await navigation.navigate(photoUrls[middleIndex], {
         info: {
             via: "navigation",
             thumbnail: photoTargets.get(photoUrls[middleIndex])
@@ -874,7 +874,7 @@ export async function usingInfoExample(appHistory: AppHistory) {
     ok(loaded.includes(photoUrls[middleIndex - 5]));
 
     // Reset to middle, and go the other way
-    await appHistory.navigate(photoUrls[middleIndex], {
+    await navigation.navigate(photoUrls[middleIndex], {
         info: {
             via: "navigation",
             thumbnail: photoTargets.get(photoUrls[middleIndex])
@@ -928,15 +928,15 @@ export async function usingInfoExample(appHistory: AppHistory) {
 
     await photoGallery.dispatchEvent({
         type: "click",
-        target: photoTargets.get(pathname(appHistory.current?.url ?? "/unknown"))
+        target: photoTargets.get(pathname(navigation.currentEntry?.url ?? "/unknown"))
     });
 
     ok(zoomies.length);
-    ok(photoTargets.get(pathname(appHistory.current?.url ?? "/unknown")))
-    ok(zoomies.includes(photoTargets.get(pathname(appHistory.current?.url ?? "/unknown")) ?? {}));
+    ok(photoTargets.get(pathname(navigation.currentEntry?.url ?? "/unknown")))
+    ok(zoomies.includes(photoTargets.get(pathname(navigation.currentEntry?.url ?? "/unknown")) ?? {}));
 }
 
-export async function nextPreviousButtons(appHistory: AppHistory) {
+export async function nextPreviousButtons(navigation: Navigation) {
     const appState = {
         currentPhoto: 0,
         totalPhotos: 10
@@ -948,24 +948,24 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     const currentPhoto: EventTarget & { src?: string } = new EventTarget();
 
     next.addEventListener("click", async () => {
-        const nextPhotoInHistory = photoNumberFromURL(appHistory.entries()[(appHistory.current?.index ?? -2) + 1]?.url);
+        const nextPhotoInHistory = photoNumberFromURL(navigation.entries()[(navigation.currentEntry?.index ?? -2) + 1]?.url);
         if (nextPhotoInHistory === appState.currentPhoto + 1) {
-            await appHistory.forward().finished;
+            await navigation.forward().finished;
         } else {
-            await appHistory.navigate(`/photos/${appState.currentPhoto + 1}`).finished;
+            await navigation.navigate(`/photos/${appState.currentPhoto + 1}`).finished;
         }
     });
 
     previous.addEventListener("click", async () => {
-        const prevPhotoInHistory = photoNumberFromURL(appHistory.entries()[(appHistory.current?.index ?? -2) - 1]?.url);
+        const prevPhotoInHistory = photoNumberFromURL(navigation.entries()[(navigation.currentEntry?.index ?? -2) - 1]?.url);
         // console.log(prevPhotoInHistory)
         // console.log({ prevPhotoInHistory, matching: appState.currentPhoto - 1, nav: `/photos/${appState.currentPhoto - 1}` });
         if (prevPhotoInHistory === appState.currentPhoto - 1) {
             // console.log("BACK!");
-            await appHistory.back().finished;
+            await navigation.back().finished;
         } else {
             // console.log({ navigate: `/photos/${appState.currentPhoto - 1}` })
-            await appHistory.navigate(`/photos/${appState.currentPhoto - 1}`).finished;
+            await navigation.navigate(`/photos/${appState.currentPhoto - 1}`).finished;
         }
     })
 
@@ -993,7 +993,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
 
     addEventListener("fetch", fetchHandler);
 
-    appHistory.addEventListener("navigate", event => {
+    navigation.addEventListener("navigate", event => {
         const photoNumberMaybe = photoNumberFromURL(event.destination.url);
         console.log({ canTransition: event.canTransition, photoNumberMaybe });
         if (!(typeof photoNumberMaybe === "number" && event.canTransition)) return;
@@ -1029,11 +1029,11 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     });
 
     // Is not a photo should not load
-    await appHistory.navigate("/").finished;
+    await navigation.navigate("/").finished;
 
     ok(!currentPhoto.src);
 
-    await appHistory.navigate("/photos/0").finished;
+    await navigation.navigate("/photos/0").finished;
 
     ok(navigateFinished);
     await navigateFinished;
@@ -1045,7 +1045,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     ok(!next.disabled);
     ok(previous.disabled);
 
-    await appHistory.navigate("/photos/1").finished;
+    await navigation.navigate("/photos/1").finished;
 
     ok(navigateFinished);
     await navigateFinished;
@@ -1065,7 +1065,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/2`);
 
-    await appHistory.navigate("/photos/9").finished;
+    await navigation.navigate("/photos/9").finished;
 
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
@@ -1129,7 +1129,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
 
     // console.log({ finalFetchCount, fetchCount });
 
-    if (!isWindowAppHistory(appHistory)) {
+    if (!isWindowNavigation(navigation)) {
         ok(finalFetchCount === fetchCount);
     }
 
@@ -1142,7 +1142,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/8`);
 
-    if (!isWindowAppHistory(appHistory)) {
+    if (!isWindowNavigation(navigation)) {
         ok(finalFetchCount === fetchCount);
     }
     // log: Updated window pathname to /photos/9
@@ -1153,7 +1153,7 @@ export async function nextPreviousButtons(appHistory: AppHistory) {
     // Utilised forward!
     assert<string>(currentPhoto.src);
     ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/9`);
-    if (!isWindowAppHistory(appHistory)) {
+    if (!isWindowNavigation(navigation)) {
         ok(finalFetchCount === fetchCount);
     }
 

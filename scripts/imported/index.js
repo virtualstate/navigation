@@ -4,7 +4,7 @@ const initialImportPath = getConfig()["@virtualstate/app-history/test/imported/p
 
 if (typeof initialImportPath !== "string") throw new Error("Expected string import path");
 
-export const { AppHistory } = await import(initialImportPath);
+export const { Navigation } = await import(initialImportPath);
 
 export function getConfig() {
     return {

@@ -1,6 +1,6 @@
-# `@virtualstate/app-history`
+# `@virtualstate/navigation`
 
-Native JavaScript [app-history](https://github.com/WICG/app-history) implementation 
+Native JavaScript [navigation](https://github.com/WICG/navigation-api) implementation 
 
 [//]: # (badges)
 
@@ -10,7 +10,7 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
  ### Test Coverage
 
- ![Web Platform Tests 115/158](https://img.shields.io/badge/Web%20Platform%20Tests-115%2F158-brightgreen) ![93.54%25 lines covered](https://img.shields.io/badge/lines-93.54%25-brightgreen) ![93.54%25 statements covered](https://img.shields.io/badge/statements-93.54%25-brightgreen) ![85.14%25 functions covered](https://img.shields.io/badge/functions-85.14%25-brightgreen) ![83.88%25 branches covered](https://img.shields.io/badge/branches-83.88%25-brightgreen)
+ ![Web Platform Tests 115/158](https://img.shields.io/badge/Web%20Platform%20Tests-115%2F158-brightgreen) ![93.59%25 lines covered](https://img.shields.io/badge/lines-93.59%25-brightgreen) ![93.59%25 statements covered](https://img.shields.io/badge/statements-93.59%25-brightgreen) ![85.14%25 functions covered](https://img.shields.io/badge/functions-85.14%25-brightgreen) ![83.62%25 branches covered](https://img.shields.io/badge/branches-83.62%25-brightgreen)
 
 [//]: # (badges)
 
@@ -18,85 +18,85 @@ Native JavaScript [app-history](https://github.com/WICG/app-history) implementat
 
 ### Skypack
 
-- [Package Registry Link - Skypack](https://www.skypack.dev/view/@virtualstate/app-history)
+- [Package Registry Link - Skypack](https://www.skypack.dev/view/@virtualstate/navigation)
 
 ```typescript
-const { AppHistory } = await import("https://cdn.skypack.dev/@virtualstate/app-history");
+const { Navigation } = await import("https://cdn.skypack.dev/@virtualstate/navigation");
 ```
 
 _Or_
 
 ```typescript
-import { AppHistory } from "https://cdn.skypack.dev/@virtualstate/app-history";
+import { Navigation } from "https://cdn.skypack.dev/@virtualstate/navigation";
 ```
 
 
 ### npm / yarn / GitHub
 
 
-- [Package Registry Link - GitHub](https://github.com/virtualstate/app-history/packages)
-- [Package Registry Link - npm](https://www.npmjs.com/package/@virtualstate/app-history)
+- [Package Registry Link - GitHub](https://github.com/virtualstate/navigation/packages)
+- [Package Registry Link - npm](https://www.npmjs.com/package/@virtualstate/navigation)
 
 ```
-npm i --save @virtualstate/app-history
+npm i --save @virtualstate/navigation
 ```
 
 _Or_
 
 ```
-yarn add @virtualstate/app-history
+yarn add @virtualstate/navigation
 ```
 
 Then
 
 ```typescript
-import { AppHistory } from "@virtualstate/app-history";
+import { Navigation } from "@virtualstate/navigation";
 ```
 
 ## Navigation
 
 ```typescript
-import { AppHistory } from "@virtualstate/app-history";
+import { Navigation } from "@virtualstate/navigation";
 
-const appHistory = new AppHistory();
+const navigation = new Navigation();
 
 // Set initial url
-appHistory.navigate("/");
+navigation.navigate("/");
 
-appHistory.navigate("/skipped");
+navigation.navigate("/skipped");
 
 // Use .finished to wait for the transition to complete
-await appHistory.navigate("/awaited").finished;
+await navigation.navigate("/awaited").finished;
 
 ```
 
 ## Waiting for events
 
 ```typescript
-import { AppHistory } from "@virtualstate/app-history";
+import { Navigation } from "@virtualstate/navigation";
 
-const appHistory = new AppHistory();
+const navigation = new Navigation();
 
-appHistory.addEventListener("navigate", async ({ destination }) => {
+navigation.addEventListener("navigate", async ({ destination }) => {
     if (destination.url === "/disallow") {
         throw new Error("No!");
     }
 });
 
-await appHistory.navigate("/allowed").finished; // Resolves
-await appHistory.navigate("/disallow").finished; // Rejects
+await navigation.navigate("/allowed").finished; // Resolves
+await navigation.navigate("/disallow").finished; // Rejects
 
 ```
 
 ## Transitions
 
 ```typescript
-import { AppHistory } from "@virtualstate/app-history";
+import { Navigation } from "@virtualstate/navigation";
 import { loadPhotoIntoCache } from "./cache";
 
-const appHistory = new AppHistory();
+const navigation = new Navigation();
 
-appHistory.addEventListener("navigate", async ({ destination, transitionWhile }) => {
+navigation.addEventListener("navigate", async ({ destination, transitionWhile }) => {
     transitionWhile(loadPhotoIntoCache(destination.url));
 });
 ```
@@ -106,12 +106,12 @@ appHistory.addEventListener("navigate", async ({ destination, transitionWhile })
 You can match `destination.url` using [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API)
 
 ```typescript
-import {AppHistory} from "@virtualstate/app-history";
+import {Navigation} from "@virtualstate/navigation";
 import {URLPattern} from "urlpattern-polyfill";
 
-const appHistory = new AppHistory();
+const navigation = new Navigation();
 
-appHistory.addEventListener("navigate", async ({destination, transitionWhile}) => {
+navigation.addEventListener("navigate", async ({destination, transitionWhile}) => {
     const pattern = new URLPattern({ pathname: "/books/:id" });
     const match = pattern.exec(destination.url);
     if (match) {
@@ -123,22 +123,22 @@ appHistory.addEventListener("navigate", async ({destination, transitionWhile}) =
     }
 });
 
-appHistory.navigate("/book/1");
+navigation.navigate("/book/1");
 ```
 
 ## State
 
 ```typescript
 
-import { AppHistory } from "@virtualstate/app-history";
+import { Navigation } from "@virtualstate/navigation";
 
-const appHistory = new AppHistory();
+const navigation = new Navigation();
 
-appHistory.addEventListener("currentchange", () => {
-    console.log({ updatedState: appHistory.current?.getState() });
+navigation.addEventListener("currentchange", () => {
+    console.log({ updatedState: navigation.current?.getState() });
 });
 
-await appHistory.updateCurrent({
+await navigation.updateCurrent({
     state: {
         items: [
             "first",
@@ -148,9 +148,9 @@ await appHistory.updateCurrent({
     }
 }).finished;
 
-await appHistory.updateCurrent({
+await navigation.updateCurrent({
     state: {
-        ...appHistory.current.getState(),
+        ...navigation.current.getState(),
         index: 1
     }
 }).finished;
@@ -170,13 +170,13 @@ This does not take into account the browser's native back/forward functionality,
 which would need to be investigated further.
 
 ```typescript
-import { AppHistory } from "@virtualstate/app-history";
+import { Navigation } from "@virtualstate/navigation";
 
-const appHistory = new AppHistory();
+const navigation = new Navigation();
 const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
 
-appHistory.addEventListener("currentchange", () => {
-    const { current } = appHistory;
+navigation.addEventListener("currentchange", () => {
+    const { current } = navigation;
     if (!current || !current.sameDocument) return;
     const state = current.getState() ?? {};
     const { pathname } = new URL(current.url, origin);

@@ -1,4 +1,4 @@
-import {AppHistory} from "../../spec/app-history";
+import {Navigation} from "../../spec/navigation";
 import {h, toString} from "@virtualstate/fringe";
 import {AsyncEventTarget} from "../../event-target";
 import {ok} from "../util";
@@ -7,7 +7,7 @@ const React = {
     createElement: h
 }
 
-export async function jsxExample(appHistory: AppHistory) {
+export async function jsxExample(navigation: Navigation) {
     interface State {
         dateTaken?: string;
         caption?: string;
@@ -34,12 +34,12 @@ export async function jsxExample(appHistory: AppHistory) {
 
     let bodyUpdated!: Promise<void>;
 
-    appHistory.addEventListener("currentchange", async (event) => {
+    navigation.addEventListener("currentchange", async (event) => {
         await (event.transitionWhile ?? (promise => promise))(bodyUpdated = handler());
         async function handler() {
             body.innerHTML = await new Promise(
                 (resolve, reject) => (
-                    toString(<Component {...appHistory.current?.getState<State>() } />).then(
+                    toString(<Component {...navigation.currentEntry?.getState<State>() } />).then(
                         resolve,
                         reject
                     )
@@ -51,7 +51,7 @@ export async function jsxExample(appHistory: AppHistory) {
 
     ok(!body.innerHTML);
 
-    await appHistory.navigate('/', {
+    await navigation.navigate('/', {
         state: {
             dateTaken: new Date().toISOString(),
             caption: `Photo taken on the date ${new Date().toDateString()}`
@@ -70,9 +70,9 @@ export async function jsxExample(appHistory: AppHistory) {
     await bodyUpdated;
     ok(!body.innerHTML?.includes(updatedCaption));
 
-    await appHistory.updateCurrent({
+    await navigation.updateCurrentEntry({
         state: {
-            ...appHistory.current?.getState<State>(),
+            ...navigation.currentEntry?.getState<State>(),
             caption: updatedCaption
         }
     });

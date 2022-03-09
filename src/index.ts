@@ -1,14 +1,14 @@
-export * from "./app-history";
-export * from "./spec/app-history";
+export * from "./navigation";
+export * from "./spec/navigation";
 export {
-    AppHistoryTransitionFinally
-} from "./app-history-transition";
+    NavigationTransitionFinally
+} from "./navigation-transition";
 export * from "./history";
 export * from "./location";
 export { EventTarget } from "./event-target";
 export {
-    AppHistoryFormData,
-    AppHistoryCanTransition,
-    AppHistoryUserInitiated,
-    AppHistoryNavigateOptions
-} from "./create-app-history-transition";
+    NavigationFormData,
+    NavigationCanTransition,
+    NavigationUserInitiated,
+    NavigationNavigateOptions
+} from "./create-navigation-transition";

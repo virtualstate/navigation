@@ -1,6 +1,6 @@
 import {Event, EventCallback, EventTarget, EventTargetAddListenerOptions} from "./event-target";
 
-export class AppHistoryEventTarget<T> extends EventTarget {
+export class NavigationEventTarget<T> extends EventTarget {
 
     addEventListener<K extends keyof T>(type: K, listener: EventCallback<T[K] extends Event ? T[K] : never>, options?: boolean | EventTargetAddListenerOptions): void;
     addEventListener(type: string | symbol, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void;

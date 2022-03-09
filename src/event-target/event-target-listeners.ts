@@ -4,7 +4,7 @@ import { EventCallback, SyncEventCallback } from "./callback"
 import { EventDescriptor, EventDescriptorSymbol } from "./descriptor"
 import { matchEventCallback } from "./callback"
 import { isSignalEvent } from "./signal-event"
-import { isAbortError } from "../app-history-errors"
+import { isAbortError } from "../navigation-errors"
 import {
     EventTargetAddListenerOptions,
     EventTargetListeners as EventTargetListenersSymbol,

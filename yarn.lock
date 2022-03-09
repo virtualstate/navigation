@@ -1434,9 +1434,6 @@
   dependencies:
     "@types/node" "*"
 
-"@virtualstate/app-history-imported@./scripts/imported":
-  version "0.0.0"
-
 "@virtualstate/astro-renderer@^2.46.0":
   version "2.46.0"
   resolved "https://registry.npmjs.org/@virtualstate/astro-renderer/-/astro-renderer-2.46.0.tgz#e0d84e6630ca9ccdfb5a09d4b5e963ae6271a700"
@@ -1487,6 +1484,9 @@
   version "2.46.0"
   resolved "https://registry.npmjs.org/@virtualstate/hooks/-/hooks-2.46.0.tgz#7dde6849f234d9c0ebe7bb30b3c239e5880ac1d2"
   integrity sha512-KUTIxVSbU6JWmc6EkTiVsdymsSDGmxOtu7l0FoEwR8saq7e2dIjJfPO1UU7YJdjX+Di4gqjGY+BaEkDgq44+NA==
+
+"@virtualstate/navigation-imported@./scripts/imported":
+  version "0.0.0"
 
 "@virtualstate/union@^2.46.0":
   version "2.46.0"

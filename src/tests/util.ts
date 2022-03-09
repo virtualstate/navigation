@@ -1,6 +1,6 @@
 /* c8 ignore start */
 import {getConfig} from "./config";
-import {AppHistory} from "../spec/app-history";
+import {Navigation} from "../spec/navigation";
 
 export function ok(value: unknown) {
     assert<unknown>(value);
@@ -17,9 +17,9 @@ export function debug(...messages: unknown[]) {
 }
 
 declare global {
-    const appHistory: AppHistory;
+    const navigation: Navigation;
 }
 
-export function isWindowAppHistory(appHistory: AppHistory): boolean {
-    return typeof window !== "undefined" && window.appHistory === appHistory;
+export function isWindowNavigation(navigation: Navigation): boolean {
+    return typeof window !== "undefined" && window.navigation === navigation;
 }

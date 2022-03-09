@@ -1,1 +1,1 @@
-declare module "@virtualstate/app-history/event-target"
+declare module "@virtualstate/navigation/event-target"

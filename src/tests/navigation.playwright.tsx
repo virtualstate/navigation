@@ -44,7 +44,7 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
     const context = await browser.newContext({});
     const page = await context.newPage();
 
-    const namespacePath = "/@virtualstate/app-history/";
+    const namespacePath = "/@virtualstate/navigation/";
     const testsSrcPath = `${namespacePath}tests/${esm ? "" : "rollup.js"}`;
 
     const eventTargetSyncPath = `${namespacePath}event-target/sync`
@@ -60,7 +60,7 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
                     imports={{
                         "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
                         "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
-                        "@virtualstate/app-history/event-target": `https://cdn.skypack.dev/@virtualstate/app-history/event-target/${eventTarget}`,
+                        "@virtualstate/navigation/event-target": `https://cdn.skypack.dev/@virtualstate/navigation/event-target/${eventTarget}`,
                         "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
                         "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
                     }}
@@ -68,10 +68,10 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
             ),
             h("body", {}, h("script", { type: "module" }, `
             
-        if (typeof appHistory !== "undefined") {
-          console.log("Global AppHistory exists");
+        if (typeof Navigation !== "undefined") {
+          console.log("Global Navigation exists");
         } else {
-          console.log("Global AppHistory does not exist");
+          console.log("Global Navigation does not exist");
         }
             
         console.log("Waiting for window to load");
@@ -178,4 +178,4 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
     await browser.close();
 }
 
-console.log(`PASS assertAppHistory:playwright:new AppHistory`);
+console.log(`PASS assertNavigation:playwright:new Navigation`);

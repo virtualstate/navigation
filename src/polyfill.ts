@@ -2,13 +2,13 @@ console.warn("THIS POLYFILL IS NOT COMPLETE, FOR EXAMPLE IT DOES NOT TAKE INTO A
 console.warn("PLEASE RAISE INTEREST AT https://github.com/virtualstate/app-history/issues")
 
 /* c8 ignore start */
-import { AppHistory } from "./app-history";
+import { Navigation } from "./navigation";
 console.log("Polyfill checking load");
-let filled: AppHistory;
+let filled: Navigation;
 
-if (typeof window !== "undefined" && !window.appHistory) {
+if (typeof window !== "undefined" && !window.navigation) {
     console.log("Polyfill checking loading");
-    filled = new AppHistory();
+    filled = new Navigation();
     // Add usage of transitionWhile for initial navigation to prevent network navigation
     filled.addEventListener(
         "navigate",
@@ -21,21 +21,21 @@ if (typeof window !== "undefined" && !window.appHistory) {
     ).finished;
     console.log("Polyfill checking loaded");
     try {
-        Object.defineProperty(window, "appHistory", {
+        Object.defineProperty(window, "navigation", {
             value: filled
         });
     } catch (e) {
 
     }
     try {
-        Object.defineProperty(self, "appHistory", {
+        Object.defineProperty(self, "navigation", {
             value: filled
         });
     } catch (e) {
 
     }
     try {
-        Object.defineProperty(globalThis, "appHistory", {
+        Object.defineProperty(globalThis, "navigation", {
             value: filled
         });
     } catch (e) {

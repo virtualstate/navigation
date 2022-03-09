@@ -1,5 +1,5 @@
 import { Event, isEvent } from "./event"
-import { isAbortError } from "../app-history-errors";
+import { isAbortError } from "../navigation-errors";
 import { ExternalSyncEventTargetListeners } from "./event-target-listeners";
 
 export interface AbortSignal extends ExternalSyncEventTargetListeners {
