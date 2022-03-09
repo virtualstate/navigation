@@ -12,49 +12,49 @@ import {AbortError, InvalidStateError, isAbortError, isInvalidStateError} from "
 import {Event, EventTarget} from "./event-target";
 import AbortController from "abort-controller";
 
-export const Rollback = Symbol.for("@virtualstate/app-history/rollback");
-export const Unset = Symbol.for("@virtualstate/app-history/unset");
+export const Rollback = Symbol.for("@virtualstate/navigation/rollback");
+export const Unset = Symbol.for("@virtualstate/navigation/unset");
 
 export type InternalNavigationNavigationType =
     | NavigationNavigationType
     | typeof Rollback
     | typeof Unset;
 
-export const NavigationTransitionParentEventTarget = Symbol.for("@virtualstate/app-history/transition/parentEventTarget");
+export const NavigationTransitionParentEventTarget = Symbol.for("@virtualstate/navigation/transition/parentEventTarget");
 
-export const NavigationTransitionFinishedDeferred = Symbol.for("@virtualstate/app-history/transition/deferred/finished");
-export const NavigationTransitionCommittedDeferred = Symbol.for("@virtualstate/app-history/transition/deferred/committed");
-export const NavigationTransitionNavigationType = Symbol.for("@virtualstate/app-history/transition/navigationType");
-export const NavigationTransitionInitialEntries = Symbol.for("@virtualstate/app-history/transition/entries/initial");
-export const NavigationTransitionFinishedEntries = Symbol.for("@virtualstate/app-history/transition/entries/finished");
-export const NavigationTransitionInitialIndex = Symbol.for("@virtualstate/app-history/transition/index/initial");
-export const NavigationTransitionFinishedIndex = Symbol.for("@virtualstate/app-history/transition/index/finished");
-export const NavigationTransitionEntry = Symbol.for("@virtualstate/app-history/transition/entry");
+export const NavigationTransitionFinishedDeferred = Symbol.for("@virtualstate/navigation/transition/deferred/finished");
+export const NavigationTransitionCommittedDeferred = Symbol.for("@virtualstate/navigation/transition/deferred/committed");
+export const NavigationTransitionNavigationType = Symbol.for("@virtualstate/navigation/transition/navigationType");
+export const NavigationTransitionInitialEntries = Symbol.for("@virtualstate/navigation/transition/entries/initial");
+export const NavigationTransitionFinishedEntries = Symbol.for("@virtualstate/navigation/transition/entries/finished");
+export const NavigationTransitionInitialIndex = Symbol.for("@virtualstate/navigation/transition/index/initial");
+export const NavigationTransitionFinishedIndex = Symbol.for("@virtualstate/navigation/transition/index/finished");
+export const NavigationTransitionEntry = Symbol.for("@virtualstate/navigation/transition/entry");
 
 
-export const NavigationTransitionIsCommitted = Symbol.for("@virtualstate/app-history/transition/isCommitted");
-export const NavigationTransitionIsFinished = Symbol.for("@virtualstate/app-history/transition/isFinished");
-export const NavigationTransitionIsRejected = Symbol.for("@virtualstate/app-history/transition/isRejected");
+export const NavigationTransitionIsCommitted = Symbol.for("@virtualstate/navigation/transition/isCommitted");
+export const NavigationTransitionIsFinished = Symbol.for("@virtualstate/navigation/transition/isFinished");
+export const NavigationTransitionIsRejected = Symbol.for("@virtualstate/navigation/transition/isRejected");
 
-export const NavigationTransitionKnown = Symbol.for("@virtualstate/app-history/transition/known");
-export const NavigationTransitionPromises = Symbol.for("@virtualstate/app-history/transition/promises");
+export const NavigationTransitionKnown = Symbol.for("@virtualstate/navigation/transition/known");
+export const NavigationTransitionPromises = Symbol.for("@virtualstate/navigation/transition/promises");
 
-export const NavigationTransitionWhile = Symbol.for("@virtualstate/app-history/transition/while");
-export const NavigationTransitionIsOngoing = Symbol.for("@virtualstate/app-history/transition/isOngoing");
-export const NavigationTransitionIsPending = Symbol.for("@virtualstate/app-history/transition/isPending");
-export const NavigationTransitionWait = Symbol.for("@virtualstate/app-history/transition/wait");
+export const NavigationTransitionWhile = Symbol.for("@virtualstate/navigation/transition/while");
+export const NavigationTransitionIsOngoing = Symbol.for("@virtualstate/navigation/transition/isOngoing");
+export const NavigationTransitionIsPending = Symbol.for("@virtualstate/navigation/transition/isPending");
+export const NavigationTransitionWait = Symbol.for("@virtualstate/navigation/transition/wait");
 
-export const NavigationTransitionPromiseResolved = Symbol.for("@virtualstate/app-history/transition/promise/resolved");
+export const NavigationTransitionPromiseResolved = Symbol.for("@virtualstate/navigation/transition/promise/resolved");
 
-export const NavigationTransitionRejected = Symbol.for("@virtualstate/app-history/transition/rejected");
+export const NavigationTransitionRejected = Symbol.for("@virtualstate/navigation/transition/rejected");
 
-export const NavigationTransitionCommit = Symbol.for("@virtualstate/app-history/transition/commit");
-export const NavigationTransitionFinish = Symbol.for("@virtualstate/app-history/transition/finish");
-export const NavigationTransitionStart = Symbol.for("@virtualstate/app-history/transition/start");
-export const NavigationTransitionStartDeadline = Symbol.for("@virtualstate/app-history/transition/start/deadline");
-export const NavigationTransitionError = Symbol.for("@virtualstate/app-history/transition/error");
-export const NavigationTransitionFinally = Symbol.for("@virtualstate/app-history/transition/finally");
-export const NavigationTransitionAbort = Symbol.for("@virtualstate/app-history/transition/abort");
+export const NavigationTransitionCommit = Symbol.for("@virtualstate/navigation/transition/commit");
+export const NavigationTransitionFinish = Symbol.for("@virtualstate/navigation/transition/finish");
+export const NavigationTransitionStart = Symbol.for("@virtualstate/navigation/transition/start");
+export const NavigationTransitionStartDeadline = Symbol.for("@virtualstate/navigation/transition/start/deadline");
+export const NavigationTransitionError = Symbol.for("@virtualstate/navigation/transition/error");
+export const NavigationTransitionFinally = Symbol.for("@virtualstate/navigation/transition/finally");
+export const NavigationTransitionAbort = Symbol.for("@virtualstate/navigation/transition/abort");
 
 export interface NavigationTransitionInit extends Omit<NavigationTransitionInitPrototype, "finished"> {
     rollback(options?: NavigationNavigationOptions): NavigationResult;
@@ -224,7 +224,7 @@ export class NavigationTransition extends EventTarget implements NavigationTrans
         // console.log({ rolled: this.#rolledBack });
         if (this.#rolledBack) {
             // TODO
-            throw new InvalidStateError("Rollback invoked multiple times: Please raise an issue at https://github.com/virtualstate/app-history with the use case where you want to use a rollback multiple times, this may have been unexpected behaviour");
+            throw new InvalidStateError("Rollback invoked multiple times: Please raise an issue at https://github.com/virtualstate/navigation with the use case where you want to use a rollback multiple times, this may have been unexpected behaviour");
         }
         this.#rolledBack = true;
         return this.#options.rollback(options);
@@ -297,7 +297,7 @@ export class NavigationTransition extends EventTarget implements NavigationTrans
                     // console.log("Rollback complete", navigationType);
                 } catch (error) {
                     // console.error("Failed to rollback", error);
-                    throw new InvalidStateError("Failed to rollback, please raise an issue at https://github.com/virtualstate/app-history/issues");
+                    throw new InvalidStateError("Failed to rollback, please raise an issue at https://github.com/virtualstate/navigation/issues");
                 }
             }
         }

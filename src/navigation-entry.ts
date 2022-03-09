@@ -8,9 +8,9 @@ import {NavigationEventTarget} from "./navigation-event-target";
 import {EventTargetListeners} from "./event-target";
 import { v4 } from "./util/uuid-or-random";
 
-export const NavigationHistoryEntryNavigationType = Symbol.for("@virtualstate/app-history/entry/navigationType");
-export const NavigationHistoryEntryKnownAs = Symbol.for("@virtualstate/app-history/entry/knownAs");
-export const NavigationHistoryEntrySetState = Symbol.for("@virtualstate/app-history/entry/setState");
+export const NavigationHistoryEntryNavigationType = Symbol.for("@virtualstate/navigation/entry/navigationType");
+export const NavigationHistoryEntryKnownAs = Symbol.for("@virtualstate/navigation/entry/knownAs");
+export const NavigationHistoryEntrySetState = Symbol.for("@virtualstate/navigation/entry/setState");
 
 export interface NavigationHistoryEntryInit<S = unknown> extends NavigationHistoryEntryInitPrototype<S> {
     navigationType: NavigationNavigationType;

@@ -17,9 +17,9 @@ type WritableURLKey =
     | "protocol"
     | "search"
 
-export const AppLocationCheckChange = Symbol.for("@virtualstate/app-history/location/checkChange");
-export const AppLocationAwaitFinished = Symbol.for("@virtualstate/app-history/location/awaitFinished");
-export const AppLocationTransitionURL = Symbol.for("@virtualstate/app-history/location/transitionURL");
+export const AppLocationCheckChange = Symbol.for("@virtualstate/navigation/location/checkChange");
+export const AppLocationAwaitFinished = Symbol.for("@virtualstate/navigation/location/awaitFinished");
+export const AppLocationTransitionURL = Symbol.for("@virtualstate/navigation/location/transitionURL");
 
 export interface NavigationLocation extends Location {
 

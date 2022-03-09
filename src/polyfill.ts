@@ -1,5 +1,5 @@
 console.warn("THIS POLYFILL IS NOT COMPLETE, FOR EXAMPLE IT DOES NOT TAKE INTO ACCOUNT IFRAMES, OR URL UPDATES");
-console.warn("PLEASE RAISE INTEREST AT https://github.com/virtualstate/app-history/issues")
+console.warn("PLEASE RAISE INTEREST AT https://github.com/virtualstate/navigation/issues")
 
 /* c8 ignore start */
 import { Navigation } from "./navigation";

@@ -19,9 +19,9 @@ import {
 } from "./navigation-transition";
 import {createEvent} from "./event-target/create-event";
 
-export const NavigationFormData = Symbol.for("@virtualstate/app-history/formData");
-export const NavigationCanTransition = Symbol.for("@virtualstate/app-history/canTransition");
-export const NavigationUserInitiated = Symbol.for("@virtualstate/app-history/userInitiated");
+export const NavigationFormData = Symbol.for("@virtualstate/navigation/formData");
+export const NavigationCanTransition = Symbol.for("@virtualstate/navigation/canTransition");
+export const NavigationUserInitiated = Symbol.for("@virtualstate/navigation/userInitiated");
 
 const baseUrl = "https://html.spec.whatwg.org/";
 
@@ -31,7 +31,7 @@ export interface NavigationNavigateOptions extends NavigationNavigateOptionsProt
     [NavigationUserInitiated]?: boolean;
 }
 
-export const EventAbortController = Symbol.for("@virtualstate/app-history/event/abortController");
+export const EventAbortController = Symbol.for("@virtualstate/navigation/event/abortController");
 
 export interface AbortControllerEvent {
     [EventAbortController]: AbortController

@@ -16,9 +16,9 @@ export interface NavigationTransitionPlannerOptions {
     constructNavigation(): Navigation;
 }
 
-export const NavigationTransitionPlanNavigationSymbol = Symbol.for("@virtualstate/app-history/transition/plan/Navigation")
-export const NavigationTransitionPlanWhile = Symbol.for("@virtualstate/app-history/transition/plan/while");
-export const NavigationTransitionPlanWait = Symbol.for("@virtualstate/app-history/transition/plan/wait");
+export const NavigationTransitionPlanNavigationSymbol = Symbol.for("@virtualstate/navigation/transition/plan/Navigation")
+export const NavigationTransitionPlanWhile = Symbol.for("@virtualstate/navigation/transition/plan/while");
+export const NavigationTransitionPlanWait = Symbol.for("@virtualstate/navigation/transition/plan/wait");
 
 export interface NavigationTransitionPlan {
     [NavigationTransitionPlanNavigationSymbol]: Navigation;
