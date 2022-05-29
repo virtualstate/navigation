@@ -11,8 +11,8 @@ import {Browser, Page} from "playwright";
 import {v4} from "uuid";
 import {createJavaScriptBundle} from "./navigation.server.wpt";
 
-const namespacePath = "/node_modules/wpt/navigation";
-const namespaceBundlePath = "/navigation";
+const namespacePath = "/node_modules/wpt/navigation-api";
+const namespaceBundlePath = "/navigation-api";
 const buildPath = "/esnext";
 const resourcesInput = "/resources";
 const resourcesTarget = "/node_modules/wpt/resources";

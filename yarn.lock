@@ -5358,7 +5358,7 @@ word-wrap@~1.2.3:
 
 "wpt@https://github.com/web-platform-tests/wpt.git":
   version "0.0.0"
-  resolved "https://github.com/web-platform-tests/wpt.git#e31b68f19b97c7e7040e40334f96802bf9b77f6d"
+  resolved "https://github.com/web-platform-tests/wpt.git#8fadb381209a215280dc3ad96d0f135b6005f176"
 
 wrap-ansi@^6.2.0:
   version "6.2.0"
