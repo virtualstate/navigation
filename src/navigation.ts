@@ -133,7 +133,7 @@ export class Navigation extends NavigationEventTarget<NavigationEventMap> implem
 
     navigate(url: string, options?: NavigationNavigateOptions): NavigationResult {
         const nextUrl = new URL(url, this.#initialUrl).toString();
-        console.log({ nextUrl });
+        // console.log({ nextUrl });
         const navigationType = options?.replace ? "replace" : "push";
         const entry = this.#createNavigationHistoryEntry({
             url: nextUrl,
