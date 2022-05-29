@@ -308,13 +308,13 @@ const {
   EventTarget, 
   NavigationUserInitiated, 
   NavigationFormData
-  } = await import("/esnext/index.js");
+} = await import("/esnext/index.js");
 
 // if (${DEVTOOLS}) {
 //   await new Promise(resolve => setTimeout(resolve, 2500));
 // }
 
-let NavigationTarget = new Navigation({
+let navigationTarget = new Navigation({
   initialUrl: globalThis.window.location.href
 });
 
@@ -329,27 +329,27 @@ function proxyNavigation(Navigation, get) {
   });
 }
 
-const Navigation = proxyNavigation(NavigationTarget, () => NavigationTarget);
+const navigation = proxyNavigation(navigationTarget, () => navigationTarget);
 const location = (
   new NavigationSync({
-    Navigation
+    navigation
   })
 ),
   history = location;
-globalThis.navigation = Navigation;
+globalThis.navigation = navigation;
 
-Navigation.addEventListener("navigateerror", console.error);
+navigation.addEventListener("navigateerror", console.error);
 
-async function navigateFinally(Navigation, url) {
+async function navigateFinally(navigation, url) {
     // This allows us to wait for the navigation to fully settle before starting 
-    const initialNavigationFinally = new Promise((resolve) => Navigation.addEventListener(NavigationTransitionFinally, resolve, { once: true }));
+    const initialNavigationFinally = new Promise((resolve) => navigation.addEventListener(NavigationTransitionFinally, resolve, { once: true }));
     
     // Initialise first navigation to emulate a page loaded
-    await Navigation.navigate(url).finished;
+    await navigation.navigate(url).finished;
     
     await initialNavigationFinally;
 }
-await navigateFinally(NavigationTarget, "/");
+await navigateFinally(navigationTarget, "/");
 
 const Event = CustomEvent;
 const windowEvents = new EventTarget();
@@ -365,10 +365,10 @@ const window = {
       windowEvents.addEventListener("load", value, { once: true });
     }
   },
-  Navigation,
+  navigation,
   stop() {
-    if (Navigation.transition) {
-      return Navigation.transition.rollback();
+    if (navigation.transition) {
+      return navigation.transition.rollback();
     }
   }
 };
@@ -380,14 +380,14 @@ const iframeNavigation = proxyNavigation(iframeNavigationTarget, () => iframeNav
 await navigateFinally(iframeNavigationTarget, "/");
 const iframeLocation = (
   new NavigationSync({
-    Navigation
+    navigation
   })
 ),
   iframeHistory = iframeLocation;
 const iframeEvents = new EventTarget();
 const iframe = {
   contentWindow: {
-    Navigation: iframeNavigation,
+    navigation: iframeNavigation,
     DOMException: InvalidStateError,
     history: iframeHistory,
     location: iframeLocation,
@@ -458,7 +458,7 @@ window.open = (url, target) => {
 const a = new EventTarget();
 a.href = ${JSON.stringify($("a[href]")?.attr("href") || "#1")};
 a.click = (e) => {
-  let targetNavigation = Navigation,
+  let targetNavigation = navigation,
     targetLocation = location;
   return targetNavigation.navigate(new URL(a.href, targetLocation.href).toString(), e);
 }
@@ -468,7 +468,7 @@ form.action = ${JSON.stringify($("form[action]")?.attr("action") || "")};
 form.method = ${JSON.stringify($("form[method]")?.attr("method") || "post")};
 form.target = ${JSON.stringify($("form[target]")?.attr("target") || "")};
 form.submit = (e) => {
-  let targetNavigation = Navigation,
+  let targetNavigation = navigation,
     targetLocation = location;
   if (form.target === "i" || form.target === "iframe") {
     targetNavigation = iframe.contentWindow.navigation;
