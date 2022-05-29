@@ -68,6 +68,20 @@ jobs:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Package Registry Test - npm
+        run: |
+          yarn add --dev @virtualstate/navigation@$(node scripts/log-version.js)
+          yarn add --dev @virtualstate/navigation-local-build@./node_modules/@virtualstate/navigation
+          export TEST_CONFIG='{"@virtualstate/navigation/test/imported/path": "@virtualstate/navigation-local-build"}'
+          yarn test
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://npm.pkg.github.com'
       - name: Package Registry Test - GitHub
         run: |
           yarn add --dev @virtualstate/navigation@$(node scripts/log-version.js)
