@@ -1,4 +1,4 @@
-import AbortController from "abort-controller";
+import {AbortController} from "./import-abort-controller";
 import {InvalidStateError} from "./navigation-errors";
 import {WritableProps} from "./util/writable";
 import {

@@ -80,6 +80,8 @@
     "./src/polyfill": "./src/polyfill.ts",
     "./src/location": "./src/location.ts",
     "./src/history": "./src/history.ts",
+    "./src/import-abort-controller": "./src/import-abort-controller.ts",
+    "./src/global-abort-controller": "./src/global-abort-controller.ts",
     "./esnext/util/parse-dom-deno.js": "./src/util/parse-dom-deno.ts",
     "./esnext/util/parse-dom.js": "./src/util/parse-dom-deno.ts",
     "cheerio": "./scripts/nop/index.js"

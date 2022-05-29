@@ -10,7 +10,7 @@ import {NavigationHistoryEntry} from "./navigation-entry";
 import {deferred, Deferred} from "./util/deferred";
 import {AbortError, InvalidStateError, isAbortError, isInvalidStateError} from "./navigation-errors";
 import {Event, EventTarget} from "./event-target";
-import AbortController from "abort-controller";
+import {AbortController} from "./import-abort-controller";
 
 export const Rollback = Symbol.for("@virtualstate/navigation/rollback");
 export const Unset = Symbol.for("@virtualstate/navigation/unset");
