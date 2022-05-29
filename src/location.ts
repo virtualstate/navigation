@@ -20,6 +20,7 @@ type WritableURLKey =
 export const AppLocationCheckChange = Symbol.for("@virtualstate/navigation/location/checkChange");
 export const AppLocationAwaitFinished = Symbol.for("@virtualstate/navigation/location/awaitFinished");
 export const AppLocationTransitionURL = Symbol.for("@virtualstate/navigation/location/transitionURL");
+export const AppLocationUrl = Symbol.for("@virtualstate/navigation/location/url");
 
 export interface NavigationLocation extends Location {
 
@@ -67,7 +68,7 @@ export class NavigationLocation implements Location {
 
     #initialURL: URL | undefined;
 
-    get #url() {
+    get [AppLocationUrl]() {
         if (this.#transitioningURL) {
             return this.#transitioningURL;
         }
@@ -85,7 +86,7 @@ export class NavigationLocation implements Location {
     }
 
     get hash() {
-        return this.#url.hash;
+        return this[AppLocationUrl].hash;
     }
 
     set hash(value) {
@@ -93,7 +94,7 @@ export class NavigationLocation implements Location {
     }
 
     get host() {
-        return this.#url.host;
+        return this[AppLocationUrl].host;
     }
 
     set host(value) {
@@ -101,7 +102,7 @@ export class NavigationLocation implements Location {
     }
 
     get hostname() {
-        return this.#url.hostname;
+        return this[AppLocationUrl].hostname;
     }
 
     set hostname(value) {
@@ -109,7 +110,7 @@ export class NavigationLocation implements Location {
     }
 
     get href() {
-        return this.#url.href;
+        return this[AppLocationUrl].href;
     }
 
     set href(value) {
@@ -117,11 +118,11 @@ export class NavigationLocation implements Location {
     }
 
     get origin() {
-        return this.#url.origin;
+        return this[AppLocationUrl].origin;
     }
 
     get pathname() {
-        return this.#url.pathname;
+        return this[AppLocationUrl].pathname;
     }
 
     set pathname(value) {
@@ -129,7 +130,7 @@ export class NavigationLocation implements Location {
     }
 
     get port() {
-        return this.#url.port;
+        return this[AppLocationUrl].port;
     }
 
     set port(value) {
@@ -137,7 +138,7 @@ export class NavigationLocation implements Location {
     }
 
     get protocol() {
-        return this.#url.protocol;
+        return this[AppLocationUrl].protocol;
     }
 
     set protocol(value) {
@@ -145,7 +146,7 @@ export class NavigationLocation implements Location {
     }
 
     get search() {
-        return this.#url.search;
+        return this[AppLocationUrl].search;
     }
 
     set search(value) {
@@ -153,7 +154,7 @@ export class NavigationLocation implements Location {
     }
 
     #setUrlValue = (key: WritableURLKey, value: string) => {
-        const currentUrlString = this.#url.toString();
+        const currentUrlString = this[AppLocationUrl].toString();
         const nextUrl = new URL(currentUrlString);
         nextUrl[key] = value;
         const nextUrlString = nextUrl.toString();
@@ -197,7 +198,7 @@ export class NavigationLocation implements Location {
     }
 
     #transitionURL = async (url: URL | string, fn: (url: URL) => NavigationResult) => {
-        const instance = this.#transitioningURL = typeof url === "string" ? new URL(url, this.#url.toString()) : url;
+        const instance = this.#transitioningURL = typeof url === "string" ? new URL(url, this[AppLocationUrl].toString()) : url;
         try {
             await this.#awaitFinished(fn(instance));
         } finally {
@@ -222,7 +223,7 @@ export class NavigationLocation implements Location {
     }
 
     #triggerIfUrlChanged = () => {
-        const current = this.#url;
+        const current = this[AppLocationUrl];
         const currentUrl = current.toString();
         const expectedUrl = this.#navigation.currentEntry.url;
         if (currentUrl !== expectedUrl) {
