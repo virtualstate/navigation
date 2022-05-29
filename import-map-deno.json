@@ -53,6 +53,8 @@
     "./src/create-navigation-transition": "./src/create-navigation-transition.ts",
     "./src/util/deferred": "./src/util/deferred.ts",
     "./src/util/deno-uuid": "./src/util/deno-uuid.ts",
+    "./src/util/global-uuid": "./src/util/global-uuid.ts",
+    "./src/util/import-uuid": "./src/util/import-uuid.ts",
     "./src/util/uuid-or-random": "./src/util/uuid-or-random.ts",
     "./src/util/parse-dom-deno": "./src/util/parse-dom-deno.ts",
     "./src/util/parse-dom": "./src/util/parse-dom-deno.ts",
