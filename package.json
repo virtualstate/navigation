@@ -15,7 +15,6 @@
   ],
   "exports": {
     ".": "./esnext/index.js",
-    "./esnext/tests/rollup": "./esnext/tests/rollup.js",
     "./esnext/tests": "./esnext/tests/index.js",
     "./esnext/tests/index.js": "./esnext/tests/index.js",
     "./esnext/tests/app-history.js": "./esnext/tests/navigation.js",
