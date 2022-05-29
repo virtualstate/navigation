@@ -78,7 +78,7 @@ import { Navigation } from "@virtualstate/navigation";
 const navigation = new Navigation();
 
 navigation.addEventListener("navigate", async ({ destination }) => {
-    if (destination.url === "/disallow") {
+    if (new URL(destination.url).pathname === "/disallow") {
         throw new Error("No!");
     }
 });
