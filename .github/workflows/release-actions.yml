@@ -72,6 +72,7 @@ jobs:
           yarn add --dev @virtualstate/navigation-local-build@./node_modules/@virtualstate/navigation
           export TEST_CONFIG='{"@virtualstate/navigation/test/imported/path": "@virtualstate/navigation-local-build"}'
           yarn test
+        continue-on-error: true
       - uses: actions/setup-node@v2
         with:
           node-version: '16.x'
@@ -82,3 +83,4 @@ jobs:
           yarn add --dev @virtualstate/navigation-local-build@./node_modules/@virtualstate/navigation
           export TEST_CONFIG='{"@virtualstate/navigation/test/imported/path": "@virtualstate/navigation-local-build"}'
           yarn test
+        continue-on-error: true
