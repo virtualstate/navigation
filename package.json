@@ -25,7 +25,6 @@
     "./esnext/tests/navigation.class.js": "./esnext/tests/navigation.class.js",
     "./esnext/tests/navigation.imported.js": "./esnext/tests/navigation.imported.js",
     "./tests": "./esnext/tests/index.js",
-    "./tests/rollup": "./esnext/tests/rollup.js",
     "./tests/index.js": "./esnext/tests/index.js",
     "./tests/app-history.js": "./esnext/tests/navigation.js",
     "./tests/app-history.class.js": "./esnext/tests/navigation.class.js",
