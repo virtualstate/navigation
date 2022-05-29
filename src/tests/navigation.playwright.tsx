@@ -1,10 +1,9 @@
 import * as Playwright from "playwright";
-import { h, toString } from "@virtualstate/fringe";
 import {deferred} from "../util/deferred";
-import { DependenciesContent } from "./dependencies";
 import fs from "fs";
 import path from "path";
 import {getConfig} from "./config";
+import {DefaultImportMap} from "./dependencies-input";
 
 declare global {
     interface Window {
@@ -52,22 +51,25 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
 
     let src = `https://cdn.skypack.dev${testsSrcPath}`;
 
-    const pageContent = await toString(
-        h("html", {},
-            h("head", {},
-                h("title", {}, "Website"),
-                h("script", { type: "importmap" }, <DependenciesContent
-                    imports={{
-                        "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
-                        "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
-                        "@virtualstate/navigation/event-target": `https://cdn.skypack.dev/@virtualstate/navigation/event-target/${eventTarget}`,
-                        "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
-                        "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
-                    }}
-                />)
-            ),
-            h("body", {}, h("script", { type: "module" }, `
-            
+    const dependencies = {
+        imports: {
+            ...DefaultImportMap,
+            "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
+            "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
+            "@virtualstate/navigation/event-target": `https://cdn.skypack.dev/@virtualstate/navigation/event-target/${eventTarget}`,
+            "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+            "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+        }
+    };
+
+    const pageContent = `
+    <html>
+    <head>
+    <title>Website</title>
+    <script type="importmap">${JSON.stringify(dependencies, undefined, "  ")}</script>
+    </head>
+    <body>
+    <script type="module">
         if (typeof Navigation !== "undefined") {
           console.log("Global Navigation exists");
         } else {
@@ -93,9 +95,10 @@ for (const [browserName, browserLauncher, { eventTarget, esm, args, FLAG }] of b
             console.log(error.stack);
             await window.testsFailed(error instanceof Error ? error.message : \`\${error}\`);
         }
-        `))
-        )
-    )
+    </script>
+    </body>
+    </html>
+    `.trim();
 
     const { resolve, reject, promise } = deferred<void>();
 

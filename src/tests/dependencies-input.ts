@@ -1,5 +1,5 @@
 /* c8 ignore start */
-export default [
+export const DefaultDependencies = [
   "@opennetwork/http-representation",
   "@virtualstate/astro-renderer",
   "@virtualstate/dom",
@@ -19,3 +19,10 @@ export default [
   "abort-controller",
   "urlpattern-polyfill"
 ] as const;
+export const DefaultImportMap = Object.fromEntries(
+    DefaultDependencies
+        .filter((key: string) => typeof key === "string" && key)
+        .map((key: string) => [key, `https://cdn.skypack.dev/${key}`])
+)
+
+export default DefaultDependencies;

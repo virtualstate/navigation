@@ -8,7 +8,6 @@ import {
 import {AsyncEventTarget as EventTarget, Event} from "../../event-target"
 import {FetchEvent, fetch} from "./fetch"
 import {addEventListener, removeEventListener} from "../../event-target/global";
-import {h} from "@virtualstate/fringe";
 import {Response} from "@opennetwork/http-representation";
 import {deferred} from "../../util/deferred";
 

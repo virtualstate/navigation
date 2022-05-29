@@ -1,6 +1,5 @@
 /* c8 ignore start */
 import * as Playwright from "playwright";
-import { h } from "@virtualstate/fringe";
 import {deferred} from "../util/deferred";
 import fs from "fs";
 import path from "path";
