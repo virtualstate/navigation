@@ -1,6 +1,6 @@
 /* c8 ignore start */
 
-const initialImportPath = getConfig()["@virtualstate/app-history/test/imported/path"] ?? "@virtualstate/app-history";
+const initialImportPath = getConfig()["@virtualstate/navigation/test/imported/path"] ?? "@virtualstate/navigation";
 
 if (typeof initialImportPath !== "string") throw new Error("Expected string import path");
 
