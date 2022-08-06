@@ -1,5 +1,5 @@
 import { GlobalUUID } from "./global-uuid";
-import * as UUID from "uuid";
+import UUID from "uuid";
 // async function importUUID() {
 //     const { v4 } = await import("uuid");
 //     return v4;
