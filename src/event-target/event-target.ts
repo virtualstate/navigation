@@ -2,15 +2,15 @@ import { AsyncEventTarget } from "./async-event-target";
 
 const defaultModule =  { EventTarget: AsyncEventTarget, AsyncEventTarget, SyncEventTarget: AsyncEventTarget } as const;
 
-let module: Record<string, unknown>;
-
-try {
-    module = await import("@virtualstate/navigation/event-target");
-    console.log("Using @virtualstate/navigation/event-target", module);
-} catch {
-    console.log("Using default");
-    module = defaultModule;
-}
+let module: Record<string, unknown> = defaultModule;
+//
+// try {
+//     module = await import("@virtualstate/navigation/event-target");
+//     console.log("Using @virtualstate/navigation/event-target", module);
+// } catch {
+//     console.log("Using default");
+//     module = defaultModule;
+// }
 
 const EventTargetImplementation =
     module.EventTarget || module.SyncEventTarget || module.AsyncEventTarget;

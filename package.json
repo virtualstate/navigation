@@ -95,10 +95,10 @@
     "build": "rm -rf esnext && tsc",
     "postbuild": "mkdir -p coverage && node scripts/post-build.js",
     "generate": "yarn build && node esnext/generate.js",
-    "test": "yarn build && node --enable-source-maps esnext/tests/index.js",
+    "test": "yarn build && node --experimental-global-customevent --enable-source-maps esnext/tests/index.js",
     "test:deno": "yarn build && deno run --allow-read --allow-net --import-map=import-map-deno.json esnext/tests/index.js",
     "test:deno:r": "yarn build && deno run -r --allow-read --allow-net --import-map=import-map-deno.json esnext/tests/index.js",
     "test:inspect": "yarn build && node --enable-source-maps --inspect-brk esnext/tests/index.js",
-    "coverage": "yarn build && c8 node esnext/tests/index.js && yarn postbuild"
+    "coverage": "yarn build && c8 node --experimental-global-customevent esnext/tests/index.js && yarn postbuild"
   }
 }
