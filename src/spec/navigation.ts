@@ -38,12 +38,12 @@ export interface Navigation extends EventTarget {
     back(options?: NavigationNavigationOptions): NavigationResult;
     forward(options?: NavigationNavigationOptions): NavigationResult;
 
-    onnavigate?: ((this: Navigation, ev: NavigateEvent) => unknown) | null;
-    onnavigatesuccess?: ((this: Navigation, ev: Event) => unknown) | null;
-    onnavigateerror?: ((this: Navigation, ev: ErrorEvent) => unknown) | null;
+    onnavigate?: ((this: Navigation, ev: NavigateEvent) => unknown | void) | null;
+    onnavigatesuccess?: ((this: Navigation, ev: Event) => unknown | void) | null;
+    onnavigateerror?: ((this: Navigation, ev: ErrorEvent) => unknown | void) | null;
     oncurrentchange?: ((this: Navigation, ev: NavigationCurrentEntryChangeEvent) => unknown) | null;
 
-    addEventListener<K extends keyof NavigationEventMap>(type: K, listener: (ev: NavigationEventMap[K]) => unknown, options?: boolean | EventTargetAddListenerOptions): void;
+    addEventListener<K extends keyof NavigationEventMap>(type: K, listener: (ev: NavigationEventMap[K]) => unknown | void, options?: boolean | EventTargetAddListenerOptions): void;
     addEventListener(type: string, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void;
     removeEventListener<K extends keyof NavigationEventMap>(type: K, listener: (ev: NavigationEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
     removeEventListener(type: string, listener: EventCallback, options?: boolean | EventListenerOptions): void;
@@ -126,7 +126,7 @@ export interface NavigationCurrentEntryChangeEventInit extends EventInit {
 export interface NavigationCurrentEntryChangeEvent extends Event, NavigationCurrentEntryChangeEventInit {
     readonly navigationType?: NavigationNavigationType ;
     readonly from?: NavigationHistoryEntry;
-    transitionWhile?(newNavigationAction: Promise<unknown>): void;
+    transitionWhile?(newNavigationAction: Promise<unknown | void>): void;
 }
 
 export interface NavigateEvent extends Event {
@@ -141,7 +141,7 @@ export interface NavigateEvent extends Event {
     readonly formData?: FormData ;
     readonly info: unknown;
 
-    transitionWhile(newNavigationAction: Promise<unknown>): void;
+    transitionWhile(newNavigationAction: Promise<unknown | void>): void;
 }
 
 export interface NavigateEventInit extends EventInit {
