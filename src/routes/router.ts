@@ -1,12 +1,12 @@
-import {NavigationNavigation} from "../../navigation-navigation";
-import {Navigation, NavigateEvent} from "../../spec/navigation";
+import {NavigationNavigation} from "../navigation-navigation";
+import {Navigation, NavigateEvent} from "../spec/navigation";
 import {URLPattern} from "urlpattern-polyfill";
-import {getNavigation} from "../../get-navigation";
+import {getNavigation} from "../get-navigation";
 
 type NonNil<T> = T extends (null | undefined) ? never : T;
 export type URLPatternResult = NonNil<ReturnType<URLPattern["exec"]>>
 
-interface RouteFn {
+export interface RouteFn {
     (event: NavigateEvent, match: URLPatternResult): Promise<void | unknown> | unknown | void
 }
 
@@ -16,6 +16,8 @@ interface Route {
 }
 
 const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
+
+const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 export class Router extends NavigationNavigation {
 
@@ -36,8 +38,12 @@ export class Router extends NavigationNavigation {
 
     route(pattern: string | URLPattern, fn: RouteFn): Router {
         if (typeof pattern === "string") {
-            const { origin } = new URL(this.currentEntry.url);
-            pattern = new URLPattern({ pathname: pattern, baseURL: origin });
+            let baseURL = DEFAULT_BASE_URL;
+            if (this.currentEntry) {
+                const { origin } = new URL(this.currentEntry.url);
+                baseURL = origin;
+            }
+            pattern = new URLPattern({ pathname: pattern, baseURL });
         }
         this[Routes].add({
             pattern,

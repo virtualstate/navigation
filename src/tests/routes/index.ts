@@ -1,7 +1,6 @@
-import { Router } from "./router";
+import {route, router, Router} from "../../routes";
 import { Navigation } from "../../navigation";
-import {ok} from "../util";
-
+import { ok } from "../util";
 
 {
 
@@ -75,5 +74,31 @@ import {ok} from "../util";
 
 
 
+
+}
+
+{
+    route("/resource/:id", async (event, match) => {
+        const {
+            pathname: {
+                groups: {
+                    id
+                }
+            }
+        } = match
+        console.log("start resource", { id })
+        await new Promise(resolve => setTimeout(resolve, 10));
+        console.log("done resource", { id, aborted: event.signal.aborted })
+    });
+
+    await router.navigate("/resource/1").finished;
+    await router.navigate("/resource/2").finished;
+    await router.navigate("/resource/3").finished;
+
+    // These two are aborted before finishing
+    router.navigate("/resource/1");
+    router.navigate("/resource/2");
+
+    await router.navigate("/resource/3").finished;
 
 }

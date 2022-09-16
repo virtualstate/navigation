@@ -35,7 +35,8 @@
     "./event-target/async": "./esnext/event-target/async-event-target.js",
     "./event-target/sync": "./esnext/event-target/sync-event-target.js",
     "./esnext/polyfill": "./esnext/polyfill.js",
-    "./polyfill": "./esnext/polyfill.js"
+    "./polyfill": "./esnext/polyfill.js",
+    "./routes": "./esnext/routes/index.js"
   },
   "repository": {
     "type": "git",
