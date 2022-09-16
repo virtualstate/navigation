@@ -1,11 +1,18 @@
 import {RouteFn, Router} from "./router";
 
-export let router: Router;
+let router: Router;
 
-export function route(pattern: string, fn: RouteFn) {
+export function getRouter(): Router {
     if (!router) {
         router = new Router();
     }
-    router.route(pattern, fn);
+    return router;
 }
 
+export function route(pattern: string, fn: RouteFn) {
+    getRouter().route(pattern, fn);
+}
+
+export function routes(router: Router) {
+    getRouter().routes(router);
+}
