@@ -17,7 +17,6 @@
         "moduleResolution": "node",
         "declaration": true,
         "sourceMap": true,
-        "declaration": true,
         "outDir": "esnext",
         "baseUrl": "./src",
         "jsx": "react",

@@ -278,8 +278,8 @@ export class Navigation extends NavigationEventTarget<NavigationEventMap> implem
 
         const performance = getPerformance();
 
-        if (entry.sameDocument && typeof navigationType === "string") {
-            performance.mark(`same-document-navigation:${entry.id}`);
+        if (performance && entry.sameDocument && typeof navigationType === "string") {
+            performance?.mark?.(`same-document-navigation:${entry.id}`);
         }
 
         let committed = false;

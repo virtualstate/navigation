@@ -84,7 +84,7 @@ import {getNavigation} from "../../get-navigation";
                 }
             } = match
             console.log("start resource", { id })
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise<void>(queueMicrotask);
             console.log("done resource", { id, aborted: event.signal.aborted })
         });
     }
@@ -109,9 +109,9 @@ import {getNavigation} from "../../get-navigation";
 {
     route("/test/:id/path", async (event, { pathname: { groups: { id } } }) => {
         console.log("test route path!", id);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise<void>(queueMicrotask);
         console.log("thing is happening for", id);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise<void>(queueMicrotask);
         console.log("thing finished for", id);
     })
 

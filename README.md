@@ -6,11 +6,11 @@ Native JavaScript [navigation](https://github.com/WICG/navigation-api) implement
 
 ### Support
 
- ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-blue) ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-blue) ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-blue) ![Webkit supported](https://img.shields.io/badge/webkit-%3E%3D15.4-blue) ![Firefox supported](https://img.shields.io/badge/firefox-%3E%3D94.0.1-blue)
+ ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-blue) ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-blue) ![Bun supported](https://img.shields.io/badge/bun-%3E%3D0.1.11-blue) ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-blue) ![Webkit supported](https://img.shields.io/badge/webkit-%3E%3D15.4-blue) ![Firefox supported](https://img.shields.io/badge/firefox-%3E%3D94.0.1-blue)
 
  ### Test Coverage
 
- ![Web Platform Tests 100/227](https://img.shields.io/badge/Web%20Platform%20Tests-100%2F227-brightgreen) ![93.4%25 lines covered](https://img.shields.io/badge/lines-93.4%25-brightgreen) ![93.4%25 statements covered](https://img.shields.io/badge/statements-93.4%25-brightgreen) ![85.93%25 functions covered](https://img.shields.io/badge/functions-85.93%25-brightgreen) ![83.28%25 branches covered](https://img.shields.io/badge/branches-83.28%25-brightgreen)
+ ![Web Platform Tests 100/227](https://img.shields.io/badge/Web%20Platform%20Tests-100%2F227-brightgreen) ![93.42%25 lines covered](https://img.shields.io/badge/lines-93.42%25-brightgreen) ![93.42%25 statements covered](https://img.shields.io/badge/statements-93.42%25-brightgreen) ![85.88%25 functions covered](https://img.shields.io/badge/functions-85.88%25-brightgreen) ![83.41%25 branches covered](https://img.shields.io/badge/branches-83.41%25-brightgreen)
 
 [//]: # (badges)
 

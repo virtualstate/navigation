@@ -6,7 +6,7 @@ import {getConfig} from "./config";
 console.log("====== START NEW SET OF TESTS ======");
 
 
-if (typeof process !== "undefined") {
+if (typeof process !== "undefined" && process.on) {
     process.on("uncaughtException", (...args: unknown[]) => {
         console.log("process uncaught exception", ...args);
         process.exit(1);

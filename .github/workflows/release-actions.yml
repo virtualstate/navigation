@@ -23,6 +23,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: 'v1.x'
+      - uses: antongolub/action-setup-bun@v1
       - run: |
           yarn install
           npx playwright install-deps
@@ -30,6 +31,7 @@ jobs:
       # yarn coverage === c8 + yarn test
       - run: yarn coverage
       - run: yarn test:deno
+      - run: yarn test:bun
       # rollup is for tests only
       - run: rm -rf ./esnext/tests/rollup.js
       - name: Package Registry Publish - npm

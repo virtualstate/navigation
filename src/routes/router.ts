@@ -40,9 +40,14 @@ export class Router extends NavigationNavigation {
         if (typeof pattern === "string") {
             let baseURL = DEFAULT_BASE_URL;
             if (this.currentEntry) {
-                const { origin } = new URL(this.currentEntry.url);
-                baseURL = origin;
+                const { origin, host, protocol } = new URL(this.currentEntry.url);
+                if (origin.startsWith(protocol)) {
+                    baseURL = origin;
+                } else {
+                    baseURL = `${protocol}//${host}`;
+                }
             }
+            console.log({ baseURL, entry: this.currentEntry?.url }, this.currentEntry?.url ? new URL(this.currentEntry.url) : undefined);
             pattern = new URLPattern({ pathname: pattern, baseURL });
         }
         this[Routes].add({
