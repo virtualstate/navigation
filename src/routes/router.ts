@@ -2,6 +2,7 @@ import {NavigationNavigation} from "../navigation-navigation";
 import {Navigation, NavigateEvent} from "../spec/navigation";
 import {URLPattern} from "urlpattern-polyfill";
 import {getNavigation} from "../get-navigation";
+import {sign} from "crypto";
 
 type NonNil<T> = T extends (null | undefined) ? never : T;
 export type URLPatternResult = NonNil<ReturnType<URLPattern["exec"]>>
@@ -47,7 +48,6 @@ export class Router extends NavigationNavigation {
                     baseURL = `${protocol}//${host}`;
                 }
             }
-            console.log({ baseURL, entry: this.currentEntry?.url }, this.currentEntry?.url ? new URL(this.currentEntry.url) : undefined);
             pattern = new URLPattern({ pathname: pattern, baseURL });
         }
         this[Routes].add({
@@ -77,10 +77,12 @@ export class Router extends NavigationNavigation {
         const {
             destination: {
                 url
-            }
+            },
+            signal
         } = event;
         const promises: Promise<unknown>[] = [];
         for (const route of this[Routes]) {
+            if (signal?.aborted) break;
             const { pattern, fn } = route;
             const match = pattern.exec(url);
             if (!match) continue;
