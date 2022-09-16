@@ -1,6 +1,7 @@
 import {getRouter, route, Router} from "../../routes";
 import { Navigation } from "../../navigation";
 import { ok } from "../util";
+import {getNavigation} from "../../get-navigation";
 
 {
 
@@ -69,12 +70,6 @@ import { ok } from "../util";
 
         ok(third.currentEntry.url !== router.currentEntry.url)
     }
-
-
-
-
-
-
 }
 
 {
@@ -96,7 +91,7 @@ import { ok } from "../util";
 
     // In another context, navigate & use the router
     {
-        const router = getRouter();
+        const router = getNavigation();
 
         await router.navigate("/resource/1").finished;
         await router.navigate("/resource/2").finished;
