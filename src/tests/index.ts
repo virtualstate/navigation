@@ -35,6 +35,7 @@ async function runTests() {
     else {
         await import("./navigation.scope");
     }
+    await import("./routes");
 }
 
 if (typeof window === "undefined") {
