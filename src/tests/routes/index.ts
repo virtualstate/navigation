@@ -105,3 +105,21 @@ import {getNavigation} from "../../get-navigation";
     }
 
 }
+
+{
+    route("/test/:id/path", async (event, { pathname: { groups: { id } } }) => {
+        console.log("test route path!", id);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log("thing is happening for", id);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log("thing finished for", id);
+    })
+
+    {
+        const navigation = getNavigation();
+
+        console.log("Starting navigation");
+        await navigation.navigate(`/test/${Math.random()}/path`).finished;
+        console.log("Finished navigation");
+    }
+}
