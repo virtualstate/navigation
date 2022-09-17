@@ -147,12 +147,12 @@ import {getNavigation} from "../../get-navigation";
     {
         {
             routes()
+                .route(() => {
+                    throw new Error("Error")
+                })
                 .catch((error, { destination: { url }}) => {
                     console.error(`Error for ${url}`);
                     console.error(error);
-                })
-                .route(() => {
-                    throw new Error("Error")
                 })
         }
 

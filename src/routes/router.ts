@@ -29,6 +29,16 @@ interface Route {
 
 const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
 
+export function isRouter(value: unknown): value is Router {
+    function isRouterLike(value: unknown): value is { [Routes]: unknown } {
+        return !!value;
+    }
+    return (
+        isRouterLike(value) &&
+        Array.isArray(value[Routes])
+    );
+}
+
 const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 export class Router extends NavigationNavigation {
@@ -40,10 +50,22 @@ export class Router extends NavigationNavigation {
         super(navigation);
     }
 
-    routes(router: Router): Router {
-        this[Routes].push({
-            router
-        })
+    routes(pattern: string | URLPattern, router: Router): Router
+    routes(router: Router): Router
+    routes(...args: ([string | URLPattern, Router] | [Router])): Router
+    routes(...args: ([string | URLPattern, Router] | [Router])): Router {
+        if (args.length === 1) {
+            const [router] = args;
+            this[Routes].push({
+                router
+            })
+        } else if (args.length === 2) {
+            const [pattern, router] = args;
+            this[Routes].push({
+                pattern: this.#getPattern(pattern),
+                router
+            })
+        }
         this.#init();
         return this;
     }
@@ -122,8 +144,6 @@ export class Router extends NavigationNavigation {
     }
 
     #navigationTransition = async (event: NavigateEvent) => {
-        let errorRoutes: Route[];
-
         const router = this;
 
         const {
@@ -160,23 +180,24 @@ export class Router extends NavigationNavigation {
                     if (pattern && !pattern.test(url)) {
                         return;
                     }
-                    let isRoute: unknown = false;
+                    let isRoute: boolean = false;
                     for (const route of router[Routes]) {
                         if (signal?.aborted) break;
                         try {
                             const maybe = withRoute(route);
+                            if (maybe !== false) {
+                                isRoute = true;
+                            }
                             if (isPromise(maybe)) {
                                 promises.push(
                                     maybe.catch(catcher)
                                 );
-                            } else if (maybe) {
-                                isRoute = true;
                             }
                         } catch (error) {
                             promises.push(catcher(error))
                         }
                     }
-                    return !!isRoute;
+                    return isRoute;
                 } else {
                     if (!use(route)) return false;
                     const { pattern } = route;

@@ -1,4 +1,4 @@
-import {PatternRouteFn, RouteFn, Router} from "./router";
+import {isRouter, PatternRouteFn, RouteFn, Router} from "./router";
 import {URLPattern} from "urlpattern-polyfill";
 import {getNavigation} from "../get-navigation";
 
@@ -20,7 +20,31 @@ export function route(...args: ([string | URLPattern, RouteFn] | [RouteFn])) {
     getRouter().route(...args);
 }
 
-export function routes(router: Router = new Router()) {
-    getRouter().routes(router);
+export function routes(pattern: string | URLPattern, router: Router): Router;
+export function routes(pattern: string | URLPattern): Router;
+export function routes(router: Router): Router;
+export function routes(): Router;
+export function routes(...args: [string | URLPattern] | [string | URLPattern, Router | undefined] | [Router | undefined] | []): Router {
+    let router: Router;
+    if (!args.length) {
+        router = new Router();
+        getRouter().routes(router);
+    } else if (args.length === 1) {
+        const [arg] = args;
+        if (isRouter(arg)) {
+            router = arg;
+            getRouter().routes(arg);
+        } else {
+            const pattern = arg;
+            router = new Router();
+            getRouter().routes(pattern, router);
+        }
+    } else if (args.length >= 2) {
+        const [pattern, routerArg] = args;
+        router = routerArg ?? new Router();
+        getRouter().routes(pattern, router);
+    }
     return router;
+
+
 }
