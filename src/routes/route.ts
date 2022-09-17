@@ -14,10 +14,17 @@ export function getRouter(): Router {
     return router;
 }
 
-export function route(pattern: string | URLPattern, fn: PatternRouteFn): void;
-export function route(fn: RouteFn): void;
-export function route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])) {
-    getRouter().route(...args);
+export function route(pattern: string | URLPattern, fn: PatternRouteFn): Router;
+export function route(fn: RouteFn): Router;
+export function route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])): Router {
+    let pattern,
+        fn;
+    if (args.length === 1) {
+        ([fn] = args);
+    } else if (args.length === 2) {
+        ([pattern, fn] = args);
+    }
+    return routes(pattern).route(fn);
 }
 
 export function routes(pattern: string | URLPattern, router: Router): Router;

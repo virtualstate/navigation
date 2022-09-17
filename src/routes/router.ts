@@ -212,18 +212,19 @@ export class Router extends NavigationNavigation {
             }
             return isRoute;
 
-            function withRoute(route: Route) {
+            function withRoute(route: Route, parentMatch?: URLPatternResult) {
                 const { router } = route;
                 if (router) {
                     const { pattern } = route;
-                    if (pattern && !pattern.test(url)) {
+                    let routerMatch;
+                    if (pattern && !(routerMatch = pattern.exec(url))) {
                         return;
                     }
                     let isRoute: boolean = false;
                     for (const route of router[Routes]) {
                         if (signal?.aborted) break;
                         try {
-                            const maybe = withRoute(route);
+                            const maybe = withRoute(route, routerMatch ?? parentMatch);
                             if (maybe !== false) {
                                 isRoute = true;
                             }
@@ -245,7 +246,7 @@ export class Router extends NavigationNavigation {
                         if (!match) return false;
                         return fn(route, match) ?? true;
                     } else {
-                        return fn(route) ?? true;
+                        return fn(route, parentMatch) ?? true;
                     }
                 }
             }

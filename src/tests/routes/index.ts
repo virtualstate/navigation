@@ -75,9 +75,11 @@ const navigation = getNavigation();
 }
 
 {
+    let detach;
+
     // In one context define the routes
     {
-        route("/resource/:id", async (event, match) => {
+        ({ detach } = route("/resource/:id", async (event, match) => {
             const {
                 pathname: {
                     groups: {
@@ -88,7 +90,7 @@ const navigation = getNavigation();
             console.log("start resource", { id })
             await new Promise<void>(queueMicrotask);
             console.log("done resource", { id, aborted: event.signal.aborted })
-        });
+        }));
     }
 
     // In another context, navigate & use the router
@@ -105,10 +107,12 @@ const navigation = getNavigation();
         await navigation.navigate("/resource/3").finished;
     }
 
+    detach();
+
 }
 
 {
-    route("/test/:id/path", async (event, { pathname: { groups: { id } } }) => {
+    const { detach } = route("/test/:id/path", async (event, { pathname: { groups: { id } } }) => {
         console.log("test route path!", id);
         await new Promise<void>(queueMicrotask);
         console.log("thing is happening for", id);
@@ -121,6 +125,8 @@ const navigation = getNavigation();
         await navigation.navigate(`/test/${Math.random()}/path`).finished;
         console.log("Finished navigation");
     }
+
+    detach();
 }
 
 {
@@ -146,16 +152,14 @@ const navigation = getNavigation();
         let detach;
 
         {
-            detach = routes()
+            ({ detach } = routes()
                 .route(() => {
                     throw new Error("Error")
                 })
                 .catch((error, { destination: { url }}) => {
                     console.error(`Error for ${url}`);
                     console.error(error);
-                })
-                .detach;
-
+                }));
         }
 
 
