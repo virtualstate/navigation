@@ -20,5 +20,5 @@ jobs:
           yarn add --dev https://github.com/web-platform-tests/wpt.git
           npx playwright install-deps
       - run: yarn build
-      - run: yarn test
+      - run: yarn test:node
         continue-on-error: true
