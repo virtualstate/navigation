@@ -56,6 +56,12 @@ export class Router extends NavigationNavigation {
 
     constructor(navigation: Navigation = new NoOperationNavigation()) {
         super(navigation);
+
+        // Catch use override types with
+        // arrow functions so need to bind manually
+        this.routes = this.routes.bind(this);
+        this.route = this.route.bind(this);
+        this.catch = this.catch.bind(this);
     }
 
     routes(pattern: string | URLPattern, router: Router): Router
@@ -133,13 +139,13 @@ export class Router extends NavigationNavigation {
     }
 
     detach = () => {
+        if (this.listening) {
+            this.#deinit();
+        }
         for (const attached of this[Attached]) {
             attached[Detach](this);
         }
         this[Attached] = new Set();
-        if (this.listening) {
-            this.#deinit();
-        }
     }
 
     #getPattern = (pattern?: string | URLPattern): URLPattern => {
