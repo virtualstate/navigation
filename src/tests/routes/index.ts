@@ -3,6 +3,8 @@ import { Navigation } from "../../navigation";
 import { ok } from "../util";
 import {getNavigation} from "../../get-navigation";
 
+const navigation = getNavigation();
+
 {
 
     const navigation = new Navigation();
@@ -91,17 +93,16 @@ import {getNavigation} from "../../get-navigation";
 
     // In another context, navigate & use the router
     {
-        const router = getNavigation();
 
-        await router.navigate("/resource/1").finished;
-        await router.navigate("/resource/2").finished;
-        await router.navigate("/resource/3").finished;
+        await navigation.navigate("/resource/1").finished;
+        await navigation.navigate("/resource/2").finished;
+        await navigation.navigate("/resource/3").finished;
 
         // These two are aborted before finishing
-        router.navigate("/resource/1");
-        router.navigate("/resource/2");
+        navigation.navigate("/resource/1");
+        navigation.navigate("/resource/2");
 
-        await router.navigate("/resource/3").finished;
+        await navigation.navigate("/resource/3").finished;
     }
 
 }
@@ -116,8 +117,6 @@ import {getNavigation} from "../../get-navigation";
     })
 
     {
-        const navigation = getNavigation();
-
         console.log("Starting navigation");
         await navigation.navigate(`/test/${Math.random()}/path`).finished;
         console.log("Finished navigation");
@@ -140,13 +139,14 @@ import {getNavigation} from "../../get-navigation";
 
     await router.navigate("/").finished;
 
-
 }
 
 {
     {
+        let detach;
+
         {
-            routes()
+            detach = routes()
                 .route(() => {
                     throw new Error("Error")
                 })
@@ -154,13 +154,49 @@ import {getNavigation} from "../../get-navigation";
                     console.error(`Error for ${url}`);
                     console.error(error);
                 })
+                .detach;
+
         }
 
 
         {
 
-            const navigation = getNavigation();
             await navigation.navigate(`/path/${Math.random()}`).finished;
+
+        }
+
+        // After detach, the router will no longer respond the top level
+        // navigation events
+        detach();
+
+
+    }
+}
+{
+    {
+        {
+            routes()
+                .route("/path/:id", (event, { pathname: { groups: { id }}}) => {
+                    throw new Error(`Error for id path ${id}`);
+                })
+                .route("/test", () => {
+                    throw new Error("Error for test path");
+                })
+                .catch("/path/:id", (error, { destination: { url }}, { pathname: { groups: { id }}}) => {
+                    console.error(`Error for ${url} in id ${id} path handler`);
+                    console.error(error);
+                })
+                .catch("/test", (error, { destination: { url }}) => {
+                    console.error(`Error for ${url} in test handler`);
+                    console.error(error);
+                })
+        }
+
+
+        {
+
+            await navigation.navigate(`/path/${Math.random()}`).finished;
+            await navigation.navigate(`/test`).finished;
 
         }
 

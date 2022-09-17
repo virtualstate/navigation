@@ -13,7 +13,11 @@ export interface RouteFn {
 }
 
 export interface ErrorFn {
-    (error: unknown, event: NavigateEvent): RouteFnReturn;
+    (error: unknown, event: NavigateEvent, match?: URLPatternResult): RouteFnReturn;
+}
+
+export interface PatternErrorFn {
+    (error: unknown, event: NavigateEvent, match: URLPatternResult): RouteFnReturn;
 }
 
 export interface PatternRouteFn {
@@ -28,6 +32,8 @@ interface Route {
 }
 
 const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
+const Attached = Symbol.for("@virtualstate/navigation/routes/attached");
+const Detach = Symbol.for("@virtualstate/navigation/routes/detach");
 
 export function isRouter(value: unknown): value is Router {
     function isRouterLike(value: unknown): value is { [Routes]: unknown } {
@@ -44,6 +50,8 @@ const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 export class Router extends NavigationNavigation {
 
     [Routes]: Route[] = [];
+    [Attached] = new Set<Router>();
+
     private listening = false;
 
     constructor(navigation: Navigation = new NoOperationNavigation()) {
@@ -54,26 +62,28 @@ export class Router extends NavigationNavigation {
     routes(router: Router): Router
     routes(...args: ([string | URLPattern, Router] | [Router])): Router
     routes(...args: ([string | URLPattern, Router] | [Router])): Router {
+        let router, pattern
         if (args.length === 1) {
-            const [router] = args;
-            this[Routes].push({
-                router
-            })
+            ([router] = args);
         } else if (args.length === 2) {
-            const [pattern, router] = args;
-            this[Routes].push({
-                pattern: this.#getPattern(pattern),
-                router
-            })
+            ([pattern, router] = args);
         }
+        if (router[Attached].has(this)) {
+            throw new Error("Router already attached");
+        }
+        this[Routes].push({
+            pattern: this.#getPattern(pattern),
+            router
+        })
+        router[Attached].add(this);
         this.#init();
         return this;
     }
 
-    catch(pattern: string | URLPattern, fn: ErrorFn): Router
+    catch(pattern: string | URLPattern, fn: PatternErrorFn): Router
     catch(fn: ErrorFn): Router
-    catch(...args: ([string | URLPattern, ErrorFn] | [ErrorFn])): Router
-    catch(...args: ([string | URLPattern, ErrorFn] | [ErrorFn])): Router {
+    catch(...args: ([string | URLPattern, PatternErrorFn] | [ErrorFn])): Router
+    catch(...args: ([string | URLPattern, PatternErrorFn] | [ErrorFn])): Router {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].push({
@@ -94,8 +104,8 @@ export class Router extends NavigationNavigation {
 
     route(pattern: string | URLPattern, fn: PatternRouteFn): Router
     route(fn: RouteFn): Router
-    route(...args: ([string | URLPattern, RouteFn] | [RouteFn])): Router
-    route(...args: ([string | URLPattern, RouteFn] | [RouteFn])): Router {
+    route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])): Router
+    route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])): Router {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].push({
@@ -112,7 +122,28 @@ export class Router extends NavigationNavigation {
         return this;
     }
 
-    #getPattern = (pattern: string | URLPattern): URLPattern => {
+    [Detach](router: Router) {
+        const index = this[Routes].findIndex(route => route.router === router);
+        if (index > -1) {
+            this[Routes].splice(index, 1);
+        }
+        if (!this[Routes].length) {
+            this.#deinit();
+        }
+    }
+
+    detach = () => {
+        for (const attached of this[Attached]) {
+            attached[Detach](this);
+        }
+        this[Attached] = new Set();
+        if (this.listening) {
+            this.#deinit();
+        }
+    }
+
+    #getPattern = (pattern?: string | URLPattern): URLPattern => {
+        if (!pattern) return undefined;
         if (typeof pattern !== "string") {
             return pattern;
         }
@@ -134,6 +165,14 @@ export class Router extends NavigationNavigation {
         }
         this.listening = true;
         this.addEventListener("navigate", this.#navigate);
+    }
+
+    #deinit = () => {
+        if (!this.listening) {
+            return;
+        }
+        this.listening = false;
+        this.removeEventListener("navigate", this.#navigate);
     }
 
     #navigate = (event: NavigateEvent) => {
@@ -215,7 +254,7 @@ export class Router extends NavigationNavigation {
         async function handleError(error: unknown) {
             const isRoute = await transition(
                 route => route.error,
-                route => route.fn(error, event),
+                (route, match) => route.fn(error, event, match),
                 error => Promise.reject(error)
             );
             if (!isRoute) {

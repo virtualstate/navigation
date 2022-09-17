@@ -16,7 +16,7 @@ export function getRouter(): Router {
 
 export function route(pattern: string | URLPattern, fn: PatternRouteFn): void;
 export function route(fn: RouteFn): void;
-export function route(...args: ([string | URLPattern, RouteFn] | [RouteFn])) {
+export function route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])) {
     getRouter().route(...args);
 }
 
