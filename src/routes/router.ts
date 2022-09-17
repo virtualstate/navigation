@@ -9,11 +9,11 @@ export type URLPatternResult = NonNil<ReturnType<URLPattern["exec"]>>
 export type RouteFnReturn = Promise<void | unknown> | unknown | void;
 
 export interface RouteFn {
-    (event: NavigateEvent, ...args: unknown[]): RouteFnReturn;
+    (...args: unknown[]): RouteFnReturn;
 }
 
 export interface ErrorFn {
-    (event: NavigateEvent, error: unknown): RouteFnReturn;
+    (error: unknown, event: NavigateEvent): RouteFnReturn;
 }
 
 export interface PatternRouteFn {
@@ -23,7 +23,8 @@ export interface PatternRouteFn {
 interface Route {
     pattern?: URLPattern;
     error?: boolean;
-    fn: RouteFn
+    fn?: RouteFn
+    router?: Router;
 }
 
 const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
@@ -32,7 +33,7 @@ const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 export class Router extends NavigationNavigation {
 
-    [Routes] = new Set<Route>();
+    [Routes]: Route[] = [];
     private listening = false;
 
     constructor(navigation: Navigation = new NoOperationNavigation()) {
@@ -40,9 +41,9 @@ export class Router extends NavigationNavigation {
     }
 
     routes(router: Router): Router {
-        for (const route of router[Routes]) {
-            this[Routes].add(route);
-        }
+        this[Routes].push({
+            router
+        })
         this.#init();
         return this;
     }
@@ -53,13 +54,13 @@ export class Router extends NavigationNavigation {
     catch(...args: ([string | URLPattern, ErrorFn] | [ErrorFn])): Router {
         if (args.length === 1) {
             const [fn] = args;
-            this[Routes].add({
+            this[Routes].push({
                 fn,
                 error: true
             });
         } else {
             const [pattern, fn] = args;
-            this[Routes].add({
+            this[Routes].push({
                 pattern: this.#getPattern(pattern),
                 fn,
                 error: true
@@ -75,12 +76,12 @@ export class Router extends NavigationNavigation {
     route(...args: ([string | URLPattern, RouteFn] | [RouteFn])): Router {
         if (args.length === 1) {
             const [fn] = args;
-            this[Routes].add({
+            this[Routes].push({
                 fn
             });
         } else {
             const [pattern, fn] = args;
-            this[Routes].add({
+            this[Routes].push({
                 pattern: this.#getPattern(pattern),
                 fn
             });
@@ -114,7 +115,7 @@ export class Router extends NavigationNavigation {
     }
 
     #navigate = (event: NavigateEvent) => {
-        if (!this[Routes].size) return;
+        if (!this[Routes].length) return;
         event.transitionWhile(
             this.#navigationTransition(event)
         );
@@ -123,7 +124,7 @@ export class Router extends NavigationNavigation {
     #navigationTransition = async (event: NavigateEvent) => {
         let errorRoutes: Route[];
 
-        const routes = this[Routes];
+        const router = this;
 
         const {
             destination: {
@@ -144,54 +145,61 @@ export class Router extends NavigationNavigation {
 
         async function transition(use: (route: Route) => boolean, fn: (route: Route, match?: URLPatternResult) => unknown, catcher = handleError) {
             const promises: Promise<unknown>[] = [];
-            for (const route of routes) {
-                if (signal?.aborted) break;
-                if (!use(route)) continue;
-                try {
-                    const maybePromise = withRoute(route);
-                    if (isPromise(maybePromise)) {
-                        promises.push(
-                            maybePromise.catch(catcher)
-                        );
-                    }
-                } catch (error) {
-                    promises.push(catcher(error))
-                }
-            }
+            const isRoute = withRoute({
+                router
+            })
             if (promises.length) {
                 await Promise.all(promises);
             }
+            return isRoute;
 
             function withRoute(route: Route) {
-                const { pattern } = route;
-                if (pattern) {
-                    const match = pattern.exec(url);
-                    if (!match) return;
-                    return fn(route, match);
+                const { router } = route;
+                if (router) {
+                    const { pattern } = route;
+                    if (pattern && !pattern.test(url)) {
+                        return;
+                    }
+                    let isRoute: unknown = false;
+                    for (const route of router[Routes]) {
+                        if (signal?.aborted) break;
+                        try {
+                            const maybe = withRoute(route);
+                            if (isPromise(maybe)) {
+                                promises.push(
+                                    maybe.catch(catcher)
+                                );
+                            } else if (maybe) {
+                                isRoute = true;
+                            }
+                        } catch (error) {
+                            promises.push(catcher(error))
+                        }
+                    }
+                    return !!isRoute;
                 } else {
-                    return fn(route);
+                    if (!use(route)) return false;
+                    const { pattern } = route;
+                    if (pattern) {
+                        const match = pattern.exec(url);
+                        if (!match) return false;
+                        return fn(route, match) ?? true;
+                    } else {
+                        return fn(route) ?? true;
+                    }
                 }
             }
         }
 
-        function getErrorRoutes() {
-            if (errorRoutes) {
-                return errorRoutes;
-            }
-            return errorRoutes = [...routes].filter(({ error }) => error);
-        }
-
         async function handleError(error: unknown) {
-            const routes = getErrorRoutes();
-            console.log(routes)
-            if (!routes.length) {
-                throw await Promise.reject(error);
-            }
-            await transition(
+            const isRoute = await transition(
                 route => route.error,
-                route => route.fn(event, error),
+                route => route.fn(error, event),
                 error => Promise.reject(error)
             );
+            if (!isRoute) {
+                throw await Promise.reject(error);
+            }
         }
 
 

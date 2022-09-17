@@ -1,4 +1,4 @@
-import {getRouter, route, Router} from "../../routes";
+import {getRouter, route, Router, routes} from "../../routes";
 import { Navigation } from "../../navigation";
 import { ok } from "../util";
 import {getNavigation} from "../../get-navigation";
@@ -130,7 +130,7 @@ import {getNavigation} from "../../get-navigation";
         new Navigation()
     );
 
-    router.catch((event, error) => {
+    router.catch(error => {
         console.error(error);
     })
 
@@ -141,4 +141,29 @@ import {getNavigation} from "../../get-navigation";
     await router.navigate("/").finished;
 
 
+}
+
+{
+    {
+        {
+            routes()
+                .catch((error, { destination: { url }}) => {
+                    console.error(`Error for ${url}`);
+                    console.error(error);
+                })
+                .route(() => {
+                    throw new Error("Error")
+                })
+        }
+
+
+        {
+
+            const navigation = getNavigation();
+            await navigation.navigate(`/path/${Math.random()}`).finished;
+
+        }
+
+
+    }
 }

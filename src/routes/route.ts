@@ -20,6 +20,7 @@ export function route(...args: ([string | URLPattern, RouteFn] | [RouteFn])) {
     getRouter().route(...args);
 }
 
-export function routes(router: Router) {
+export function routes(router: Router = new Router()) {
     getRouter().routes(router);
+    return router;
 }
