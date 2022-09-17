@@ -123,3 +123,22 @@ import {getNavigation} from "../../get-navigation";
         console.log("Finished navigation");
     }
 }
+
+{
+
+    const router = new Router(
+        new Navigation()
+    );
+
+    router.catch((event, error) => {
+        console.error(error);
+    })
+
+    router.route("/", () => {
+        throw new Error("Error");
+    })
+
+    await router.navigate("/").finished;
+
+
+}

@@ -21,3 +21,4 @@ jobs:
           npx playwright install-deps
       - run: yarn build
       - run: yarn test
+        continue-on-error: true
