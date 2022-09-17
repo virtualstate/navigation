@@ -24,10 +24,10 @@ export class NavigationNavigation implements Navigation {
 
     [key: string]: unknown;
 
-    #navigation: Navigation;
+    readonly #navigation: Navigation;
 
     get [EventTargetListenersSymbol](): EventDescriptor[] | undefined {
-        return [];
+        return this.#navigation[EventTargetListenersSymbol];
     }
 
     constructor(Navigation: Navigation) {
