@@ -178,22 +178,26 @@ const navigation = getNavigation();
 }
 {
     {
+        let detach;
+
         {
-            routes()
-                .route("/path/:id", (event, { pathname: { groups: { id }}}) => {
-                    throw new Error(`Error for id path ${id}`);
-                })
-                .route("/test", () => {
-                    throw new Error("Error for test path");
-                })
-                .catch("/path/:id", (error, { destination: { url }}, { pathname: { groups: { id }}}) => {
-                    console.error(`Error for ${url} in id ${id} path handler`);
-                    console.error(error);
-                })
-                .catch("/test", (error, { destination: { url }}) => {
-                    console.error(`Error for ${url} in test handler`);
-                    console.error(error);
-                })
+            ({ detach } = (
+                routes()
+                    .route("/path/:id", (event, { pathname: { groups: { id }}}) => {
+                        throw new Error(`Error for id path ${id}`);
+                    })
+                    .route("/test", () => {
+                        throw new Error("Error for test path");
+                    })
+                    .catch("/path/:id", (error, { destination: { url }}, { pathname: { groups: { id }}}) => {
+                        console.error(`Error for ${url} in id ${id} path handler`);
+                        console.error(error);
+                    })
+                    .catch("/test", (error, { destination: { url }}) => {
+                        console.error(`Error for ${url} in test handler`);
+                        console.error(error);
+                    })
+            ));
         }
 
 
@@ -203,6 +207,8 @@ const navigation = getNavigation();
             await navigation.navigate(`/test`).finished;
 
         }
+
+        detach();
 
 
     }
