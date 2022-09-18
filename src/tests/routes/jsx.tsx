@@ -1,6 +1,6 @@
 import {Navigation} from "../../navigation";
 import {Router} from "../../routes";
-import {children, h, name} from "@virtualstate/focus";
+import {children, h, name, properties} from "@virtualstate/focus";
 import {defer} from "@virtualstate/promise";
 import {ok} from "../util";
 
@@ -23,10 +23,11 @@ declare global {
 
     const { resolve: render, promise } = defer<unknown>();
 
-    route("/post/:id", ({ destination }) => {
+    route("/post/:id", ({ destination }, { pathname: { groups: { id }}}) => {
         const state = destination.getState();
         return (
             <main>
+                <meta name="id" value={id}  />
                 <h1>{state.title}</h1>
                 <p>{state.content}</p>
             </main>
@@ -35,7 +36,9 @@ declare global {
 
     then(render);
 
-    navigation.navigate("/post/1", {
+    const id = `${Math.random()}`;
+
+    navigation.navigate(`/post/${id}`, {
         state: {
             title: "Hello!",
             content: "Here is some content for ya!"
@@ -54,8 +57,16 @@ declare global {
 
     const {
         h1: [h1],
-        p: [p]
+        p: [p],
+        meta: [meta]
     } = children(node).group(name);
+
+    const idMeta = properties(await meta)
+
+    ok(idMeta);
+
+    ok(idMeta.name === "id");
+    ok(idMeta.value === id);
 
     const [h1Text] = await children(h1);
     const [pText] = await children(p);
@@ -63,6 +74,7 @@ declare global {
     console.log({
         h1Text,
         pText,
+        idMeta
     })
 
     ok(h1Text);
