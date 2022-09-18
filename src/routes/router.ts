@@ -45,7 +45,7 @@ export interface PatternRouteFn<S = unknown, R = void | unknown> {
 }
 
 interface Route {
-  pattern?: string | URLPattern;
+  pattern?: URLPattern;
   fn?: Fn;
   router?: Router;
 }
@@ -110,7 +110,7 @@ export class Router<
       throw new Error("Router already attached");
     }
     this[Routes].router.push({
-      pattern,
+      pattern: this.#getPattern(pattern),
       router,
     });
     router[Attached].add(this);
@@ -134,7 +134,7 @@ export class Router<
     } else {
       const [pattern, fn] = args;
       this[Routes].resolve.push({
-        pattern,
+        pattern: this.#getPattern(pattern),
         fn,
       });
     }
@@ -156,7 +156,7 @@ export class Router<
     } else {
       const [pattern, fn] = args;
       this[Routes].reject.push({
-        pattern,
+        pattern: this.#getPattern(pattern),
         fn,
       });
     }
@@ -180,7 +180,7 @@ export class Router<
     } else {
       const [pattern, fn] = args;
       this[Routes].route.push({
-        pattern,
+        pattern: this.#getPattern(pattern),
         fn,
       });
     }
@@ -216,6 +216,14 @@ export class Router<
     this[Attached] = new Set();
   };
 
+  #getPattern = (pattern?: string | URLPattern): URLPattern => {
+    if (!pattern) return undefined;
+    if (typeof pattern !== "string") {
+      return pattern;
+    }
+    return new URLPattern({ pathname: pattern });
+  }
+
   #init = () => {
     if (this.listening) {
       return;
@@ -244,23 +252,6 @@ export class Router<
       signal,
     } = event;
 
-    const getPattern = (pattern?: string | URLPattern): URLPattern => {
-      if (!pattern) return undefined;
-      if (typeof pattern !== "string") {
-        return pattern;
-      }
-      let baseURL = DEFAULT_BASE_URL;
-      if (this.currentEntry) {
-        const { origin, host, protocol } = new URL(this.currentEntry.url);
-        if (origin.startsWith(protocol)) {
-          baseURL = origin;
-        } else {
-          baseURL = `${protocol}//${host}`;
-        }
-      }
-      return new URLPattern({ pathname: pattern, baseURL });
-    }
-
     return transition(
         "route",
         (route, match) => route.fn(event, match),
@@ -288,7 +279,7 @@ export class Router<
         let match = parentMatch;
 
         if (pattern) {
-          match = getPattern(pattern).exec(url);
+          match = pattern.exec(url);
           if (!match) return;
         }
 
