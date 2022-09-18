@@ -25,7 +25,7 @@ export const NavigationUserInitiated = Symbol.for("@virtualstate/navigation/user
 
 const baseUrl = "https://html.spec.whatwg.org/";
 
-export interface NavigationNavigateOptions extends NavigationNavigateOptionsPrototype {
+export interface NavigationNavigateOptions<S = unknown> extends NavigationNavigateOptionsPrototype<S> {
     [NavigationFormData]?: FormData;
     [NavigationCanTransition]?: boolean;
     [NavigationUserInitiated]?: boolean;

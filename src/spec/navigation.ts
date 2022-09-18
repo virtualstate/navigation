@@ -20,7 +20,7 @@ export interface NavigationResult {
     finished: Promise<NavigationHistoryEntry>;
 }
 
-export interface Navigation extends EventTarget {
+export interface Navigation<S = unknown> extends EventTarget {
 
     readonly canGoBack: boolean;
     readonly canGoForward: boolean;
@@ -31,8 +31,8 @@ export interface Navigation extends EventTarget {
     updateCurrentEntry(options: NavigationUpdateCurrentOptions): Promise<void>;
     updateCurrentEntry(options: NavigationUpdateCurrentOptions): void;
 
-    navigate(url: string, options?: NavigationNavigateOptions): NavigationResult;
-    reload(options?: NavigationReloadOptions): NavigationResult;
+    navigate<NS extends S = S>(url: string, options?: NavigationNavigateOptions<NS>): NavigationResult;
+    reload<NS extends S = S>(options?: NavigationReloadOptions<NS>): NavigationResult;
 
     goTo(key: string, options?: NavigationNavigationOptions): NavigationResult;
     back(options?: NavigationNavigationOptions): NavigationResult;

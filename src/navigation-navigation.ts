@@ -20,7 +20,7 @@ export interface NavigationNavigation {
     new (thisValue: Navigation): NavigationNavigation;
 }
 
-export class NavigationNavigation implements Navigation {
+export class NavigationNavigation<S = unknown> implements Navigation<S> {
 
     [key: string]: unknown;
 
@@ -30,7 +30,7 @@ export class NavigationNavigation implements Navigation {
         return this.#navigation[EventTargetListenersSymbol];
     }
 
-    constructor(Navigation: Navigation) {
+    constructor(Navigation: Navigation<S>) {
         this.#navigation = Navigation;
     }
 

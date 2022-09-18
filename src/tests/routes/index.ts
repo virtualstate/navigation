@@ -213,3 +213,44 @@ const navigation = getNavigation();
 
     }
 }
+
+
+{
+    interface State {
+        key: number;
+    }
+
+    const navigation = new Navigation<State>()
+    const { route, then } = new Router<State>(navigation);
+
+
+    route("/path", async ({ destination }) => {
+        console.log("In path route handler");
+
+        const state = destination.getState<State>();
+
+        console.log({ state });
+
+        return state?.key;
+    });
+
+    let setValue: unknown = undefined;
+
+    then("/path", (value) => {
+        console.log("In path result handler");
+        setValue = value;
+    })
+
+    const value = Math.random();
+
+    ok(!setValue);
+
+    await navigation.navigate("/path", {
+        state: {
+            key: value
+        }
+    }).finished;
+
+    ok(setValue);
+    ok(setValue === value);
+}

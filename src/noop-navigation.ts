@@ -13,7 +13,7 @@ class NoOperationNavigationResult implements NavigationResult {
     finished: Promise<NavigationHistoryEntry> = new Promise(() => {});
 }
 
-export class NoOperationNavigation extends NavigationEventTarget<NavigationEventMap> implements Navigation {
+export class NoOperationNavigation<S = unknown> extends NavigationEventTarget<NavigationEventMap> implements Navigation<S> {
 
     readonly canGoBack: boolean = false;
     readonly canGoForward: boolean = false;

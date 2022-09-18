@@ -55,7 +55,7 @@ export interface NavigationOptions {
 
 const baseUrl = "https://html.spec.whatwg.org/";
 
-export class Navigation extends NavigationEventTarget<NavigationEventMap> implements NavigationPrototype {
+export class Navigation<S = unknown> extends NavigationEventTarget<NavigationEventMap> implements NavigationPrototype<S> {
 
     // Should be always 0 or 1
     #transitionInProgressCount = 0;
@@ -131,7 +131,7 @@ export class Navigation extends NavigationEventTarget<NavigationEventMap> implem
         throw new InvalidStateError();
     }
 
-    navigate(url: string, options?: NavigationNavigateOptions): NavigationResult {
+    navigate<NS extends S = S>(url: string, options?: NavigationNavigateOptions<NS>): NavigationResult {
         const nextUrl = new URL(url, this.#initialUrl).toString();
         // console.log({ nextUrl });
         const navigationType = options?.replace ? "replace" : "push";
@@ -534,7 +534,7 @@ export class Navigation extends NavigationEventTarget<NavigationEventMap> implem
         // console.log(JSON.stringify({ pruned: [...this.#known] }));
     }
 
-    reload(options?: NavigationReloadOptions): NavigationResult {
+    reload<NS extends S = S>(options?: NavigationReloadOptions<NS>): NavigationResult {
         const { currentEntry } = this;
         if (!currentEntry) throw new InvalidStateError();
         const entry = this.#cloneNavigationHistoryEntry(currentEntry, options);
