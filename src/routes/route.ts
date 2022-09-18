@@ -2,14 +2,16 @@ import { isRouter, PatternRouteFn, RouteFn, Router } from "./router";
 import { URLPattern } from "urlpattern-polyfill";
 import { getNavigation } from "../get-navigation";
 
-let router: Router;
+declare module globalThis {
+  let $__router_navigation_virtualstate: Router;
+}
 
 export function getRouter<S = unknown, R = void | unknown>(): Router<S, R> {
-  if (isRouter<S, R>(router)) {
-    return router;
+  if (isRouter<S, R>(globalThis.$__router_navigation_virtualstate)) {
+    return globalThis.$__router_navigation_virtualstate;
   }
   const navigation = getNavigation();
-  return (router = new Router<S, R>(navigation));
+  return (globalThis.$__router_navigation_virtualstate = new Router<S, R>(navigation));
 }
 
 export function route<S = unknown, R = void | unknown>(

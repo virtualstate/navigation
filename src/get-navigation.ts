@@ -2,14 +2,16 @@ import { globalNavigation } from "./global-navigation";
 import type { Navigation } from "./spec/navigation";
 import { Navigation as NavigationPolyfill } from "./navigation";
 
-let navigation: Navigation;
+declare module globalThis {
+  let $__navigation_virtualstate: Navigation;
+}
 
 export function getNavigation(): Navigation {
   if (globalNavigation) {
     return globalNavigation;
   }
-  if (navigation) {
-    return navigation;
+  if (globalThis.$__navigation_virtualstate) {
+    return globalThis.$__navigation_virtualstate;
   }
-  return (navigation = new NavigationPolyfill());
+  return (globalThis.$__navigation_virtualstate = new NavigationPolyfill());
 }
