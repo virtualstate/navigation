@@ -169,11 +169,11 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     }
   }
 
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions): Promise<void>;
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions): unknown;
   updateCurrentEntry(options: NavigationUpdateCurrentOptions): void;
   updateCurrentEntry(
     options: NavigationUpdateCurrentOptions
-  ): Promise<void> | void {
+  ): unknown {
     return this[Navigation].updateCurrentEntry(options);
   }
 }

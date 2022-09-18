@@ -39,9 +39,9 @@ export class NavigationHistory<S extends object>
     return this.#navigation.currentEntry.getState<S>();
   }
 
-  back(): Promise<void>;
+  back(): unknown;
   back(): void;
-  async back(): Promise<void> {
+  back(): unknown {
     const entries = this.#navigation.entries();
     const index = this.#navigation.currentEntry?.index ?? -1;
     const back = entries[index - 1];
@@ -51,9 +51,9 @@ export class NavigationHistory<S extends object>
     );
   }
 
-  forward(): Promise<void>;
+  forward(): unknown;
   forward(): void;
-  async forward(): Promise<void> {
+  forward(): unknown {
     const entries = this.#navigation.entries();
     const index = this.#navigation.currentEntry?.index ?? -1;
     const forward = entries[index + 1];
@@ -63,9 +63,9 @@ export class NavigationHistory<S extends object>
     );
   }
 
-  go(delta?: number): Promise<void>;
+  go(delta?: number): unknown;
   go(delta?: number): void;
-  async go(delta?: number): Promise<void> {
+  go(delta?: number): unknown {
     if (typeof delta !== "number" || delta === 0 || isNaN(delta)) {
       return this[AppLocationAwaitFinished](this.#navigation.reload());
     }
@@ -86,13 +86,13 @@ export class NavigationHistory<S extends object>
     data: any,
     unused: string,
     url?: string | URL | null
-  ): Promise<void>;
+  ): unknown;
   replaceState(data: any, unused: string, url?: string | URL | null): void;
-  async replaceState(
+  replaceState(
     data: any,
     unused: string,
     url?: string | URL | null
-  ): Promise<void> {
+  ): unknown {
     if (url) {
       return this[AppLocationTransitionURL](url, (url) =>
         this.#navigation.navigate(url.toString(), {
@@ -111,15 +111,15 @@ export class NavigationHistory<S extends object>
     data: object,
     unused: string,
     url?: string | URL | null
-  ): Promise<void>;
-  pushState(data: unknown, unused: string, url?: string | URL): Promise<void>;
+  ): unknown;
+  pushState(data: unknown, unused: string, url?: string | URL): unknown;
   pushState(data: object, unused: string, url?: string | URL | null): void;
   pushState(data: unknown, unused: string, url?: string | URL): void;
-  async pushState(
+  pushState(
     data: object,
     unused: string,
     url?: string | URL | null
-  ): Promise<void> {
+  ): unknown {
     if (url) {
       return this[AppLocationTransitionURL](url, (url) =>
         this.#navigation.navigate(url.toString(), {

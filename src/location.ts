@@ -183,9 +183,9 @@ export class NavigationLocation implements Location {
     );
   };
 
-  replace(url: string | URL): Promise<void>;
+  replace(url: string | URL): unknown;
   replace(url: string | URL): void;
-  async replace(url: string | URL): Promise<void> {
+  replace(url: string | URL): unknown {
     return this.#transitionURL(url, (url) =>
       this.#navigation.navigate(url.toString(), {
         replace: true,
@@ -193,16 +193,16 @@ export class NavigationLocation implements Location {
     );
   }
 
-  reload(): Promise<void>;
+  reload(): unknown;
   reload(): void;
-  async reload(): Promise<void> {
+  reload(): unknown {
     return this.#awaitFinished(this.#navigation.reload());
   }
 
-  assign(url: string | URL): Promise<void>;
+  assign(url: string | URL): unknown;
   assign(url: string | URL): void;
-  async assign(url: string | URL): Promise<void> {
-    await this.#transitionURL(url, (url) =>
+  assign(url: string | URL): unknown {
+    return this.#transitionURL(url, (url) =>
       this.#navigation.navigate(url.toString())
     );
   }
