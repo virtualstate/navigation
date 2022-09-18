@@ -52,7 +52,7 @@ const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
 const Attached = Symbol.for("@virtualstate/navigation/routes/attached");
 const Detach = Symbol.for("@virtualstate/navigation/routes/detach");
 
-export function isRouter<S = unknown>(value: unknown): value is Router<S> {
+export function isRouter<S = unknown, R = void | unknown>(value: unknown): value is Router<S, R> {
     function isRouterLike(value: unknown): value is { [Routes]: unknown } {
         return !!value;
     }

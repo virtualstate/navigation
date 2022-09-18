@@ -4,19 +4,19 @@ import {getNavigation} from "../get-navigation";
 
 let router: Router;
 
-export function getRouter<S = unknown>(): Router<S> {
-    if (isRouter<S>(router)) {
+export function getRouter<S = unknown, R = void | unknown>(): Router<S, R> {
+    if (isRouter<S, R>(router)) {
         return router;
     }
     const navigation = getNavigation()
-    return router = new Router<S>(
+    return router = new Router<S, R>(
         navigation
     );
 }
 
-export function route<S = unknown>(pattern: string | URLPattern, fn: PatternRouteFn<S>): Router<S>;
-export function route<S = unknown>(fn: RouteFn<S>): Router<S>;
-export function route<S = unknown>(...args: ([string | URLPattern, PatternRouteFn<S>] | [RouteFn<S>])): Router<S> {
+export function route<S = unknown, R = void | unknown>(pattern: string | URLPattern, fn: PatternRouteFn<S, R>): Router<S, R>;
+export function route<S = unknown, R = void | unknown>(fn: RouteFn<S, R>): Router<S, R>;
+export function route<S = unknown, R = void | unknown>(...args: ([string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>])): Router<S, R> {
     let pattern,
         fn;
     if (args.length === 1) {
@@ -24,15 +24,15 @@ export function route<S = unknown>(...args: ([string | URLPattern, PatternRouteF
     } else if (args.length === 2) {
         ([pattern, fn] = args);
     }
-    return routes<S>(pattern).route(fn);
+    return routes<S, R>(pattern).route(fn);
 }
 
-export function routes<S = unknown>(pattern: string | URLPattern, router: Router): Router<S>;
-export function routes<S = unknown>(pattern: string | URLPattern): Router<S>;
-export function routes<S = unknown>(router: Router<S>): Router<S>;
-export function routes<S = unknown>(): Router<S>;
-export function routes<S = unknown>(...args: [string | URLPattern] | [string | URLPattern, Router<S> | undefined] | [Router<S> | undefined] | []): Router<S> {
-    let router: Router<S>;
+export function routes<S = unknown, R = void | unknown>(pattern: string | URLPattern, router: Router<S, R>): Router<S, R>;
+export function routes<S = unknown, R = void | unknown>(pattern: string | URLPattern): Router<S, R>;
+export function routes<S = unknown, R = void | unknown>(router: Router<S, R>): Router<S, R>;
+export function routes<S = unknown, R = void | unknown>(): Router<S, R>;
+export function routes<S = unknown, R = void | unknown>(...args: [string | URLPattern] | [string | URLPattern, Router<S, R> | undefined] | [Router<S, R> | undefined] | []): Router<S, R> {
+    let router: Router<S, R>;
     if (!args.length) {
         router = new Router();
         getRouter().routes(router);
