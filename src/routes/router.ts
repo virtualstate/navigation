@@ -6,14 +6,14 @@ import {NoOperationNavigation} from "../noop-navigation";
 type NonNil<T> = T extends (null | undefined) ? never : T;
 export type URLPatternResult = NonNil<ReturnType<URLPattern["exec"]>>
 
-export type RouteFnReturn = Promise<void | unknown> | unknown | void;
+export type RouteFnReturn<R = void | unknown> = Promise<R> | R;
 
 export interface Fn {
     (...args: unknown[]): RouteFnReturn;
 }
 
-export interface RouteFn<S = unknown> {
-    (event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn;
+export interface RouteFn<S = unknown, R = void | unknown> {
+    (event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn<R>;
 }
 
 export interface ErrorFn<S = unknown> {
@@ -24,16 +24,16 @@ export interface PatternErrorFn<S = unknown> {
     (error: unknown, event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn;
 }
 
-export interface ThenFn<S = unknown> {
-    (value: unknown, event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn;
+export interface ThenFn<S = unknown, R = unknown> {
+    (value: R, event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternThenFn<S = unknown> {
-    (value: unknown, event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn;
+export interface PatternThenFn<S = unknown, R = unknown> {
+    (value: R, event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternRouteFn<S = unknown> {
-    (event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn
+export interface PatternRouteFn<S = unknown, R = void | unknown> {
+    (event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn<R>
 }
 
 interface Route {
@@ -64,7 +64,7 @@ export function isRouter<S = unknown>(value: unknown): value is Router<S> {
 
 const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
-export class Router<S = unknown> extends NavigationNavigation<S> {
+export class Router<S = unknown, R = void | unknown> extends NavigationNavigation<S> {
 
     [Routes]: RouteRecord = {
         router: [],
@@ -87,10 +87,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         this.catch = this.catch.bind(this);
     }
 
-    routes(pattern: string | URLPattern, router: Router): Router<S>
-    routes(router: Router<S>): Router<S>
-    routes(...args: ([string | URLPattern, Router<S>] | [Router<S>])): Router<S>
-    routes(...args: ([string | URLPattern, Router<S>] | [Router<S>])): Router<S> {
+    routes(pattern: string | URLPattern, router: Router<S, R>): this
+    routes(router: Router<S, R>): this
+    routes(...args: ([string | URLPattern, Router<S, R>] | [Router<S, R>])): this
+    routes(...args: ([string | URLPattern, Router<S, R>] | [Router<S, R>])): this {
         let router, pattern
         if (args.length === 1) {
             ([router] = args);
@@ -109,10 +109,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         return this;
     }
 
-    then(pattern: string | URLPattern, fn: PatternThenFn<S>): Router
-    then(fn: ThenFn<S>): Router
-    then(...args: ([string | URLPattern, PatternThenFn<S>] | [ThenFn<S>])): Router
-    then(...args: ([string | URLPattern, PatternThenFn<S>] | [ThenFn<S>])): Router {
+    then(pattern: string | URLPattern, fn: PatternThenFn<S, R>): this
+    then(fn: ThenFn<S, R>): this
+    then(...args: ([string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>])): this
+    then(...args: ([string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>])): this {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].resolve.push({
@@ -129,10 +129,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         return this;
     }
 
-    catch(pattern: string | URLPattern, fn: PatternErrorFn<S>): Router<S>
-    catch(fn: ErrorFn<S>): Router<S>
-    catch(...args: ([string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>])): Router<S>
-    catch(...args: ([string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>])): Router<S> {
+    catch(pattern: string | URLPattern, fn: PatternErrorFn<S>): this
+    catch(fn: ErrorFn<S>): this
+    catch(...args: ([string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>])): this
+    catch(...args: ([string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>])): this {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].reject.push({
@@ -149,10 +149,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         return this;
     }
 
-    route(pattern: string | URLPattern, fn: PatternRouteFn<S>): Router<S>
-    route(fn: RouteFn<S>): Router<S>
-    route(...args: ([string | URLPattern, PatternRouteFn<S>] | [RouteFn<S>])): Router<S>
-    route(...args: ([string | URLPattern, PatternRouteFn<S>] | [RouteFn<S>])): Router<S> {
+    route(pattern: string | URLPattern, fn: PatternRouteFn<S, R>): this
+    route(fn: RouteFn<S, R>): this
+    route(...args: ([string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>])): this
+    route(...args: ([string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>])): this {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].route.push({

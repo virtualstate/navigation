@@ -221,7 +221,7 @@ const navigation = getNavigation();
     }
 
     const navigation = new Navigation()
-    const { route, then } = new Router<State>(navigation);
+    const { route, then } = new Router<State, number>(navigation);
 
 
     route("/path", async ({ destination }) => {
