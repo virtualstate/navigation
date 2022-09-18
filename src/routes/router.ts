@@ -261,16 +261,12 @@ export class Router<
       signal,
     } = event;
 
-    try {
-      await transition(
+    return transition(
         "route",
         (route, match) => route.fn(event, match),
         handleResolve,
         handleReject
-      );
-    } catch (error) {
-      await handleReject(error);
-    }
+    );
 
     async function transition(
       type: RouteType,
