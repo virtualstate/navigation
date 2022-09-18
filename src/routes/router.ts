@@ -317,17 +317,11 @@ export class Router<
           if (isPromise(maybe)) {
             promises.push(
               maybe
-                .then((value) => {
-                  if (typeof value !== "undefined") {
-                    return resolve(value);
-                  }
-                })
+                .then(resolve)
                 .catch(reject)
             );
           } else {
-            if (typeof maybe !== "undefined") {
-              promises.push(resolve(maybe));
-            }
+            promises.push(resolve(maybe));
           }
         } catch (error) {
           promises.push(reject(error));
