@@ -26,7 +26,7 @@ const Navigation = Symbol.for("@virtualstate/navigation/instance");
 export class NavigationNavigation<S = unknown> implements Navigation<S> {
   [key: string]: unknown;
 
-  readonly [Navigation]: Navigation;
+  readonly [Navigation]: Navigation<S>;
 
   get [EventTargetListenersSymbol](): EventDescriptor[] | undefined {
     return this[Navigation][EventTargetListenersSymbol];
@@ -64,9 +64,9 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     return this[Navigation].transition;
   }
 
-  addEventListener<K extends keyof NavigationEventMap>(
+  addEventListener<K extends keyof NavigationEventMap<S>>(
     type: K,
-    listener: (ev: NavigationEventMap[K]) => unknown,
+    listener: (ev: NavigationEventMap<S>[K]) => unknown,
     options?: boolean | EventTargetAddListenerOptions
   ): void;
   addEventListener(
@@ -103,7 +103,7 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     }
   }
 
-  back(options?: NavigationNavigationOptions): NavigationResult {
+  back(options?: NavigationNavigationOptions): NavigationResult<S> {
     return this[Navigation].back(options);
   }
 
@@ -113,15 +113,15 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     return this[Navigation].dispatchEvent(event);
   }
 
-  entries(): NavigationHistoryEntry[] {
+  entries(): NavigationHistoryEntry<S>[] {
     return this[Navigation].entries();
   }
 
-  forward(options?: NavigationNavigationOptions): NavigationResult {
+  forward(options?: NavigationNavigationOptions): NavigationResult<S> {
     return this[Navigation].forward(options);
   }
 
-  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult {
+  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S> {
     return this[Navigation].goTo(key, options);
   }
 
@@ -131,17 +131,17 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     return this[Navigation].hasEventListener(type, callback);
   }
 
-  navigate(url: string, options?: NavigationNavigateOptions): NavigationResult {
+  navigate<NS extends S = S>(url: string, options?: NavigationNavigateOptions<S>): NavigationResult<S> {
     return this[Navigation].navigate(url, options);
   }
 
-  reload(options?: NavigationReloadOptions): NavigationResult {
+  reload<NS extends S = S>(options?: NavigationReloadOptions<S>): NavigationResult<S> {
     return this[Navigation].reload(options);
   }
 
-  removeEventListener<K extends keyof NavigationEventMap>(
+  removeEventListener<K extends keyof NavigationEventMap<S>>(
     type: K,
-    listener: (ev: NavigationEventMap[K]) => unknown,
+    listener: (ev: NavigationEventMap<S>[K]) => unknown,
     options?: boolean | EventListenerOptions
   ): void;
   removeEventListener(
@@ -169,10 +169,10 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     }
   }
 
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions): unknown;
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions): void;
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): unknown;
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): void;
   updateCurrentEntry(
-    options: NavigationUpdateCurrentOptions
+    options: NavigationUpdateCurrentOptions<S>
   ): unknown {
     return this[Navigation].updateCurrentEntry(options);
   }

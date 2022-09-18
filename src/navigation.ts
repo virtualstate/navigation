@@ -108,7 +108,7 @@ export class Navigation<S = unknown>
     ).toString();
   }
 
-  back(options?: NavigationNavigationOptions): NavigationResult {
+  back(options?: NavigationNavigationOptions): NavigationResult<S> {
     if (!this.canGoBack) throw new InvalidStateError("Cannot go back");
     const entry = this.#entries[this.#currentIndex - 1];
     return this.#pushEntry(
@@ -124,7 +124,7 @@ export class Navigation<S = unknown>
     return [...this.#entries];
   }
 
-  forward(options?: NavigationNavigationOptions): NavigationResult {
+  forward(options?: NavigationNavigationOptions): NavigationResult<S> {
     if (!this.canGoForward) throw new InvalidStateError();
     const entry = this.#entries[this.#currentIndex + 1];
     return this.#pushEntry(
@@ -136,7 +136,7 @@ export class Navigation<S = unknown>
     );
   }
 
-  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult {
+  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S> {
     const found = this.#entries.find((entry) => entry.key === key);
     if (found) {
       return this.#pushEntry(
@@ -150,9 +150,9 @@ export class Navigation<S = unknown>
     throw new InvalidStateError();
   }
 
-  navigate<NS extends S = S>(
+  navigate(
     url: string,
-    options?: NavigationNavigateOptions<NS>
+    options?: NavigationNavigateOptions<S>
   ): NavigationResult {
     const nextUrl = new URL(url, this.#initialUrl).toString();
     // console.log({ nextUrl });
@@ -621,9 +621,9 @@ export class Navigation<S = unknown>
     // console.log(JSON.stringify({ pruned: [...this.#known] }));
   };
 
-  reload<NS extends S = S>(
-    options?: NavigationReloadOptions<NS>
-  ): NavigationResult {
+  reload(
+    options?: NavigationReloadOptions<S>
+  ): NavigationResult<S> {
     const { currentEntry } = this;
     if (!currentEntry) throw new InvalidStateError();
     const entry = this.#cloneNavigationHistoryEntry(currentEntry, options);

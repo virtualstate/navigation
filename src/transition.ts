@@ -1,6 +1,6 @@
 import {Navigation, NavigationTransition} from "./spec/navigation";
 
-export async function transition<S = unknown>(navigation: Navigation<S>) {
+export async function transition<S>(navigation: Navigation<S>) {
     let transition: NavigationTransition<S> | undefined = undefined;
     let finalPromise;
     while (navigation.transition && transition !== navigation.transition) {

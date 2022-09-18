@@ -64,3 +64,8 @@ import {ok} from "./util";
 
 
 }
+{
+    const navigation = new Navigation<{ withState: true }>()
+
+    await transition(navigation);
+}

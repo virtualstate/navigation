@@ -37,12 +37,12 @@ export interface Navigation<S = unknown> extends EventTarget {
   updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): unknown;
   updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): void;
 
-  navigate<NS extends S = S>(
+  navigate(
     url: string,
-    options?: NavigationNavigateOptions<NS>
+    options?: NavigationNavigateOptions<S>
   ): NavigationResult<S>;
-  reload<NS extends S = S>(
-    options?: NavigationReloadOptions<NS>
+  reload(
+    options?: NavigationReloadOptions<S>
   ): NavigationResult<S>;
 
   goTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S>;
