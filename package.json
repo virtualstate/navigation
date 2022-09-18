@@ -19,7 +19,7 @@
         "./esnext/index.d.ts"
       ],
       "routes": [
-        "./esnext/routes.d.ts"
+        "./esnext/routes/index.d.ts"
       ],
       "polyfill": [
         "./esnext/polyfill.d.ts"
