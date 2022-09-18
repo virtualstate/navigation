@@ -4,19 +4,19 @@ import {getNavigation} from "../get-navigation";
 
 let router: Router;
 
-export function getRouter(): Router {
-    if (!router) {
-        const navigation = getNavigation()
-        router = new Router(
-            navigation
-        );
+export function getRouter<S = unknown>(): Router<S> {
+    if (isRouter<S>(router)) {
+        return router;
     }
-    return router;
+    const navigation = getNavigation()
+    return router = new Router<S>(
+        navigation
+    );
 }
 
-export function route(pattern: string | URLPattern, fn: PatternRouteFn): Router;
-export function route(fn: RouteFn): Router;
-export function route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])): Router {
+export function route<S = unknown>(pattern: string | URLPattern, fn: PatternRouteFn<S>): Router<S>;
+export function route<S = unknown>(fn: RouteFn<S>): Router<S>;
+export function route<S = unknown>(...args: ([string | URLPattern, PatternRouteFn<S>] | [RouteFn<S>])): Router<S> {
     let pattern,
         fn;
     if (args.length === 1) {
@@ -24,15 +24,15 @@ export function route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn
     } else if (args.length === 2) {
         ([pattern, fn] = args);
     }
-    return routes(pattern).route(fn);
+    return routes<S>(pattern).route(fn);
 }
 
-export function routes(pattern: string | URLPattern, router: Router): Router;
-export function routes(pattern: string | URLPattern): Router;
-export function routes(router: Router): Router;
-export function routes(): Router;
-export function routes(...args: [string | URLPattern] | [string | URLPattern, Router | undefined] | [Router | undefined] | []): Router {
-    let router: Router;
+export function routes<S = unknown>(pattern: string | URLPattern, router: Router): Router<S>;
+export function routes<S = unknown>(pattern: string | URLPattern): Router<S>;
+export function routes<S = unknown>(router: Router<S>): Router<S>;
+export function routes<S = unknown>(): Router<S>;
+export function routes<S = unknown>(...args: [string | URLPattern] | [string | URLPattern, Router<S> | undefined] | [Router<S> | undefined] | []): Router<S> {
+    let router: Router<S>;
     if (!args.length) {
         router = new Router();
         getRouter().routes(router);
