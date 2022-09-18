@@ -49,21 +49,23 @@ function isFunctionEventCallback(fn: Function): fn is EventCallback {
   return typeof fn === "function";
 }
 
+const EventTargetDescriptors = Symbol.for("@virtualstate/navigation/event-target/descriptors");
+
 export class EventTargetListeners implements EventTargetListeners {
   [key: string]: unknown;
 
-  #listeners?: EventDescriptor[] = [];
+  [EventTargetDescriptors]?: EventDescriptor[] = [];
   [EventTargetListenersIgnore]?: WeakSet<EventDescriptor> =
     new WeakSet<EventDescriptor>();
 
   get [EventTargetListenersSymbol](): EventDescriptor[] | undefined {
-    return [...(this.#listeners ?? [])];
+    return [...(this[EventTargetDescriptors] ?? [])];
   }
 
   [EventTargetListenersMatch]?(type: string | symbol) {
     const external = this[EventTargetListenersSymbol];
     const matched = [
-      ...new Set([...(external ?? []), ...(this.#listeners ?? [])]),
+      ...new Set([...(external ?? []), ...(this[EventTargetDescriptors] ?? [])]),
     ]
       .filter(
         (descriptor) => descriptor.type === type || descriptor.type === "*"
@@ -104,7 +106,7 @@ export class EventTargetListeners implements EventTargetListeners {
     const listener: EventListener = {
       ...options,
       isListening: () =>
-        !!this.#listeners?.find(matchEventCallback(type, callback)),
+        !!this[EventTargetDescriptors]?.find(matchEventCallback(type, callback)),
       descriptor: {
         [EventDescriptorSymbol]: true,
         ...options,
@@ -116,7 +118,7 @@ export class EventTargetListeners implements EventTargetListeners {
     if (listener.isListening()) {
       return;
     }
-    this.#listeners?.push(listener.descriptor);
+    this[EventTargetDescriptors]?.push(listener.descriptor);
   }
 
   removeEventListener(
@@ -133,7 +135,7 @@ export class EventTargetListeners implements EventTargetListeners {
       return;
     }
     const externalListeners =
-      this[EventTargetListenersSymbol] ?? this.#listeners ?? [];
+      this[EventTargetListenersSymbol] ?? this[EventTargetDescriptors]?? [];
     const externalIndex = externalListeners.findIndex(
       matchEventCallback(type, callback, options)
     );
@@ -141,10 +143,10 @@ export class EventTargetListeners implements EventTargetListeners {
       return;
     }
     const index =
-      this.#listeners?.findIndex(matchEventCallback(type, callback, options)) ??
+      this[EventTargetDescriptors]?.findIndex(matchEventCallback(type, callback, options)) ??
       -1;
     if (index !== -1) {
-      this.#listeners?.splice(index, 1);
+      this[EventTargetDescriptors]?.splice(index, 1);
     }
     const descriptor = externalListeners[externalIndex];
     if (descriptor) {
@@ -158,7 +160,7 @@ export class EventTargetListeners implements EventTargetListeners {
       return false;
     }
     const foundIndex =
-      this.#listeners?.findIndex(matchEventCallback(type, callback)) ?? -1;
+      this[EventTargetDescriptors]?.findIndex(matchEventCallback(type, callback)) ?? -1;
     return foundIndex > -1;
   }
 }
