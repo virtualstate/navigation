@@ -630,7 +630,7 @@ export class Navigation<S = unknown>
     return this.#pushEntry("reload", entry, undefined, options);
   }
 
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions): Promise<void>;
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions): unknown;
   updateCurrentEntry(options: NavigationUpdateCurrentOptions): void;
   updateCurrentEntry(options: NavigationUpdateCurrentOptions): unknown {
     const { currentEntry } = this;

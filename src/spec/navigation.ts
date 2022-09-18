@@ -34,7 +34,7 @@ export interface Navigation<S = unknown> extends EventTarget {
   readonly transition?: NavigationTransition<S> | null;
 
   entries(): NavigationHistoryEntry<S>[];
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): Promise<void>;
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): unknown;
   updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): void;
 
   navigate<NS extends S = S>(
