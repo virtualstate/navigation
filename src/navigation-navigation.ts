@@ -21,45 +21,47 @@ export interface NavigationNavigation {
   new (thisValue: Navigation): NavigationNavigation;
 }
 
+const Navigation = Symbol.for("@virtualstate/navigation/instance");
+
 export class NavigationNavigation<S = unknown> implements Navigation<S> {
   [key: string]: unknown;
 
-  readonly #navigation: Navigation;
+  readonly [Navigation]: Navigation;
 
   get [EventTargetListenersSymbol](): EventDescriptor[] | undefined {
-    return this.#navigation[EventTargetListenersSymbol];
+    return this[Navigation][EventTargetListenersSymbol];
   }
 
-  constructor(Navigation: Navigation<S>) {
-    this.#navigation = Navigation;
+  constructor(navigation: Navigation<S>) {
+    this[Navigation] = navigation;
   }
 
   get canGoBack() {
-    return this.#navigation.canGoBack;
+    return this[Navigation].canGoBack;
   }
 
   get canGoForward() {
-    return this.#navigation.canGoForward;
+    return this[Navigation].canGoForward;
   }
 
   get currentEntry() {
-    return this.#navigation.currentEntry;
+    return this[Navigation].currentEntry;
   }
 
   set oncurrentchange(value: Navigation["oncurrentchange"]) {
-    this.#navigation.oncurrentchange = value;
+    this[Navigation].oncurrentchange = value;
   }
   set onnavigate(value: Navigation["onnavigate"]) {
-    this.#navigation.onnavigate = value;
+    this[Navigation].onnavigate = value;
   }
   set onnavigateerror(value: Navigation["onnavigateerror"]) {
-    this.#navigation.onnavigateerror = value;
+    this[Navigation].onnavigateerror = value;
   }
   set onnavigatesuccess(value: Navigation["onnavigatesuccess"]) {
-    this.#navigation.onnavigatesuccess = value;
+    this[Navigation].onnavigatesuccess = value;
   }
   get transition() {
-    return this.#navigation.transition;
+    return this[Navigation].transition;
   }
 
   addEventListener<K extends keyof NavigationEventMap>(
@@ -93,7 +95,7 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     options?: boolean | EventTargetAddListenerOptions
   ): void {
     if (typeof type === "string") {
-      this.#navigation.addEventListener(
+      this[Navigation].addEventListener(
         type,
         listener,
         typeof options === "boolean" ? { once: true } : options
@@ -102,39 +104,39 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
   }
 
   back(options?: NavigationNavigationOptions): NavigationResult {
-    return this.#navigation.back(options);
+    return this[Navigation].back(options);
   }
 
   dispatchEvent(event: Event): Promise<void>;
   dispatchEvent(event: Event): void;
   dispatchEvent(event: Event): void | Promise<void> {
-    return this.#navigation.dispatchEvent(event);
+    return this[Navigation].dispatchEvent(event);
   }
 
   entries(): NavigationHistoryEntry[] {
-    return this.#navigation.entries();
+    return this[Navigation].entries();
   }
 
   forward(options?: NavigationNavigationOptions): NavigationResult {
-    return this.#navigation.forward(options);
+    return this[Navigation].forward(options);
   }
 
   goTo(key: string, options?: NavigationNavigationOptions): NavigationResult {
-    return this.#navigation.goTo(key, options);
+    return this[Navigation].goTo(key, options);
   }
 
   hasEventListener(type: string | symbol, callback?: Function): boolean;
   hasEventListener(type: string, callback?: Function): boolean;
   hasEventListener(type: string | symbol, callback?: Function): boolean {
-    return this.#navigation.hasEventListener(type, callback);
+    return this[Navigation].hasEventListener(type, callback);
   }
 
   navigate(url: string, options?: NavigationNavigateOptions): NavigationResult {
-    return this.#navigation.navigate(url, options);
+    return this[Navigation].navigate(url, options);
   }
 
   reload(options?: NavigationReloadOptions): NavigationResult {
-    return this.#navigation.reload(options);
+    return this[Navigation].reload(options);
   }
 
   removeEventListener<K extends keyof NavigationEventMap>(
@@ -163,7 +165,7 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     options?: unknown
   ): void {
     if (typeof type === "string") {
-      return this.#navigation.removeEventListener(type, listener, options);
+      return this[Navigation].removeEventListener(type, listener, options);
     }
   }
 
@@ -172,6 +174,6 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
   updateCurrentEntry(
     options: NavigationUpdateCurrentOptions
   ): Promise<void> | void {
-    return this.#navigation.updateCurrentEntry(options);
+    return this[Navigation].updateCurrentEntry(options);
   }
 }
