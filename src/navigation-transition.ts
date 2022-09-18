@@ -114,39 +114,39 @@ export const NavigationTransitionAbort = Symbol.for(
   "@virtualstate/navigation/transition/abort"
 );
 
-export interface NavigationTransitionInit
+export interface NavigationTransitionInit<S = unknown>
   extends Omit<NavigationTransitionInitPrototype, "finished"> {
   rollback(options?: NavigationNavigationOptions): NavigationResult;
-  [NavigationTransitionFinishedDeferred]?: Deferred<NavigationHistoryEntry>;
-  [NavigationTransitionCommittedDeferred]?: Deferred<NavigationHistoryEntry>;
+  [NavigationTransitionFinishedDeferred]?: Deferred<NavigationHistoryEntry<S>>;
+  [NavigationTransitionCommittedDeferred]?: Deferred<NavigationHistoryEntry<S>>;
   [NavigationTransitionNavigationType]: InternalNavigationNavigationType;
-  [NavigationTransitionInitialEntries]: NavigationHistoryEntry[];
+  [NavigationTransitionInitialEntries]: NavigationHistoryEntry<S>[];
   [NavigationTransitionInitialIndex]: number;
-  [NavigationTransitionFinishedEntries]?: NavigationHistoryEntry[];
+  [NavigationTransitionFinishedEntries]?: NavigationHistoryEntry<S>[];
   [NavigationTransitionFinishedIndex]?: number;
   [NavigationTransitionKnown]?: Iterable<EventTarget>;
-  [NavigationTransitionEntry]: NavigationHistoryEntry;
+  [NavigationTransitionEntry]: NavigationHistoryEntry<S>;
   [NavigationTransitionParentEventTarget]: EventTarget;
 }
 
-export class NavigationTransition
+export class NavigationTransition<S = unknown>
   extends EventTarget
-  implements NavigationTransitionPrototype
+  implements NavigationTransitionPrototype<S>
 {
-  readonly finished: Promise<NavigationHistoryEntryPrototype>;
+  readonly finished: Promise<NavigationHistoryEntryPrototype<S>>;
   /**
    * @experimental
    */
-  readonly committed: Promise<NavigationHistoryEntryPrototype>;
-  readonly from: NavigationHistoryEntryPrototype;
+  readonly committed: Promise<NavigationHistoryEntryPrototype<S>>;
+  readonly from: NavigationHistoryEntryPrototype<S>;
   readonly navigationType: NavigationNavigationType;
 
-  readonly #options: NavigationTransitionInit;
+  readonly #options: NavigationTransitionInit<S>;
 
   readonly [NavigationTransitionFinishedDeferred] =
-    deferred<NavigationHistoryEntry>();
+    deferred<NavigationHistoryEntry<S>>();
   readonly [NavigationTransitionCommittedDeferred] =
-    deferred<NavigationHistoryEntry>();
+    deferred<NavigationHistoryEntry<S>>();
 
   get [NavigationTransitionIsPending]() {
     return !!this.#promises.size;
@@ -156,7 +156,7 @@ export class NavigationTransition
     return this.#options[NavigationTransitionNavigationType];
   }
 
-  get [NavigationTransitionInitialEntries](): NavigationHistoryEntry[] {
+  get [NavigationTransitionInitialEntries](): NavigationHistoryEntry<S>[] {
     return this.#options[NavigationTransitionInitialEntries];
   }
 
@@ -164,7 +164,7 @@ export class NavigationTransition
     return this.#options[NavigationTransitionInitialIndex];
   }
 
-  [NavigationTransitionFinishedEntries]?: NavigationHistoryEntry[];
+  [NavigationTransitionFinishedEntries]?: NavigationHistoryEntry<S>[];
   [NavigationTransitionFinishedIndex]?: number;
   [NavigationTransitionIsCommitted] = false;
   [NavigationTransitionIsFinished] = false;
@@ -172,7 +172,7 @@ export class NavigationTransition
   [NavigationTransitionIsOngoing] = false;
 
   readonly [NavigationTransitionKnown] = new Set<EventTarget>();
-  readonly [NavigationTransitionEntry]: NavigationHistoryEntry;
+  readonly [NavigationTransitionEntry]: NavigationHistoryEntry<S>;
 
   #promises = new Set<Promise<PromiseSettledResult<void>>>();
 
@@ -188,7 +188,7 @@ export class NavigationTransition
     return this.#promises;
   }
 
-  constructor(init: NavigationTransitionInit) {
+  constructor(init: NavigationTransitionInit<S>) {
     super();
     this[NavigationTransitionFinishedDeferred] =
       init[NavigationTransitionFinishedDeferred] ??

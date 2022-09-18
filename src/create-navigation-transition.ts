@@ -49,34 +49,34 @@ export interface AbortControllerEvent {
   [EventAbortController]: AbortController;
 }
 
-export interface NavigateEvent
-  extends NavigateEventPrototype,
+export interface NavigateEvent<S>
+  extends NavigateEventPrototype<S>,
     AbortControllerEvent {}
 
-export interface InternalNavigationNavigateOptions
-  extends NavigationNavigateOptions {
-  entries?: NavigationHistoryEntry[];
+export interface InternalNavigationNavigateOptions<S>
+  extends NavigationNavigateOptions<S> {
+  entries?: NavigationHistoryEntry<S>[];
   index?: number;
-  known?: Set<NavigationHistoryEntry>;
+  known?: Set<NavigationHistoryEntry<S>>;
   navigationType?: NavigationNavigationType;
 }
 
-export interface NavigationTransitionContext {
-  transition: NavigationTransition;
-  options?: InternalNavigationNavigateOptions;
+export interface NavigationTransitionContext<S> {
+  transition: NavigationTransition<S>;
+  options?: InternalNavigationNavigateOptions<S>;
   currentIndex: number;
-  known: Set<NavigationHistoryEntry>;
+  known: Set<NavigationHistoryEntry<S>>;
   startTime?: number;
-  currentEntry?: NavigationHistoryEntry;
+  currentEntry?: NavigationHistoryEntry<S>;
 }
 
-export interface NavigationTransitionResult {
-  entries: NavigationHistoryEntry[];
+export interface NavigationTransitionResult<S> {
+  entries: NavigationHistoryEntry<S>[];
   index: number;
-  known: Set<NavigationHistoryEntry>;
-  destination: NavigationDestination;
-  navigate: NavigateEvent;
-  currentChange: NavigationCurrentEntryChangeEvent;
+  known: Set<NavigationHistoryEntry<S>>;
+  destination: NavigationDestination<S>;
+  navigate: NavigateEvent<S>;
+  currentChange: NavigationCurrentEntryChangeEvent<S>;
   navigationType: InternalNavigationNavigationType;
 }
 
@@ -92,9 +92,9 @@ function getEntryIndex(
   return -1;
 }
 
-export function createNavigationTransition(
-  context: NavigationTransitionContext
-): NavigationTransitionResult {
+export function createNavigationTransition<S = unknown>(
+  context: NavigationTransitionContext<S>
+): NavigationTransitionResult<S> {
   const {
     currentIndex,
     options,
@@ -148,7 +148,7 @@ export function createNavigationTransition(
     throw new InvalidStateError("Expected entry url");
   }
 
-  const destination: WritableProps<NavigationDestination> = {
+  const destination: WritableProps<NavigationDestination<S>> = {
     url: entry.url,
     key: entry.key,
     index: destinationIndex,
@@ -179,7 +179,7 @@ export function createNavigationTransition(
   }
 
   const navigateController = new AbortController();
-  const navigate: NavigateEvent = createEvent({
+  const navigate: NavigateEvent<S> = createEvent({
     [EventAbortController]: navigateController,
     signal: navigateController.signal,
     info: undefined,

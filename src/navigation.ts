@@ -62,17 +62,17 @@ export interface NavigationOptions {
 const baseUrl = "https://html.spec.whatwg.org/";
 
 export class Navigation<S = unknown>
-  extends NavigationEventTarget<NavigationEventMap>
+  extends NavigationEventTarget<NavigationEventMap<S>>
   implements NavigationPrototype<S>
 {
   // Should be always 0 or 1
   #transitionInProgressCount = 0;
 
-  #entries: NavigationHistoryEntry[] = [];
-  #known = new Set<NavigationHistoryEntry>();
+  #entries: NavigationHistoryEntry<S>[] = [];
+  #known = new Set<NavigationHistoryEntry<S>>();
   #currentIndex = -1;
   #activePromise?: Promise<unknown>;
-  #activeTransition?: NavigationTransition;
+  #activeTransition?: NavigationTransition<S>;
   //
   // #upcomingNonTraverseTransition: NavigationTransition;
 
@@ -120,7 +120,7 @@ export class Navigation<S = unknown>
     );
   }
 
-  entries(): NavigationHistoryEntry[] {
+  entries(): NavigationHistoryEntry<S>[] {
     return [...this.#entries];
   }
 
@@ -166,13 +166,13 @@ export class Navigation<S = unknown>
   }
 
   #cloneNavigationHistoryEntry = (
-    entry?: NavigationHistoryEntry,
-    options?: InternalNavigationNavigateOptions
-  ): NavigationHistoryEntry => {
+    entry?: NavigationHistoryEntry<S>,
+    options?: InternalNavigationNavigateOptions<S>
+  ): NavigationHistoryEntry<S> => {
     return this.#createNavigationHistoryEntry({
       ...entry,
       index: entry?.index ?? undefined,
-      state: options?.state ?? entry?.getState() ?? {},
+      state: options?.state ?? entry?.getState<S>(),
       navigationType:
         entry?.[NavigationHistoryEntryNavigationType] ??
         (typeof options?.navigationType === "string"
@@ -189,10 +189,10 @@ export class Navigation<S = unknown>
   };
 
   #createNavigationHistoryEntry = (
-    options: Partial<NavigationHistoryEntryInit> &
-      Omit<NavigationHistoryEntryInit, "index">
+    options: Partial<NavigationHistoryEntryInit<S>> &
+      Omit<NavigationHistoryEntryInit<S>, "index">
   ) => {
-    const entry: NavigationHistoryEntry = new NavigationHistoryEntry({
+    const entry: NavigationHistoryEntry<S> = new NavigationHistoryEntry<S>({
       ...options,
       index:
         options.index ??
@@ -205,9 +205,9 @@ export class Navigation<S = unknown>
 
   #pushEntry = (
     navigationType: InternalNavigationNavigationType,
-    entry: NavigationHistoryEntry,
-    transition?: NavigationTransition,
-    options?: InternalNavigationNavigateOptions
+    entry: NavigationHistoryEntry<S>,
+    transition?: NavigationTransition<S>,
+    options?: InternalNavigationNavigateOptions<S>
   ) => {
     /* c8 ignore start */
     if (entry === this.currentEntry) throw new InvalidStateError();
@@ -223,13 +223,13 @@ export class Navigation<S = unknown>
 
   #commitTransition = (
     givenNavigationType: InternalNavigationNavigationType,
-    entry: NavigationHistoryEntry,
-    transition?: NavigationTransition,
-    options?: InternalNavigationNavigateOptions
+    entry: NavigationHistoryEntry<S>,
+    transition?: NavigationTransition<S>,
+    options?: InternalNavigationNavigateOptions<S>
   ) => {
-    const nextTransition: NavigationTransition =
+    const nextTransition: NavigationTransition<S> =
       transition ??
-      new NavigationTransition({
+      new NavigationTransition<S>({
         from: entry,
         navigationType:
           typeof givenNavigationType === "string"
@@ -279,7 +279,7 @@ export class Navigation<S = unknown>
     return { committed, finished };
   };
 
-  #queueTransition = (transition: NavigationTransition) => {
+  #queueTransition = (transition: NavigationTransition<S>) => {
     // TODO consume errors that are not abort errors
     // transition.finished.catch(error => void error);
     this.#knownTransitions.add(transition);
@@ -287,9 +287,9 @@ export class Navigation<S = unknown>
 
   #immediateTransition = (
     givenNavigationType: InternalNavigationNavigationType,
-    entry: NavigationHistoryEntry,
-    transition: NavigationTransition,
-    options?: InternalNavigationNavigateOptions
+    entry: NavigationHistoryEntry<S>,
+    transition: NavigationTransition<S>,
+    options?: InternalNavigationNavigateOptions<S>
   ) => {
     try {
       this.#transitionInProgressCount += 1;
@@ -306,7 +306,7 @@ export class Navigation<S = unknown>
   };
 
   #rollback = (
-    rollbackTransition: NavigationTransition,
+    rollbackTransition: NavigationTransition<S>,
     options?: NavigationNavigationOptions
   ): NavigationResult => {
     const previousEntries =
@@ -318,7 +318,7 @@ export class Navigation<S = unknown>
     const entry = previousCurrent
       ? this.#cloneNavigationHistoryEntry(previousCurrent, options)
       : undefined;
-    const nextOptions: InternalNavigationNavigateOptions = {
+    const nextOptions: InternalNavigationNavigateOptions<S> = {
       ...options,
       index: previousIndex,
       known: new Set([...this.#known, ...previousEntries]),
@@ -345,9 +345,9 @@ export class Navigation<S = unknown>
 
   #transition = (
     givenNavigationType: InternalNavigationNavigationType,
-    entry: NavigationHistoryEntry,
-    transition: NavigationTransition,
-    options?: InternalNavigationNavigateOptions
+    entry: NavigationHistoryEntry<S>,
+    transition: NavigationTransition<S>,
+    options?: InternalNavigationNavigateOptions<S>
   ): Promise<NavigationHistoryEntry> => {
     // console.log({ givenNavigationType, transition });
     let navigationType = givenNavigationType;
@@ -454,9 +454,9 @@ export class Navigation<S = unknown>
     };
 
     interface Commit {
-      entries: NavigationHistoryEntry[];
+      entries: NavigationHistoryEntry<S>[];
       index: number;
-      known?: Set<NavigationHistoryEntry>;
+      known?: Set<NavigationHistoryEntry<S>>;
     }
 
     const syncCommit = ({ entries, index, known }: Commit) => {
@@ -482,7 +482,7 @@ export class Navigation<S = unknown>
     const dispose = async () => this.#dispose();
 
     function* transitionSteps(
-      transitionResult: NavigationTransitionResult
+      transitionResult: NavigationTransitionResult<S>
     ): Iterable<Promise<unknown>> {
       const microtask = new Promise<void>(queueMicrotask);
       const { known, entries, index, currentChange, navigate } =
@@ -630,9 +630,9 @@ export class Navigation<S = unknown>
     return this.#pushEntry("reload", entry, undefined, options);
   }
 
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions): unknown;
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions): void;
-  updateCurrentEntry(options: NavigationUpdateCurrentOptions): unknown {
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): unknown;
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): void;
+  updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): unknown {
     const { currentEntry } = this;
 
     if (!currentEntry) {

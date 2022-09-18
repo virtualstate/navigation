@@ -120,7 +120,7 @@ export interface NavigationHistoryEntry<S = unknown> extends EventTarget {
   readonly index: number;
   readonly sameDocument: boolean;
 
-  getState<ST extends S>(): ST;
+  getState<ST extends S = S>(): ST;
 
   onnavigateto?: ((ev: Event) => unknown) | null;
   onnavigatefrom?: ((ev: Event) => unknown) | null;
