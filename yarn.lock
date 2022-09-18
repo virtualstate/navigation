@@ -1440,7 +1440,7 @@
   dependencies:
     "@types/node" "*"
 
-"@virtualstate/focus@^1.0.1-alpha.89", "@virtualstate/focus@^1.0.1-alpha.92":
+"@virtualstate/focus@^1.0.1-alpha.89":
   version "1.0.1-alpha.92"
   resolved "https://registry.npmjs.org/@virtualstate/focus/-/focus-1.0.1-alpha.92.tgz#327357b5ef2413284fbb4d4be11bd068d96c6bad"
   integrity sha512-Qcy93Q8jUkY6hMpIi6LwIp/EWLCOmf9AbBojd2WSpGyd8dyCCanhUr0/mb81ph1S6ZijxWiqRQOXT3ak5nVWwA==
@@ -1449,6 +1449,11 @@
     abort-controller "^3.0.0"
     uuid "^8.3.2"
     whatwg-url "^9.1.0"
+
+"@virtualstate/focus@^1.4.9":
+  version "1.4.9"
+  resolved "https://registry.yarnpkg.com/@virtualstate/focus/-/focus-1.4.9.tgz#cca2045ac285cb9588b763377df6966c3c8fd352"
+  integrity sha512-NHMPQWHh8AxDpYJSfSGEUz6BixtF54BlICje7zB5vKBxnneZs2jPMk1vOnGMrKQqnT6s+UU91l+kG/xZ4sVvTw==
 
 "@virtualstate/kdl@^1.0.1-alpha.32":
   version "1.0.1-alpha.32"
@@ -1468,6 +1473,11 @@
   version "1.1.4"
   resolved "https://registry.npmjs.org/@virtualstate/promise/-/promise-1.1.4.tgz#9513ab3dfe8a9e5d3ad674daaac9556893de6673"
   integrity sha512-Ar48Y+89sY6e+UmfxHZrC+gfrbE9fXqPAL7I+tXuwm4pOpPxEFRYPkyo5nWWir9y91tIiGO4Psb+9opwqe8N7Q==
+
+"@virtualstate/promise@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@virtualstate/promise/-/promise-1.2.1.tgz#085a5d5830464f1331f180c3180b38414b1cffd6"
+  integrity sha512-+1Yc2xS9za2zOeaoYgidC96XQ3YwmFSej87p+LWojP+S7GVaLSxQCNYiL83Pv0MpGIJT+j0XDEG+LufhB3Xzug==
 
 "@virtualstate/union@^2.48.1":
   version "2.48.1"
@@ -5102,10 +5112,10 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-typescript@^4.4.3:
-  version "4.4.3"
-  resolved "https://registry.npmjs.org/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
-  integrity sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==
+typescript@^4.8.3:
+  version "4.8.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.8.3.tgz#d59344522c4bc464a65a730ac695007fdb66dd88"
+  integrity sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==
 
 unicode-canonical-property-names-ecmascript@^1.0.4:
   version "1.0.4"

@@ -23,6 +23,6 @@ export function assertEvent<T extends string | symbol, E extends Event<T>>(value
         throw new Error("Expected event");
     }
     if (typeof type !== "undefined" && value.type !== type) {
-        throw new Error(`Expected event type ${type}, got ${value.type.toString()}`);
+        throw new Error(`Expected event type ${String(type)}, got ${value.type.toString()}`);
     }
 }

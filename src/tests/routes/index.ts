@@ -223,6 +223,7 @@ const navigation = getNavigation();
     const navigation = new Navigation()
     const { route, then } = new Router<State, number>(navigation);
 
+    let setValue: unknown = undefined;
 
     route("/path", async ({ destination }) => {
         console.log("In path route handler");
@@ -230,8 +231,6 @@ const navigation = getNavigation();
         console.log({ state });
         return state.key;
     });
-
-    let setValue: unknown = undefined;
 
     then("/path", (value) => {
         console.log("In path result handler", { value });
@@ -251,3 +250,5 @@ const navigation = getNavigation();
     ok(setValue);
     ok(setValue === value);
 }
+
+await import("./jsx");
