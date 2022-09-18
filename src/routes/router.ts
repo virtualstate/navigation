@@ -66,7 +66,7 @@ export function isRouter<S = unknown, R = void | unknown>(
   function isRouterLike(value: unknown): value is { [Routes]: unknown } {
     return !!value;
   }
-  return isRouterLike(value) && Array.isArray(value[Routes]);
+  return isRouterLike(value) && !!value[Routes];
 }
 
 const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
