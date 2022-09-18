@@ -220,24 +220,21 @@ const navigation = getNavigation();
         key: number;
     }
 
-    const navigation = new Navigation<State>()
+    const navigation = new Navigation()
     const { route, then } = new Router<State>(navigation);
 
 
     route("/path", async ({ destination }) => {
         console.log("In path route handler");
-
-        const state = destination.getState<State>();
-
+        const state = destination.getState();
         console.log({ state });
-
-        return state?.key;
+        return state.key;
     });
 
     let setValue: unknown = undefined;
 
     then("/path", (value) => {
-        console.log("In path result handler");
+        console.log("In path result handler", { value });
         setValue = value;
     })
 

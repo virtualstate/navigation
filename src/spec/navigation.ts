@@ -8,59 +8,59 @@
 
 import {AsyncEventTarget as EventTarget, EventCallback, Event, EventTargetListeners, EventDescriptor, EventTargetAddListenerOptions} from "../event-target";
 
-export interface NavigationEventMap {
-    "navigate": NavigateEvent;
+export interface NavigationEventMap<S = unknown> {
+    "navigate": NavigateEvent<S>;
     "navigatesuccess": Event;
     "navigateerror": Event & { error?: unknown };
-    "currentchange": NavigationCurrentEntryChangeEvent;
+    "currentchange": NavigationCurrentEntryChangeEvent<S>;
 }
 
-export interface NavigationResult {
-    committed: Promise<NavigationHistoryEntry>;
-    finished: Promise<NavigationHistoryEntry>;
+export interface NavigationResult<S = unknown> {
+    committed: Promise<NavigationHistoryEntry<S>>;
+    finished: Promise<NavigationHistoryEntry<S>>;
 }
 
 export interface Navigation<S = unknown> extends EventTarget {
 
     readonly canGoBack: boolean;
     readonly canGoForward: boolean;
-    readonly currentEntry?: NavigationHistoryEntry | null;
-    readonly transition?: NavigationTransition | null;
+    readonly currentEntry?: NavigationHistoryEntry<S> | null;
+    readonly transition?: NavigationTransition<S> | null;
 
-    entries(): NavigationHistoryEntry[];
-    updateCurrentEntry(options: NavigationUpdateCurrentOptions): Promise<void>;
-    updateCurrentEntry(options: NavigationUpdateCurrentOptions): void;
+    entries(): NavigationHistoryEntry<S>[];
+    updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): Promise<void>;
+    updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): void;
 
-    navigate<NS extends S = S>(url: string, options?: NavigationNavigateOptions<NS>): NavigationResult;
-    reload<NS extends S = S>(options?: NavigationReloadOptions<NS>): NavigationResult;
+    navigate<NS extends S = S>(url: string, options?: NavigationNavigateOptions<NS>): NavigationResult<S>;
+    reload<NS extends S = S>(options?: NavigationReloadOptions<NS>): NavigationResult<S>;
 
-    goTo(key: string, options?: NavigationNavigationOptions): NavigationResult;
-    back(options?: NavigationNavigationOptions): NavigationResult;
-    forward(options?: NavigationNavigationOptions): NavigationResult;
+    goTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S>;
+    back(options?: NavigationNavigationOptions): NavigationResult<S>;
+    forward(options?: NavigationNavigationOptions): NavigationResult<S>;
 
-    onnavigate?: ((this: Navigation, ev: NavigateEvent) => unknown | void) | null;
+    onnavigate?: ((this: Navigation, ev: NavigateEvent<S>) => unknown | void) | null;
     onnavigatesuccess?: ((this: Navigation, ev: Event) => unknown | void) | null;
     onnavigateerror?: ((this: Navigation, ev: ErrorEvent) => unknown | void) | null;
-    oncurrentchange?: ((this: Navigation, ev: NavigationCurrentEntryChangeEvent) => unknown) | null;
+    oncurrentchange?: ((this: Navigation, ev: NavigationCurrentEntryChangeEvent<S>) => unknown) | null;
 
-    addEventListener<K extends keyof NavigationEventMap>(type: K, listener: (ev: NavigationEventMap[K]) => unknown | void, options?: boolean | EventTargetAddListenerOptions): void;
+    addEventListener<K extends keyof NavigationEventMap<S>>(type: K, listener: (ev: NavigationEventMap<S>[K]) => unknown | void, options?: boolean | EventTargetAddListenerOptions): void;
     addEventListener(type: string, listener: EventCallback, options?: boolean | EventTargetAddListenerOptions): void;
-    removeEventListener<K extends keyof NavigationEventMap>(type: K, listener: (ev: NavigationEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof NavigationEventMap<S>>(type: K, listener: (ev: NavigationEventMap<S>[K]) => unknown, options?: boolean | EventListenerOptions): void;
     removeEventListener(type: string, listener: EventCallback, options?: boolean | EventListenerOptions): void;
 }
 
-export interface NavigationTransitionInit {
+export interface NavigationTransitionInit<S = unknown> {
     navigationType: NavigationNavigationType;
-    from: NavigationHistoryEntry;
-    finished: Promise<NavigationHistoryEntry>;
+    from: NavigationHistoryEntry<S>;
+    finished: Promise<NavigationHistoryEntry<S>>;
 }
 
-export interface NavigationTransition extends NavigationTransitionInit {
+export interface NavigationTransition<S = unknown> extends NavigationTransitionInit {
     readonly navigationType: NavigationNavigationType;
-    readonly from: NavigationHistoryEntry;
-    readonly finished: Promise<NavigationHistoryEntry>;
+    readonly from: NavigationHistoryEntry<S>;
+    readonly finished: Promise<NavigationHistoryEntry<S>>;
 
-    rollback(options?: NavigationNavigationOptions): NavigationResult;
+    rollback(options?: NavigationNavigationOptions): NavigationResult<S>;
 }
 
 export interface NavigationHistoryEntryEventMap {
@@ -100,8 +100,8 @@ export interface NavigationHistoryEntry<S = unknown> extends EventTarget {
 
 export type NavigationNavigationType = 'reload'|'push'|'replace'|'traverse';
 
-export interface NavigationUpdateCurrentOptions {
-    state: unknown;
+export interface NavigationUpdateCurrentOptions<S = unknown> {
+    state: S;
 }
 
 export interface NavigationNavigationOptions {
@@ -117,26 +117,26 @@ export interface NavigationReloadOptions<S = unknown> extends NavigationNavigati
     state?: S;
 }
 
-export interface NavigationCurrentEntryChangeEventInit extends EventInit {
+export interface NavigationCurrentEntryChangeEventInit<S = unknown> extends EventInit {
     navigationType?: NavigationNavigationType ;
-    from?: NavigationHistoryEntry;
+    from?: NavigationHistoryEntry<S>;
     startTime?: number;
 }
 
-export interface NavigationCurrentEntryChangeEvent extends Event, NavigationCurrentEntryChangeEventInit {
+export interface NavigationCurrentEntryChangeEvent<S = unknown> extends Event, NavigationCurrentEntryChangeEventInit {
     readonly navigationType?: NavigationNavigationType ;
-    readonly from?: NavigationHistoryEntry;
+    readonly from?: NavigationHistoryEntry<S>;
     transitionWhile?(newNavigationAction: Promise<unknown | void>): void;
 }
 
-export interface NavigateEvent extends Event {
+export interface NavigateEvent<S = unknown> extends Event {
     preventDefault(): void;
 
     readonly navigationType: NavigationNavigationType;
     readonly canTransition: boolean;
     readonly userInitiated: boolean;
     readonly hashChange: boolean;
-    readonly destination: NavigationDestination;
+    readonly destination: NavigationDestination<S>;
     readonly signal: AbortSignal;
     readonly formData?: FormData ;
     readonly info: unknown;
@@ -144,23 +144,23 @@ export interface NavigateEvent extends Event {
     transitionWhile(newNavigationAction: Promise<unknown | void>): void;
 }
 
-export interface NavigateEventInit extends EventInit {
+export interface NavigateEventInit<S = unknown> extends EventInit {
     navigationType?: NavigationNavigationType;
     canTransition?: boolean;
     userInitiated?: boolean;
     hashChange?: boolean;
-    destination: NavigationDestination;
+    destination: NavigationDestination<S>;
     signal: AbortSignal;
     formData?: FormData ;
     info?: unknown;
 }
 
-export interface NavigationDestination {
+export interface NavigationDestination<S = unknown> {
     readonly url: string;
     readonly key?: string;
     readonly id?: string ;
     readonly index: number;
     readonly sameDocument: boolean;
-    getState<S>(): S;
-    getState(): unknown;
+    getState<GS extends S = S>(): GS;
+    getState(): S;
 }

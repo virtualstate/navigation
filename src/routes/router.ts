@@ -8,33 +8,37 @@ export type URLPatternResult = NonNil<ReturnType<URLPattern["exec"]>>
 
 export type RouteFnReturn = Promise<void | unknown> | unknown | void;
 
-export interface RouteFn {
+export interface Fn {
     (...args: unknown[]): RouteFnReturn;
 }
 
-export interface ErrorFn {
-    (error: unknown, event: NavigateEvent, match?: URLPatternResult): RouteFnReturn;
+export interface RouteFn<S = unknown> {
+    (event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternErrorFn {
-    (error: unknown, event: NavigateEvent, match: URLPatternResult): RouteFnReturn;
+export interface ErrorFn<S = unknown> {
+    (error: unknown, event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn;
 }
 
-export interface ThenFn {
-    (value: unknown, event: NavigateEvent, match?: URLPatternResult): RouteFnReturn;
+export interface PatternErrorFn<S = unknown> {
+    (error: unknown, event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternThenFn {
-    (value: unknown, event: NavigateEvent, match: URLPatternResult): RouteFnReturn;
+export interface ThenFn<S = unknown> {
+    (value: unknown, event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternRouteFn {
-    (event: NavigateEvent, match: URLPatternResult): RouteFnReturn
+export interface PatternThenFn<S = unknown> {
+    (value: unknown, event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn;
+}
+
+export interface PatternRouteFn<S = unknown> {
+    (event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn
 }
 
 interface Route {
     pattern?: URLPattern;
-    fn?: RouteFn
+    fn?: Fn;
     router?: Router;
 }
 
@@ -83,10 +87,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         this.catch = this.catch.bind(this);
     }
 
-    routes(pattern: string | URLPattern, router: Router): Router
-    routes(router: Router): Router
-    routes(...args: ([string | URLPattern, Router] | [Router])): Router
-    routes(...args: ([string | URLPattern, Router] | [Router])): Router {
+    routes(pattern: string | URLPattern, router: Router): Router<S>
+    routes(router: Router<S>): Router<S>
+    routes(...args: ([string | URLPattern, Router<S>] | [Router<S>])): Router<S>
+    routes(...args: ([string | URLPattern, Router<S>] | [Router<S>])): Router<S> {
         let router, pattern
         if (args.length === 1) {
             ([router] = args);
@@ -105,10 +109,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         return this;
     }
 
-    then(pattern: string | URLPattern, fn: PatternThenFn): Router
-    then(fn: ThenFn): Router
-    then(...args: ([string | URLPattern, PatternThenFn] | [ThenFn])): Router
-    then(...args: ([string | URLPattern, PatternThenFn] | [ThenFn])): Router {
+    then(pattern: string | URLPattern, fn: PatternThenFn<S>): Router
+    then(fn: ThenFn<S>): Router
+    then(...args: ([string | URLPattern, PatternThenFn<S>] | [ThenFn<S>])): Router
+    then(...args: ([string | URLPattern, PatternThenFn<S>] | [ThenFn<S>])): Router {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].resolve.push({
@@ -125,10 +129,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         return this;
     }
 
-    catch(pattern: string | URLPattern, fn: PatternErrorFn): Router
-    catch(fn: ErrorFn): Router
-    catch(...args: ([string | URLPattern, PatternErrorFn] | [ErrorFn])): Router
-    catch(...args: ([string | URLPattern, PatternErrorFn] | [ErrorFn])): Router {
+    catch(pattern: string | URLPattern, fn: PatternErrorFn<S>): Router<S>
+    catch(fn: ErrorFn<S>): Router<S>
+    catch(...args: ([string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>])): Router<S>
+    catch(...args: ([string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>])): Router<S> {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].reject.push({
@@ -145,10 +149,10 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         return this;
     }
 
-    route(pattern: string | URLPattern, fn: PatternRouteFn): Router
-    route(fn: RouteFn): Router
-    route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])): Router
-    route(...args: ([string | URLPattern, PatternRouteFn] | [RouteFn])): Router {
+    route(pattern: string | URLPattern, fn: PatternRouteFn<S>): Router<S>
+    route(fn: RouteFn<S>): Router<S>
+    route(...args: ([string | URLPattern, PatternRouteFn<S>] | [RouteFn<S>])): Router<S>
+    route(...args: ([string | URLPattern, PatternRouteFn<S>] | [RouteFn<S>])): Router<S> {
         if (args.length === 1) {
             const [fn] = args;
             this[Routes].route.push({
@@ -222,13 +226,13 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         this.removeEventListener("navigate", this.#navigate);
     }
 
-    #navigate = (event: NavigateEvent) => {
+    #navigate = (event: NavigateEvent<S>) => {
         event.transitionWhile(
             this.#navigationTransition(event)
         );
     }
 
-    #navigationTransition = async (event: NavigateEvent) => {
+    #navigationTransition = async (event: NavigateEvent<S>) => {
         const router = this;
 
         const {
@@ -257,66 +261,65 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         ) {
             const promises: Promise<unknown>[] = [];
             let isRoute = false;
-            withRoute({
-                router
-            })
+            resolveRouter(router);
             if (promises.length) {
                 await Promise.all(promises);
             }
             return isRoute;
 
-            function withRoute(route: Route, parentMatch?: URLPatternResult) {
+            function matchRoute(route: Route, parentMatch?: URLPatternResult) {
                 const { router, pattern } = route;
-                if (!router) {
-                    if (pattern) {
-                        const match = pattern.exec(url);
-                        if (!match) return;
-                        isRoute = true;
-                        return fn(route, match);
-                    }
-                    isRoute = true;
-                    return fn(route, parentMatch);
+
+                let match = parentMatch;
+
+                if (pattern) {
+                    match = pattern.exec(url);
+                    if (!match) return;
                 }
 
-                let routerMatch: URLPatternResult | undefined = undefined;
-                if (pattern && !(routerMatch = pattern.exec(url))) {
-                    return;
+                if (router) {
+                    resolveRouter(router, match);
+                } else {
+                    isRoute = true;
+                    return fn(route, match);
                 }
+            }
+
+            function resolveRouter(router: Router, match?: URLPatternResult) {
                 resolveRoutes(router[Routes][type]);
                 resolveRoutes(router[Routes].router);
-
                 function resolveRoutes(routes: Route[]) {
                     for (const route of routes) {
                         if (signal?.aborted) break;
-                        resolveRoute(route);
+                        resolveRoute(route, match);
                     }
                 }
+            }
 
-                async function resolveRoute(route: Route) {
-                    try {
-                        const maybe = withRoute(route, routerMatch ?? parentMatch);
-                        if (isPromise(maybe)) {
-                            return promises.push(
-                                maybe
-                                    .then(value => {
-                                        if (typeof value !== "undefined") {
-                                            return resolve(value);
-                                        }
-                                    })
-                                    .catch(reject)
+            function resolveRoute(route: Route, match?: URLPatternResult) {
+                try {
+                    const maybe = matchRoute(route, match);
+                    if (isPromise(maybe)) {
+                        promises.push(
+                            maybe
+                                .then(value => {
+                                    if (typeof value !== "undefined") {
+                                        return resolve(value);
+                                    }
+                                })
+                                .catch(reject)
+                        );
+                    } else {
+                        if (typeof maybe !== "undefined") {
+                            promises.push(
+                                resolve(maybe)
                             );
-                        } else {
-                            if (typeof maybe !== "undefined") {
-                                return promises.push(
-                                    resolve(maybe)
-                                );
-                            }
                         }
-                    } catch (error) {
-                        return promises.push(
-                            reject(error)
-                        )
                     }
+                } catch (error) {
+                    promises.push(
+                        reject(error)
+                    )
                 }
             }
         }
@@ -325,7 +328,6 @@ export class Router<S = unknown> extends NavigationNavigation<S> {
         }
 
         async function handleResolve(value: unknown) {
-            console.log("handleResolve", { value });
             await transition(
                 "resolve",
                 (route, match) => route.fn(value, event, match),
