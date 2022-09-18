@@ -11,7 +11,8 @@ export async function hashChangeExample(navigation: Navigation) {
 
   const expectedHash = `#h${Math.random()}`;
 
-  await navigation.navigate(expectedHash);
+  navigation.navigate(expectedHash);
+
   const event = await navigate;
 
   ok(event);

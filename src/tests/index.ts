@@ -34,6 +34,7 @@ async function runTests() {
     await import("./navigation.scope");
   }
   await import("./routes");
+  await import("./transition");
 }
 
 if (typeof window === "undefined") {
