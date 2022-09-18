@@ -13,6 +13,22 @@
     "history",
     "ponyfill"
   ],
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./esnext/index.d.ts"
+      ],
+      "routes": [
+        "./esnext/routes.d.ts"
+      ],
+      "polyfill": [
+        "./esnext/polyfill.d.ts"
+      ],
+      "tests": [
+        "./esnext/tests/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": "./esnext/index.js",
     "./esnext/tests": "./esnext/tests/index.js",
