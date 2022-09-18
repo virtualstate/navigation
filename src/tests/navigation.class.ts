@@ -1,5 +1,5 @@
-import {Navigation} from "../navigation";
-import {NavigationAssertFn, assertNavigation} from "./navigation";
+import { Navigation } from "../navigation";
+import { NavigationAssertFn, assertNavigation } from "./navigation";
 
 const input = () => new Navigation();
 const fn: NavigationAssertFn = await assertNavigation(input);

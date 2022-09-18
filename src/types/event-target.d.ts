@@ -1,1 +1,1 @@
-declare module "@virtualstate/navigation/event-target"
+declare module "@virtualstate/navigation/event-target";

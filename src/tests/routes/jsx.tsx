@@ -1,93 +1,95 @@
-import {Navigation} from "../../navigation";
-import {Router} from "../../routes";
-import {children, h, name, properties} from "@virtualstate/focus";
-import {defer} from "@virtualstate/promise";
-import {ok} from "../util";
+import { Navigation } from "../../navigation";
+import { Router } from "../../routes";
+import { children, h, name, properties } from "@virtualstate/focus";
+import { defer } from "@virtualstate/promise";
+import { ok } from "../util";
 
 declare global {
-    namespace JSX {
-        interface IntrinsicElements extends Record<string, Record<string, unknown>> {
-        }
-    }
+  namespace JSX {
+    interface IntrinsicElements
+      extends Record<string, Record<string, unknown>> {}
+  }
 }
 
 {
+  interface State {
+    title: string;
+    content: string;
+  }
 
-    interface State {
-        title: string;
-        content: string;
+  const navigation = new Navigation<State>();
+  const { route, then } = new Router<State>(navigation);
+
+  const { resolve: render, promise } = defer<unknown>();
+
+  route(
+    "/post/:id",
+    (
+      { destination },
+      {
+        pathname: {
+          groups: { id },
+        },
+      }
+    ) => {
+      const state = destination.getState();
+      return (
+        <main>
+          <meta name="id" value={id} />
+          <h1>{state.title}</h1>
+          <p>{state.content}</p>
+        </main>
+      );
     }
+  );
 
-    const navigation = new Navigation<State>()
-    const { route, then } = new Router<State>(navigation);
+  then(render);
 
-    const { resolve: render, promise } = defer<unknown>();
+  const id = `${Math.random()}`;
 
-    route("/post/:id", ({ destination }, { pathname: { groups: { id }}}) => {
-        const state = destination.getState();
-        return (
-            <main>
-                <meta name="id" value={id}  />
-                <h1>{state.title}</h1>
-                <p>{state.content}</p>
-            </main>
-        );
-    })
+  navigation.navigate(`/post/${id}`, {
+    state: {
+      title: "Hello!",
+      content: "Here is some content for ya!",
+    },
+  });
 
-    then(render);
+  const [node] = await Promise.all([promise, navigation.transition?.finished]);
 
-    const id = `${Math.random()}`;
+  console.log({ node });
 
-    navigation.navigate(`/post/${id}`, {
-        state: {
-            title: "Hello!",
-            content: "Here is some content for ya!"
-        }
-    });
+  ok(node);
+  ok(name(node) === "main");
 
-    const [node] = await Promise.all([
-        promise,
-        navigation.transition?.finished
-    ]);
+  const {
+    h1: [h1],
+    p: [p],
+    meta: [meta],
+  } = children(node).group(name);
 
-    console.log({ node });
+  const idMeta = properties(await meta);
 
-    ok(node);
-    ok(name(node) === "main");
+  ok(idMeta);
 
-    const {
-        h1: [h1],
-        p: [p],
-        meta: [meta]
-    } = children(node).group(name);
+  ok(idMeta.name === "id");
+  ok(idMeta.value === id);
 
-    const idMeta = properties(await meta)
+  const [h1Text] = await children(h1);
+  const [pText] = await children(p);
 
-    ok(idMeta);
+  console.log({
+    h1Text,
+    pText,
+    idMeta,
+  });
 
-    ok(idMeta.name === "id");
-    ok(idMeta.value === id);
+  ok(h1Text);
+  ok(pText);
 
-    const [h1Text] = await children(h1);
-    const [pText] = await children(p);
+  const state: State = navigation.currentEntry.getState();
 
-    console.log({
-        h1Text,
-        pText,
-        idMeta
-    })
+  ok(state);
 
-    ok(h1Text);
-    ok(pText);
-
-    const state: State = navigation.currentEntry.getState();
-
-    ok(state);
-
-    ok(h1Text === state.title);
-    ok(pText === state.content);
-
-
-
-
+  ok(h1Text === state.title);
+  ok(pText === state.content);
 }

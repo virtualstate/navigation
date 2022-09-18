@@ -20,12 +20,12 @@ export const DefaultDependencies = [
   "uuid",
   "whatwg-url",
   "abort-controller",
-  "urlpattern-polyfill"
+  "urlpattern-polyfill",
 ] as const;
 export const DefaultImportMap = Object.fromEntries(
-    DefaultDependencies
-        .filter((key: string) => typeof key === "string" && key)
-        .map((key: string) => [key, `https://cdn.skypack.dev/${key}`])
-)
+  DefaultDependencies.filter(
+    (key: string) => typeof key === "string" && key
+  ).map((key: string) => [key, `https://cdn.skypack.dev/${key}`])
+);
 
 export default DefaultDependencies;

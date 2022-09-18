@@ -1,1 +1,2 @@
-export const GlobalAbortController = typeof AbortController !== "undefined" ? AbortController : undefined;
+export const GlobalAbortController =
+  typeof AbortController !== "undefined" ? AbortController : undefined;

@@ -2,15 +2,15 @@
 import process from "./node-process";
 
 export function getConfig(): Record<string, string> {
-    return {
-        ...getNodeConfig(),
-    };
+  return {
+    ...getNodeConfig(),
+  };
 }
 
 function getNodeConfig(): Record<string, string> {
-    if (typeof process === "undefined") return {};
-    return {
-        FLAGS: process.env.FLAGS,
-        ...JSON.parse(process.env.TEST_CONFIG ?? "{}")
-    };
+  if (typeof process === "undefined") return {};
+  return {
+    FLAGS: process.env.FLAGS,
+    ...JSON.parse(process.env.TEST_CONFIG ?? "{}"),
+  };
 }

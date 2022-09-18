@@ -7,23 +7,21 @@ export interface Deferred<T = void> {
 /**
  * @param handleCatch rejected promises automatically to allow free usage
  */
-export function deferred<T = void>(handleCatch?: (() => T | Promise<T>)): Deferred<T> {
+export function deferred<T = void>(
+  handleCatch?: () => T | Promise<T>
+): Deferred<T> {
   let resolve: Deferred<T>["resolve"] | undefined = undefined,
     reject: Deferred<T>["reject"] | undefined = undefined;
-  const promise = new Promise<T>(
-    (resolveFn, rejectFn) => {
-      resolve = resolveFn;
-      reject = rejectFn;
-    }
-  );
+  const promise = new Promise<T>((resolveFn, rejectFn) => {
+    resolve = resolveFn;
+    reject = rejectFn;
+  });
   ok(resolve);
   ok(reject);
   return {
     resolve,
     reject,
-    promise: handleCatch ? (
-        promise.catch(handleCatch)
-    ) : promise
+    promise: handleCatch ? promise.catch(handleCatch) : promise,
   };
 }
 

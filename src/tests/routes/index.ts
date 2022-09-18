@@ -1,254 +1,260 @@
-import {getRouter, route, Router, routes} from "../../routes";
+import { getRouter, route, Router, routes } from "../../routes";
 import { Navigation } from "../../navigation";
 import { ok } from "../util";
-import {getNavigation} from "../../get-navigation";
+import { getNavigation } from "../../get-navigation";
 
 const navigation = getNavigation();
 
 {
+  const navigation = new Navigation();
+  const { finished } = navigation.navigate("/");
+  await finished;
 
+  const router = new Router(navigation);
+
+  router.route("/", () => {
+    console.log("main");
+  });
+
+  router.route("/test", () => {
+    console.log("test");
+  });
+
+  router.route("/resource/:id", async (event, match) => {
+    const {
+      pathname: {
+        groups: { id },
+      },
+    } = match;
+    console.log("start resource", { id });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    console.log("done resource", { id });
+  });
+
+  router.navigate("/test");
+  router.navigate("/");
+  router.navigate("/test");
+  router.navigate("/resource/1");
+
+  await router.transition?.finished;
+
+  console.log("finished first round");
+
+  // router is a navigation, so it can be shared
+  // note, navigation in one, navigates the other
+  const another = new Router(router);
+
+  another.navigate("/resource/2");
+
+  await router.transition?.finished;
+
+  ok(another.currentEntry.url === router.currentEntry.url);
+
+  console.log("finished second round");
+
+  {
     const navigation = new Navigation();
-    const { finished } = navigation.navigate("/");
-    await finished;
+    navigation.navigate("/");
+    await navigation.transition?.finished;
 
-    const router = new Router(navigation);
+    const third = new Router(navigation);
 
-    router.route("/", () => {
-        console.log("main");
-    })
+    // This copies the routes over, allowing separate navigation
+    third.routes(router);
 
-    router.route("/test", () => {
-        console.log("test");
-    });
+    third.navigate("/resource/3");
 
-    router.route("/resource/:id", async (event, match) => {
-        const {
-            pathname: {
-                groups: {
-                    id
-                }
-            }
-        } = match
-        console.log("start resource", { id })
-        await new Promise(resolve => setTimeout(resolve, 10));
-        console.log("done resource", { id })
-    });
+    await third.transition?.finished;
 
-    router.navigate("/test");
-    router.navigate("/");
-    router.navigate("/test");
-    router.navigate("/resource/1");
-
-    await router.transition?.finished
-
-    console.log("finished first round");
-
-    // router is a navigation, so it can be shared
-    // note, navigation in one, navigates the other
-    const another = new Router(router);
-
-    another.navigate("/resource/2");
-
-    await router.transition?.finished
-
-    ok(another.currentEntry.url === router.currentEntry.url)
-
-    console.log("finished second round");
-
-    {
-
-        const navigation = new Navigation();
-        navigation.navigate("/");
-        await navigation.transition?.finished
-
-        const third = new Router(navigation);
-
-        // This copies the routes over, allowing separate navigation
-        third.routes(router);
-
-        third.navigate("/resource/3");
-
-        await third.transition?.finished
-
-        ok(third.currentEntry.url !== router.currentEntry.url)
-    }
+    ok(third.currentEntry.url !== router.currentEntry.url);
+  }
 }
 
 {
+  let detach;
+
+  // In one context define the routes
+  {
+    ({ detach } = route("/resource/:id", async (event, match) => {
+      const {
+        pathname: {
+          groups: { id },
+        },
+      } = match;
+      console.log("start resource", { id });
+      await new Promise<void>(queueMicrotask);
+      console.log("done resource", { id, aborted: event.signal.aborted });
+    }));
+  }
+
+  // In another context, navigate & use the router
+  {
+    await navigation.navigate("/resource/1").finished;
+    await navigation.navigate("/resource/2").finished;
+    await navigation.navigate("/resource/3").finished;
+
+    // These two are aborted before finishing
+    navigation.navigate("/resource/1");
+    navigation.navigate("/resource/2");
+
+    await navigation.navigate("/resource/3").finished;
+  }
+
+  detach();
+}
+
+{
+  const { detach } = route(
+    "/test/:id/path",
+    async (
+      event,
+      {
+        pathname: {
+          groups: { id },
+        },
+      }
+    ) => {
+      console.log("test route path!", id);
+      await new Promise<void>(queueMicrotask);
+      console.log("thing is happening for", id);
+      await new Promise<void>(queueMicrotask);
+      console.log("thing finished for", id);
+    }
+  );
+
+  {
+    console.log("Starting navigation");
+    await navigation.navigate(`/test/${Math.random()}/path`).finished;
+    console.log("Finished navigation");
+  }
+
+  detach();
+}
+
+{
+  const router = new Router(new Navigation());
+
+  router.catch((error) => {
+    console.error(error);
+  });
+
+  router.route("/", () => {
+    throw new Error("Error");
+  });
+
+  await router.navigate("/").finished;
+}
+
+{
+  {
     let detach;
 
-    // In one context define the routes
     {
-        ({ detach } = route("/resource/:id", async (event, match) => {
-            const {
-                pathname: {
-                    groups: {
-                        id
-                    }
-                }
-            } = match
-            console.log("start resource", { id })
-            await new Promise<void>(queueMicrotask);
-            console.log("done resource", { id, aborted: event.signal.aborted })
+      ({ detach } = routes()
+        .route(() => {
+          throw new Error("Error");
+        })
+        .catch((error, { destination: { url } }) => {
+          console.error(`Error for ${url}`);
+          console.error(error);
         }));
     }
 
-    // In another context, navigate & use the router
     {
+      await navigation.navigate(`/path/${Math.random()}`).finished;
+    }
 
-        await navigation.navigate("/resource/1").finished;
-        await navigation.navigate("/resource/2").finished;
-        await navigation.navigate("/resource/3").finished;
+    // After detach, the router will no longer respond the top level
+    // navigation events
+    detach();
+  }
+}
+{
+  {
+    let detach;
 
-        // These two are aborted before finishing
-        navigation.navigate("/resource/1");
-        navigation.navigate("/resource/2");
+    {
+      ({ detach } = routes()
+        .route(
+          "/path/:id",
+          (
+            event,
+            {
+              pathname: {
+                groups: { id },
+              },
+            }
+          ) => {
+            throw new Error(`Error for id path ${id}`);
+          }
+        )
+        .route("/test", () => {
+          throw new Error("Error for test path");
+        })
+        .catch(
+          "/path/:id",
+          (
+            error,
+            { destination: { url } },
+            {
+              pathname: {
+                groups: { id },
+              },
+            }
+          ) => {
+            console.error(`Error for ${url} in id ${id} path handler`);
+            console.error(error);
+          }
+        )
+        .catch("/test", (error, { destination: { url } }) => {
+          console.error(`Error for ${url} in test handler`);
+          console.error(error);
+        }));
+    }
 
-        await navigation.navigate("/resource/3").finished;
+    {
+      await navigation.navigate(`/path/${Math.random()}`).finished;
+      await navigation.navigate(`/test`).finished;
     }
 
     detach();
-
+  }
 }
 
 {
-    const { detach } = route("/test/:id/path", async (event, { pathname: { groups: { id } } }) => {
-        console.log("test route path!", id);
-        await new Promise<void>(queueMicrotask);
-        console.log("thing is happening for", id);
-        await new Promise<void>(queueMicrotask);
-        console.log("thing finished for", id);
-    })
+  interface State {
+    key: number;
+  }
 
-    {
-        console.log("Starting navigation");
-        await navigation.navigate(`/test/${Math.random()}/path`).finished;
-        console.log("Finished navigation");
-    }
+  const navigation = new Navigation();
+  const { route, then } = new Router<State, number>(navigation);
 
-    detach();
-}
+  let setValue: unknown = undefined;
 
-{
+  route("/path", async ({ destination }) => {
+    console.log("In path route handler");
+    const state = destination.getState();
+    console.log({ state });
+    return state.key;
+  });
 
-    const router = new Router(
-        new Navigation()
-    );
+  then("/path", (value) => {
+    console.log("In path result handler", { value });
+    setValue = value;
+  });
 
-    router.catch(error => {
-        console.error(error);
-    })
+  const value = Math.random();
 
-    router.route("/", () => {
-        throw new Error("Error");
-    })
+  ok(!setValue);
 
-    await router.navigate("/").finished;
+  await navigation.navigate("/path", {
+    state: {
+      key: value,
+    },
+  }).finished;
 
-}
-
-{
-    {
-        let detach;
-
-        {
-            ({ detach } = routes()
-                .route(() => {
-                    throw new Error("Error")
-                })
-                .catch((error, { destination: { url }}) => {
-                    console.error(`Error for ${url}`);
-                    console.error(error);
-                }));
-        }
-
-
-        {
-
-            await navigation.navigate(`/path/${Math.random()}`).finished;
-
-        }
-
-        // After detach, the router will no longer respond the top level
-        // navigation events
-        detach();
-
-
-    }
-}
-{
-    {
-        let detach;
-
-        {
-            ({ detach } = (
-                routes()
-                    .route("/path/:id", (event, { pathname: { groups: { id }}}) => {
-                        throw new Error(`Error for id path ${id}`);
-                    })
-                    .route("/test", () => {
-                        throw new Error("Error for test path");
-                    })
-                    .catch("/path/:id", (error, { destination: { url }}, { pathname: { groups: { id }}}) => {
-                        console.error(`Error for ${url} in id ${id} path handler`);
-                        console.error(error);
-                    })
-                    .catch("/test", (error, { destination: { url }}) => {
-                        console.error(`Error for ${url} in test handler`);
-                        console.error(error);
-                    })
-            ));
-        }
-
-
-        {
-
-            await navigation.navigate(`/path/${Math.random()}`).finished;
-            await navigation.navigate(`/test`).finished;
-
-        }
-
-        detach();
-
-
-    }
-}
-
-
-{
-    interface State {
-        key: number;
-    }
-
-    const navigation = new Navigation()
-    const { route, then } = new Router<State, number>(navigation);
-
-    let setValue: unknown = undefined;
-
-    route("/path", async ({ destination }) => {
-        console.log("In path route handler");
-        const state = destination.getState();
-        console.log({ state });
-        return state.key;
-    });
-
-    then("/path", (value) => {
-        console.log("In path result handler", { value });
-        setValue = value;
-    })
-
-    const value = Math.random();
-
-    ok(!setValue);
-
-    await navigation.navigate("/path", {
-        state: {
-            key: value
-        }
-    }).finished;
-
-    ok(setValue);
-    ok(setValue === value);
+  ok(setValue);
+  ok(setValue === value);
 }
 
 await import("./jsx");
