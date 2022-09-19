@@ -241,6 +241,7 @@ export class Router<
   };
 
   #navigate = (event: NavigateEvent<S>) => {
+    if (!event.canIntercept) return;
     event.intercept(this.#navigationTransition(event));
   };
 
