@@ -497,6 +497,10 @@ export class Navigation<S = unknown, R = unknown | void>
           createEvent({
             type: "navigatefrom",
             intercept: transition[NavigationIntercept],
+            /**
+             * @deprecated
+             */
+            transitionWhile: transition[NavigationIntercept],
           })
         );
         if (promise) yield promise;
@@ -520,6 +524,10 @@ export class Navigation<S = unknown, R = unknown | void>
           createEvent({
             type: "navigateto",
             intercept: transition[NavigationIntercept],
+            /**
+             * @deprecated
+             */
+            transitionWhile: transition[NavigationIntercept],
           })
         );
       }
@@ -540,12 +548,20 @@ export class Navigation<S = unknown, R = unknown | void>
           createEvent({
             type: "finish",
             intercept: transition[NavigationIntercept],
+            /**
+             * @deprecated
+             */
+            transitionWhile: transition[NavigationIntercept],
           })
         );
         yield transition.dispatchEvent(
           createEvent({
             type: "navigatesuccess",
             intercept: transition[NavigationIntercept],
+            /**
+             * @deprecated
+             */
+            transitionWhile: transition[NavigationIntercept],
           })
         );
       }

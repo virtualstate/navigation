@@ -190,6 +190,10 @@ export function createNavigationTransition<S = unknown>(
     info: undefined,
     ...options,
     canIntercept: options?.[NavigationCanIntercept] ?? true,
+    /**
+     * @deprecated
+     */
+    canTransition: options?.[NavigationCanIntercept] ?? true,
     formData: options?.[NavigationFormData] ?? undefined,
     hashChange,
     navigationType:
@@ -199,6 +203,10 @@ export function createNavigationTransition<S = unknown>(
     destination,
     preventDefault: transition[NavigationTransitionAbort].bind(transition),
     intercept,
+    /**
+     * @deprecated
+     */
+    transitionWhile: intercept,
     type: "navigate",
     scroll: noop
   });
@@ -207,6 +215,10 @@ export function createNavigationTransition<S = unknown>(
     type: "currententrychange",
     navigationType: navigate.navigationType,
     intercept,
+    /**
+     * @deprecated
+     */
+    transitionWhile: intercept,
   });
   if (navigationType === Rollback) {
     const { entries } = options ?? { entries: undefined };

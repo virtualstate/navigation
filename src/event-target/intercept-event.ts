@@ -9,6 +9,7 @@ export interface InterceptEvent<
    * @throws InvalidStateError
    */
   intercept(value: T | Promise<T>): void;
+  transitionWhile?(value: T | Promise<T>): void;
 }
 
 export function isInterceptEvent<T = unknown>(
