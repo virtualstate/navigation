@@ -31,7 +31,7 @@ async function runTests() {
       await import("./navigation.playwright");
     }
   } else {
-    await import("./navigation.scope");
+    // await import("./navigation.scope");
   }
   await import("./routes");
   await import("./transition");

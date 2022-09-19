@@ -21,6 +21,7 @@ import {
   Rollback,
 } from "./navigation-transition";
 import { createEvent } from "./event-target/create-event";
+import {getBaseURL} from "./base-url";
 
 export const NavigationFormData = Symbol.for(
   "@virtualstate/navigation/formData"
@@ -31,8 +32,6 @@ export const NavigationCanIntercept = Symbol.for(
 export const NavigationUserInitiated = Symbol.for(
   "@virtualstate/navigation/userInitiated"
 );
-
-const baseUrl = "https://html.spec.whatwg.org/";
 
 export interface NavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptionsPrototype<S> {
@@ -164,10 +163,11 @@ export function createNavigationTransition<S = unknown>(
 
   let hashChange = false;
 
-  const currentUrlInstance = new URL(currentEntry?.url ?? "/", baseUrl);
-  const destinationUrlInstance = new URL(destination.url, baseUrl);
+  const currentUrlInstance = getBaseURL(currentEntry?.url);
+  const destinationUrlInstance = new URL(destination.url);
   const currentHash = currentUrlInstance.hash;
   const destinationHash = destinationUrlInstance.hash;
+  // console.log({ currentHash, destinationHash });
   if (currentHash !== destinationHash) {
     const currentUrlInstanceWithoutHash = new URL(
       currentUrlInstance.toString()
@@ -180,6 +180,7 @@ export function createNavigationTransition<S = unknown>(
     hashChange =
       currentUrlInstanceWithoutHash.toString() ===
       destinationUrlInstanceWithoutHash.toString();
+    // console.log({ hashChange, currentUrlInstanceWithoutHash: currentUrlInstanceWithoutHash.toString(), before: destinationUrlInstanceWithoutHash.toString() })
   }
 
   const navigateController = new AbortController();

@@ -1,7 +1,7 @@
 function getWindowBaseURL() {
     try {
         if (typeof window !== "undefined" && window.location) {
-            return window.location.origin;
+            return window.location.href;
         }
     } catch {}
 }

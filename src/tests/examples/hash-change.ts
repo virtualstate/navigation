@@ -15,6 +15,8 @@ export async function hashChangeExample(navigation: Navigation) {
 
   const event = await navigate;
 
+  console.log({ hashChange: event.hashChange, url: event.destination.url });
+
   ok(event);
   ok(event.hashChange);
 
