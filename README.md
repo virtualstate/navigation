@@ -96,8 +96,8 @@ import { loadPhotoIntoCache } from "./cache";
 
 const navigation = new Navigation();
 
-navigation.addEventListener("navigate", async ({ destination, transitionWhile }) => {
-    transitionWhile(loadPhotoIntoCache(destination.url));
+navigation.addEventListener("navigate", async ({ destination, intercept }) => {
+    intercept(loadPhotoIntoCache(destination.url));
 });
 ```
 
@@ -111,11 +111,11 @@ import {URLPattern} from "urlpattern-polyfill";
 
 const navigation = new Navigation();
 
-navigation.addEventListener("navigate", async ({destination, transitionWhile}) => {
+navigation.addEventListener("navigate", async ({destination, intercept}) => {
     const pattern = new URLPattern({ pathname: "/books/:id" });
     const match = pattern.exec(destination.url);
     if (match) {
-        transitionWhile(transition());
+        intercept(transition());
     }
 
     async function transition() {
@@ -134,11 +134,11 @@ import { Navigation } from "@virtualstate/navigation";
 
 const navigation = new Navigation();
 
-navigation.addEventListener("currentchange", () => {
-    console.log({ updatedState: navigation.current?.getState() });
+navigation.addEventListener("currententrychange", () => {
+    console.log({ updatedState: navigation.currentEntry?.getState() });
 });
 
-await navigation.updateCurrent({
+await navigation.updateCurrentEntry({
     state: {
         items: [
             "first",
@@ -148,9 +148,9 @@ await navigation.updateCurrent({
     }
 }).finished;
 
-await navigation.updateCurrent({
+await navigation.updateCurrentEntry({
     state: {
-        ...navigation.current.getState(),
+        ...navigation.currentEntry.getState(),
         index: 1
     }
 }).finished;
@@ -175,11 +175,11 @@ import { Navigation } from "@virtualstate/navigation";
 const navigation = new Navigation();
 const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
 
-navigation.addEventListener("currentchange", () => {
-    const { current } = navigation;
-    if (!current || !current.sameDocument) return;
-    const state = current.getState() ?? {};
-    const { pathname } = new URL(current.url, origin);
+navigation.addEventListener("currententrychange", () => {
+    const { currentEntry } = navigation;
+    if (!currentEntry || !currentEntry.sameDocument) return;
+    const state = currentEntry.getState() ?? {};
+    const { pathname } = new URL(currentEntry.url, origin);
     if (typeof window !== "undefined" && window.history) {
         window.history.pushState(state, state.title, origin)
     }
