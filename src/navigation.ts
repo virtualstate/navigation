@@ -14,6 +14,7 @@ import {
   NavigationTransition as NavigationTransitionPrototype,
   NavigationCurrentEntryChangeEvent,
   NavigationNavigationOptions,
+  NavigationNavigationType,
 } from "./spec/navigation";
 import { NavigationEventTarget } from "./navigation-event-target";
 import { InvalidStateError } from "./navigation-errors";
@@ -129,7 +130,14 @@ export class Navigation<S = unknown, R = unknown | void>
     );
   }
 
-  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S> {
+  /**
+   * @deprecated
+   */
+  goTo(key: string, options?: NavigationNavigateOptions): NavigationResult<R> {
+    return this.traverseTo(key, options);
+  }
+
+  traverseTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S> {
     const found = this.#entries.find((entry) => entry.key === key);
     if (found) {
       return this.#pushEntry(
@@ -153,7 +161,10 @@ export class Navigation<S = unknown, R = unknown | void>
       baseURL = this.currentEntry?.url;
     }
     const nextUrl = new URL(url, baseURL).toString();
-    const navigationType = options?.replace ? "replace" : "push";
+    let navigationType: NavigationNavigationType = "push"
+    if (options?.history === "push" || options?.history === "replace") {
+        navigationType = options?.history;
+    }
     const entry = this.#createNavigationHistoryEntry({
       url: nextUrl,
       ...options,

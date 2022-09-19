@@ -24,7 +24,10 @@ import { createEvent } from "./event-target/create-event";
 import {getBaseURL} from "./base-url";
 
 export const NavigationFormData = Symbol.for(
-  "@virtualstate/navigation/formData"
+    "@virtualstate/navigation/formData"
+);
+export const NavigationDownloadRequest = Symbol.for(
+    "@virtualstate/navigation/downloadRequest"
 );
 export const NavigationCanIntercept = Symbol.for(
   "@virtualstate/navigation/canIntercept"
@@ -36,6 +39,7 @@ export const NavigationUserInitiated = Symbol.for(
 export interface NavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptionsPrototype<S> {
   [NavigationFormData]?: FormData;
+  [NavigationDownloadRequest]?: string;
   [NavigationCanIntercept]?: boolean;
   [NavigationUserInitiated]?: boolean;
 }
@@ -195,6 +199,7 @@ export function createNavigationTransition<S = unknown>(
      */
     canTransition: options?.[NavigationCanIntercept] ?? true,
     formData: options?.[NavigationFormData] ?? undefined,
+    downloadRequest: options?.[NavigationDownloadRequest] ?? undefined,
     hashChange,
     navigationType:
       options?.navigationType ??

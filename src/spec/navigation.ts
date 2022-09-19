@@ -45,7 +45,7 @@ export interface Navigation<S = unknown, R = unknown | void> extends EventTarget
     options?: NavigationReloadOptions<S>
   ): NavigationResult<S>;
 
-  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S>;
+  traverseTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S>;
   back(options?: NavigationNavigationOptions): NavigationResult<S>;
   forward(options?: NavigationNavigationOptions): NavigationResult<S>;
 
@@ -166,7 +166,7 @@ export interface NavigationNavigationOptions {
 export interface NavigationNavigateOptions<S = unknown>
   extends NavigationNavigationOptions {
   state?: S;
-  replace?: boolean;
+  history?: "auto"|"push"|"replace";
 }
 
 export interface NavigationReloadOptions<S = unknown>
@@ -182,13 +182,13 @@ export interface NavigationCurrentEntryChangeEventInit<S = unknown>
 }
 
 export interface NavigationInterceptFn<R> {
-  (): Promise<R>
+  (): Promise<R>;
 }
 
 export interface NavigationInterceptOptions<R> {
-  handler: NavigationInterceptFn<R>;
-  scroll?: string;
-  focusReset?: string;
+  handler?: NavigationInterceptFn<R>;
+  focusReset?: "after-transition" | "manual";
+  scroll?: "after-transition" | "manual";
 }
 
 export type NavigationIntercept<R> = NavigationInterceptFn<R> | NavigationInterceptOptions<R> | Promise<R>;
@@ -211,6 +211,7 @@ export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"n
   readonly destination: NavigationDestination<S>;
   readonly signal: AbortSignal;
   readonly formData?: FormData;
+  readonly downloadRequest?: string;
   readonly info: unknown;
 
   intercept(options?: NavigationIntercept<R>): void;
@@ -225,6 +226,7 @@ export interface NavigateEventInit<S = unknown> extends EventInit {
   destination: NavigationDestination<S>;
   signal: AbortSignal;
   formData?: FormData;
+  downloadRequest?: string;
   info?: unknown;
 }
 

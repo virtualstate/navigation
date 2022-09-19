@@ -183,7 +183,7 @@ export class NavigationLocation implements Location {
   replace(url: string | URL): unknown {
     return this.#transitionURL(url, (url) =>
       this.#navigation.navigate(url.toString(), {
-        replace: true,
+        history: "replace",
       })
     );
   }

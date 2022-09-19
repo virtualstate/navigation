@@ -34,7 +34,7 @@ export class NoOperationNavigation<S = unknown>
     return new NoOperationNavigationResult();
   }
 
-  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult {
+  traverseTo(key: string, options?: NavigationNavigationOptions): NavigationResult {
     return new NoOperationNavigationResult();
   }
 

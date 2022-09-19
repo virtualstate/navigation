@@ -166,7 +166,7 @@ export async function productBackButtonClicked(navigation: Navigation) {
       // console.log("Navigate replace");
       // If the user arrived here by typing the URL directly:
       const { finished } = navigation.navigate("/product-listing", {
-        replace: true,
+        history: "replace",
       });
       finishedClickNavigation.resolve(finished);
       await finished;
@@ -271,7 +271,7 @@ export async function homepageGoToExample(navigation: Navigation) {
   assert<string>(homepageKey);
 
   homeButton.addEventListener("click", async () => {
-    await navigation.goTo(homepageKey).finished;
+    await navigation.traverseTo(homepageKey).finished;
   });
 
   await navigation.navigate("/other").finished;
@@ -356,7 +356,7 @@ export async function perEntryEventsExample(navigation: Navigation) {
     let navigateBackToState!: State;
 
     // If we ever navigate back to this photo, e.g. using the browser back button or
-    // navigation.goTo(), restore the input values.
+    // navigation.traverseTo(), restore the input values.
     entry.addEventListener("navigateto", () => {
       const next = navigation.currentEntry?.getState<State>();
       if (next) {
@@ -376,7 +376,7 @@ export async function perEntryEventsExample(navigation: Navigation) {
     await updateCurrentEntryFinished;
 
     // Trigger naviagateto
-    await navigation.goTo(entry.key).finished;
+    await navigation.traverseTo(entry.key).finished;
 
     assert(navigation.currentEntry?.key === entry.key);
 
@@ -441,7 +441,7 @@ export async function disposeExample(navigation: Navigation) {
   entry3.addEventListener("dispose", () => values.push(3));
   await entry3Finished;
 
-  await navigation.goTo(startingKey).finished;
+  await navigation.traverseTo(startingKey).finished;
   await navigation.navigate("/1-b").finished;
 
   await Promise.all([entry1Disposed, entry2Disposed, entry3Disposed]);
@@ -474,9 +474,9 @@ export async function currentEntryChangeMonitoringExample(navigation: Navigation
   ok(!disposedCount);
 
   // Dispose first
-  await navigation.navigate("/", { replace: true }).finished;
+  await navigation.navigate("/", { history: "replace" }).finished;
   // Dispose Second
-  await navigation.navigate("/", { replace: true }).finished;
+  await navigation.navigate("/", { history: "replace" }).finished;
   // Should be back at start
 
   ok(disposedCount === 2);
@@ -727,13 +727,13 @@ export async function navigationExamples(navigation: Navigation) {
   // Performs a navigation to the given URL, but replace the current history entry
   // instead of pushing a new one.
   // (equivalent to `location.replace(url)`)
-  await navigation.navigate(url, { replace: true }).finished;
+  await navigation.navigate(url, { history: "replace" }).finished;
 
   // Replace the URL and state at the same time.
-  await navigation.navigate(url, { replace: true, state }).finished;
+  await navigation.navigate(url, { history: "replace", state }).finished;
 
   // You can still pass along info:
-  await navigation.navigate(url, { replace: true, state, info }).finished;
+  await navigation.navigate(url, { history: "replace", state, info }).finished;
 
   // Just like location.reload().
   await navigation.reload().finished;

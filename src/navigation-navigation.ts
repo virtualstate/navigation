@@ -121,8 +121,8 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     return this[Navigation].forward(options);
   }
 
-  goTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S> {
-    return this[Navigation].goTo(key, options);
+  traverseTo(key: string, options?: NavigationNavigationOptions): NavigationResult<S> {
+    return this[Navigation].traverseTo(key, options);
   }
 
   hasEventListener(type: string | symbol, callback?: Function): boolean;

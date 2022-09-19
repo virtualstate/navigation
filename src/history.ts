@@ -79,7 +79,7 @@ export class NavigationHistory<S extends object>
       throw new Error(`Could not go ${delta}`);
     }
     const nextEntryKey = nextEntry.key;
-    return this[AppLocationAwaitFinished](this.#navigation.goTo(nextEntryKey));
+    return this[AppLocationAwaitFinished](this.#navigation.traverseTo(nextEntryKey));
   }
 
   replaceState(
@@ -97,12 +97,12 @@ export class NavigationHistory<S extends object>
       return this[AppLocationTransitionURL](url, (url) =>
         this.#navigation.navigate(url.toString(), {
           state: data,
-          replace: true,
+          history: "replace",
         })
       );
     } else {
       return this.#navigation.updateCurrentEntry({
-        state: data,
+        state: data
       });
     }
   }
