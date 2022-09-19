@@ -131,7 +131,7 @@ export class Navigation<S = unknown, R = unknown | void>
   }
 
   /**
-   * @deprecated
+   * @deprecated use traverseTo
    */
   goTo(key: string, options?: NavigationNavigateOptions): NavigationResult<R> {
     return this.traverseTo(key, options);
