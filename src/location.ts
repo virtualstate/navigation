@@ -5,6 +5,7 @@ import {
 } from "./spec/navigation";
 import { NavigationTransitionCommittedDeferred } from "./navigation-transition";
 import { Deferred } from "./util/deferred";
+import { getBaseURL} from "./base-url";
 
 export interface NavigationLocationOptions {
   navigation: Navigation;
@@ -35,8 +36,6 @@ export const AppLocationUrl = Symbol.for(
 );
 
 export interface NavigationLocation extends Location {}
-
-const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 /**
  * @experimental
@@ -88,16 +87,12 @@ export class NavigationLocation implements Location {
     }
     const { currentEntry } = this.#navigation;
     if (!currentEntry) {
-      const baseURL = this.#options.baseURL ?? "/";
-      this.#baseURL =
-          baseURL
-          ? new URL(baseURL, DEFAULT_BASE_URL)
-          : new URL(DEFAULT_BASE_URL);
+      this.#baseURL = getBaseURL(this.#options.baseURL);
       return this.#baseURL;
     }
     const existing = this.#urls.get(currentEntry);
     if (existing) return existing;
-    const next = new URL(currentEntry.url, DEFAULT_BASE_URL);
+    const next = new URL(currentEntry.url);
     this.#urls.set(currentEntry, next);
     return next;
   }

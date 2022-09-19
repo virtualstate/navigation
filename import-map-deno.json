@@ -88,6 +88,7 @@
     "./esnext/util/parse-dom-deno.js": "./src/util/parse-dom-deno.ts",
     "./esnext/util/parse-dom.js": "./src/util/parse-dom-deno.ts",
     "./src/is": "./src/is.ts",
+    "./src/base-url": "./src/base-url.ts",
     "cheerio": "./scripts/nop/index.js"
   }
 }

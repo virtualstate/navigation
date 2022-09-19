@@ -52,14 +52,13 @@ import {
   NavigationNavigateOptions,
 } from "./create-navigation-transition";
 import { createEvent } from "./event-target/create-event";
+import { getBaseURL } from "./base-url";
 
 export * from "./spec/navigation";
 
 export interface NavigationOptions {
   baseURL?: URL | string;
 }
-
-const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 export class Navigation<S = unknown, R = unknown | void>
   extends NavigationEventTarget<NavigationEventMap<S, R>>
@@ -71,13 +70,10 @@ export class Navigation<S = unknown, R = unknown | void>
   #entries: NavigationHistoryEntry<S>[] = [];
   #known = new Set<NavigationHistoryEntry<S>>();
   #currentIndex = -1;
-  #activePromise?: Promise<unknown>;
   #activeTransition?: NavigationTransition<S>;
-  //
-  // #upcomingNonTraverseTransition: NavigationTransition;
 
   #knownTransitions = new WeakSet();
-  #baseURL: string;
+  readonly #baseURL: string | URL;
 
   get canGoBack() {
     return !!this.#entries[this.#currentIndex - 1];
@@ -102,13 +98,7 @@ export class Navigation<S = unknown, R = unknown | void>
 
   constructor(options?: NavigationOptions) {
     super();
-    const baseURL = options?.baseURL ?? "/";
-    this.#baseURL = (
-      baseURL ? new URL(
-          (baseURL ?? "/").toString(),
-          DEFAULT_BASE_URL
-      ) : DEFAULT_BASE_URL
-    ).toString();
+    this.#baseURL = getBaseURL(options?.baseURL);
   }
 
   back(options?: NavigationNavigationOptions): NavigationResult<S> {
