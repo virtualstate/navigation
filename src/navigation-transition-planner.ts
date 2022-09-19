@@ -2,7 +2,7 @@ import {
   NavigationTransition,
   NavigationTransitionNavigationType,
   NavigationTransitionWait,
-  NavigationTransitionWhile,
+  NavigationIntercept,
 } from "./navigation-transition";
 import { Navigation } from "./navigation";
 import { NavigationHistoryEntry } from "./navigation-entry";
@@ -45,7 +45,7 @@ export function plan(options: NavigationTransitionPlannerOptions) {
     transitions: [],
     ...currentPlan,
     knownTransitions: new Set(currentPlan?.knownTransitions ?? []),
-    [NavigationTransitionPlanWhile]: transition[NavigationTransitionWhile],
+    [NavigationTransitionPlanWhile]: transition[NavigationIntercept],
     [NavigationTransitionPlanWait]: transition[NavigationTransitionWait],
   };
   if (nextPlan.knownTransitions.has(transition)) {

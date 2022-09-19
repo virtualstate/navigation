@@ -6,3 +6,4 @@ export * from "./event-target-options";
 export * from "./async-event-target";
 export * from "./sync-event-target";
 export * from "./signal-event";
+export * from "./intercept-event";

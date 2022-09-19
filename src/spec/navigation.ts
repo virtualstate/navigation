@@ -15,11 +15,11 @@ import {
   EventTargetAddListenerOptions,
 } from "../event-target";
 
-export interface NavigationEventMap<S = unknown> {
-  navigate: NavigateEvent<S>;
+export interface NavigationEventMap<S = unknown, R = void | unknown> {
+  navigate: NavigateEvent<S, R>;
   navigatesuccess: Event;
   navigateerror: Event & { error?: unknown };
-  currentchange: NavigationCurrentEntryChangeEvent<S>;
+  currentchange: NavigationCurrentEntryChangeEvent<S, R>;
 }
 
 export interface NavigationResult<S = unknown> {
@@ -27,7 +27,7 @@ export interface NavigationResult<S = unknown> {
   finished: Promise<NavigationHistoryEntry<S>>;
 }
 
-export interface Navigation<S = unknown> extends EventTarget {
+export interface Navigation<S = unknown, R = unknown | void> extends EventTarget {
   readonly canGoBack: boolean;
   readonly canGoForward: boolean;
   readonly currentEntry?: NavigationHistoryEntry<S> | null;
@@ -60,9 +60,9 @@ export interface Navigation<S = unknown> extends EventTarget {
     | ((this: Navigation, ev: NavigationCurrentEntryChangeEvent<S>) => unknown)
     | null;
 
-  addEventListener<K extends keyof NavigationEventMap<S>>(
+  addEventListener<K extends keyof NavigationEventMap<S, R>>(
     type: K,
-    listener: (ev: NavigationEventMap<S>[K]) => unknown | void,
+    listener: (ev: NavigationEventMap<S, R>[K]) => unknown | void,
     options?: boolean | EventTargetAddListenerOptions
   ): void;
   addEventListener(
@@ -70,9 +70,9 @@ export interface Navigation<S = unknown> extends EventTarget {
     listener: EventCallback,
     options?: boolean | EventTargetAddListenerOptions
   ): void;
-  removeEventListener<K extends keyof NavigationEventMap<S>>(
+  removeEventListener<K extends keyof NavigationEventMap<S, R>>(
     type: K,
-    listener: (ev: NavigationEventMap<S>[K]) => unknown,
+    listener: (ev: NavigationEventMap<S, R>[K]) => unknown,
     options?: boolean | EventListenerOptions
   ): void;
   removeEventListener(
@@ -181,19 +181,31 @@ export interface NavigationCurrentEntryChangeEventInit<S = unknown>
   startTime?: number;
 }
 
-export interface NavigationCurrentEntryChangeEvent<S = unknown>
+export interface NavigationInterceptFn<R> {
+  (): Promise<R>
+}
+
+export interface NavigationInterceptOptions<R> {
+  handler: NavigationInterceptFn<R>;
+  scroll?: string;
+  focusReset?: string;
+}
+
+export type NavigationIntercept<R> = NavigationInterceptFn<R> | NavigationInterceptOptions<R> | Promise<R>;
+
+export interface NavigationCurrentEntryChangeEvent<S = unknown, R = unknown | void>
   extends Event,
     NavigationCurrentEntryChangeEventInit {
   readonly navigationType?: NavigationNavigationType;
   readonly from?: NavigationHistoryEntry<S>;
-  transitionWhile?(newNavigationAction: Promise<unknown | void>): void;
+  intercept?(options: NavigationIntercept<R>): void;
 }
 
-export interface NavigateEvent<S = unknown> extends Event {
+export interface NavigateEvent<S = unknown, R = unknown | void> extends Event {
   preventDefault(): void;
 
   readonly navigationType: NavigationNavigationType;
-  readonly canTransition: boolean;
+  readonly canIntercept: boolean;
   readonly userInitiated: boolean;
   readonly hashChange: boolean;
   readonly destination: NavigationDestination<S>;
@@ -201,12 +213,13 @@ export interface NavigateEvent<S = unknown> extends Event {
   readonly formData?: FormData;
   readonly info: unknown;
 
-  transitionWhile(newNavigationAction: Promise<unknown | void>): void;
+  intercept(options: NavigationIntercept<R>): void;
+  scroll(): void;
 }
 
 export interface NavigateEventInit<S = unknown> extends EventInit {
   navigationType?: NavigationNavigationType;
-  canTransition?: boolean;
+  canIntercept?: boolean;
   userInitiated?: boolean;
   hashChange?: boolean;
   destination: NavigationDestination<S>;

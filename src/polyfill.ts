@@ -16,10 +16,10 @@ if (
   typeof window !== "undefined"
 ) {
   console.log("Polyfill checking loading");
-  // Add usage of transitionWhile for initial navigation to prevent network navigation
+  // Add usage of intercept for initial navigation to prevent network navigation
   navigation.addEventListener(
     "navigate",
-    (event) => event.transitionWhile(Promise.resolve()),
+    (event) => event.intercept(Promise.resolve()),
     { once: true }
   );
   await navigation.navigate(window.location.href, window.history?.state)

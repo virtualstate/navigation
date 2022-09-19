@@ -85,11 +85,11 @@ export async function demo1(navigation: Navigation) {
   navigation.addEventListener("navigate", (e) => {
     console.log(e);
 
-    if (!e.canTransition || e.hashChange) {
+    if (!e.canIntercept || e.hashChange) {
       return;
     }
 
-    e.transitionWhile(
+    e.intercept(
       (async () => {
         e.signal.addEventListener("abort", () => {
           // console.log(e.signal);

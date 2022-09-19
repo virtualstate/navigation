@@ -16,7 +16,7 @@ import {
   NavigationTransitionInitialEntries,
   NavigationTransitionKnown,
   NavigationTransitionNavigationType,
-  NavigationTransitionWhile,
+  NavigationIntercept,
   InternalNavigationNavigationType,
   Rollback,
 } from "./navigation-transition";
@@ -25,8 +25,8 @@ import { createEvent } from "./event-target/create-event";
 export const NavigationFormData = Symbol.for(
   "@virtualstate/navigation/formData"
 );
-export const NavigationCanTransition = Symbol.for(
-  "@virtualstate/navigation/canTransition"
+export const NavigationCanIntercept = Symbol.for(
+  "@virtualstate/navigation/canIntercept"
 );
 export const NavigationUserInitiated = Symbol.for(
   "@virtualstate/navigation/userInitiated"
@@ -37,7 +37,7 @@ const baseUrl = "https://html.spec.whatwg.org/";
 export interface NavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptionsPrototype<S> {
   [NavigationFormData]?: FormData;
-  [NavigationCanTransition]?: boolean;
+  [NavigationCanIntercept]?: boolean;
   [NavigationUserInitiated]?: boolean;
 }
 
@@ -80,6 +80,10 @@ export interface NavigationTransitionResult<S> {
   navigationType: InternalNavigationNavigationType;
 }
 
+function noop(): void {
+  return undefined;
+}
+
 function getEntryIndex(
   entries: NavigationHistoryEntry[],
   entry: NavigationHistoryEntry
@@ -104,7 +108,7 @@ export function createNavigationTransition<S = unknown>(
     transition: {
       [NavigationTransitionInitialEntries]: previousEntries,
       [NavigationTransitionEntry]: entry,
-      [NavigationTransitionWhile]: transitionWhile,
+      [NavigationIntercept]: intercept,
     },
   } = context;
   let {
@@ -184,7 +188,7 @@ export function createNavigationTransition<S = unknown>(
     signal: navigateController.signal,
     info: undefined,
     ...options,
-    canTransition: options?.[NavigationCanTransition] ?? true,
+    canIntercept: options?.[NavigationCanIntercept] ?? true,
     formData: options?.[NavigationFormData] ?? undefined,
     hashChange,
     navigationType:
@@ -193,14 +197,15 @@ export function createNavigationTransition<S = unknown>(
     userInitiated: options?.[NavigationUserInitiated] ?? false,
     destination,
     preventDefault: transition[NavigationTransitionAbort].bind(transition),
-    transitionWhile,
+    intercept,
     type: "navigate",
+    scroll: noop
   });
   const currentChange: NavigationCurrentEntryChangeEvent = createEvent({
     from: currentEntry,
     type: "currentchange",
     navigationType: navigate.navigationType,
-    transitionWhile,
+    intercept,
   });
   if (navigationType === Rollback) {
     const { entries } = options ?? { entries: undefined };

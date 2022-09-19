@@ -22,7 +22,7 @@ export async function initialNavigateThenBack(navigation: Navigation) {
     "navigate",
     (event) => {
       navigateCalled = true;
-      event.transitionWhile(new Promise<void>(queueMicrotask));
+      event.intercept(new Promise<void>(queueMicrotask));
     },
     { once: true }
   );
@@ -70,7 +70,7 @@ export async function initialNavigateThenBackAssigned(navigation: Navigation) {
     currentChangeCalled = false;
   navigation.onnavigate = (event) => {
     navigateCalled = true;
-    event.transitionWhile(new Promise<void>(queueMicrotask));
+    event.intercept(new Promise<void>(queueMicrotask));
   };
   navigation.oncurrentchange = () => {
     currentChangeCalled = true;
@@ -115,14 +115,14 @@ export async function routeHandlerExample(navigation: Navigation) {
   const routesTable = new Map<string, () => Promise<void>>();
 
   function handler(event: NavigateEvent) {
-    if (!event.canTransition || event.hashChange) {
+    if (!event.canIntercept || event.hashChange) {
       return;
     }
     const url = pathname(event.destination.url);
     if (routesTable.has(url)) {
       const routeHandler = routesTable.get(url);
       if (!routeHandler) return;
-      event.transitionWhile(routeHandler());
+      event.intercept(routeHandler());
     }
   }
   navigation.addEventListener("navigate", handler);
@@ -516,7 +516,7 @@ export async function rollbackExample(navigation: Navigation) {
   navigation.addEventListener(
     "navigate",
     (event) => {
-      event.transitionWhile(Promise.reject(new Error(expectedError)));
+      event.intercept(Promise.reject(new Error(expectedError)));
     },
     { once: true }
   );
@@ -619,14 +619,14 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
   let redirectFinished: Promise<NavigationHistoryEntry> | undefined = undefined;
   const seen = new WeakSet();
   navigation.addEventListener("navigate", (e) => {
-    if (seen.has(e) || seen.has(e.transitionWhile)) {
-      console.log(e, seen.has(e), seen.has(e.transitionWhile));
+    if (seen.has(e) || seen.has(e.intercept)) {
+      console.log(e, seen.has(e), seen.has(e.intercept));
       // throw new Error("Seen event multiple times");
     }
     console.log("Adding");
     seen.add(e);
-    seen.add(e.transitionWhile);
-    e.transitionWhile(
+    seen.add(e.intercept);
+    e.intercept(
       (async () => {
         const result = determineAction(e.destination);
 
@@ -843,7 +843,7 @@ export async function usingInfoExample(navigation: Navigation) {
   }
 
   navigation.addEventListener("navigate", (e) => {
-    e.transitionWhile(
+    e.intercept(
       (async () => {
         if (isPhotoNavigation(e)) {
           const { thumbnail, via } = e.info;
@@ -1083,10 +1083,10 @@ export async function nextPreviousButtons(navigation: Navigation) {
 
   navigation.addEventListener("navigate", (event) => {
     const photoNumberMaybe = photoNumberFromURL(event.destination.url);
-    console.log({ canTransition: event.canTransition, photoNumberMaybe });
-    if (!(typeof photoNumberMaybe === "number" && event.canTransition)) return;
+    console.log({ canIntercept: event.canIntercept, photoNumberMaybe });
+    if (!(typeof photoNumberMaybe === "number" && event.canIntercept)) return;
     const photoNumber: number = photoNumberMaybe;
-    event.transitionWhile((navigateFinished = handler()));
+    event.intercept((navigateFinished = handler()));
     async function handler() {
       console.log("transitioning for ", { photoNumber });
 

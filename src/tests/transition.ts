@@ -22,7 +22,7 @@ import {ok} from "./util";
 {
     const navigation = new Navigation();
 
-    navigation.addEventListener("navigate", event => event.transitionWhile(
+    navigation.addEventListener("navigate", event => event.intercept(
         new Promise(resolve => setTimeout(resolve, 10))
     ));
 

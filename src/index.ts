@@ -6,8 +6,9 @@ export * from "./location";
 export { EventTarget } from "./event-target";
 export {
   NavigationFormData,
-  NavigationCanTransition,
+  NavigationCanIntercept,
   NavigationUserInitiated,
   NavigationNavigateOptions,
 } from "./create-navigation-transition";
 export * from "./transition";
+export * from "./event-target/intercept-event";

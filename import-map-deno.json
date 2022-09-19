@@ -78,7 +78,7 @@
     "./src/event-target/parallel-event": "./src/event-target/parallel-event.ts",
     "./src/event-target/respond-event": "./src/event-target/respond-event.ts",
     "./src/event-target/signal-event": "./src/event-target/signal-event.ts",
-    "./src/event-target/transition-event": "./src/event-target/transition-event.ts",
+    "./src/event-target/intercept-event": "./src/event-target/intercept-event.ts",
     "./src/util/import-types": "./src/util/import-types.ts",
     "./src/polyfill": "./src/polyfill.ts",
     "./src/location": "./src/location.ts",
@@ -87,6 +87,7 @@
     "./src/global-abort-controller": "./src/global-abort-controller.ts",
     "./esnext/util/parse-dom-deno.js": "./src/util/parse-dom-deno.ts",
     "./esnext/util/parse-dom.js": "./src/util/parse-dom-deno.ts",
+    "./src/is": "./src/is.ts",
     "cheerio": "./scripts/nop/index.js"
   }
 }

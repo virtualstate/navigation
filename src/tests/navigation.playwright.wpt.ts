@@ -71,7 +71,7 @@ for (const [
 
   if (!ONLY && DEBUG) {
     // urls = urls.slice(0, 3);
-    urls = urls.filter((url) => url.includes("transitionWhile"));
+    urls = urls.filter((url) => url.includes("intercept"));
   }
 
   console.log("STARTING:");

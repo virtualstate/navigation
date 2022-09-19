@@ -34,7 +34,7 @@ import {
   InternalNavigationNavigationType,
   Rollback,
   Unset,
-  NavigationTransitionWhile,
+  NavigationIntercept,
   NavigationTransitionStartDeadline,
   NavigationTransitionCommit,
   NavigationTransitionFinish,
@@ -61,9 +61,9 @@ export interface NavigationOptions {
 
 const baseUrl = "https://html.spec.whatwg.org/";
 
-export class Navigation<S = unknown>
-  extends NavigationEventTarget<NavigationEventMap<S>>
-  implements NavigationPrototype<S>
+export class Navigation<S = unknown, R = unknown | void>
+  extends NavigationEventTarget<NavigationEventMap<S, R>>
+  implements NavigationPrototype<S, R>
 {
   // Should be always 0 or 1
   #transitionInProgressCount = 0;
@@ -499,7 +499,7 @@ export class Navigation<S = unknown>
         const promise = currentEntry?.dispatchEvent(
           createEvent({
             type: "navigatefrom",
-            transitionWhile: transition[NavigationTransitionWhile],
+            intercept: transition[NavigationIntercept],
           })
         );
         if (promise) yield promise;
@@ -522,7 +522,7 @@ export class Navigation<S = unknown>
         yield entry.dispatchEvent(
           createEvent({
             type: "navigateto",
-            transitionWhile: transition[NavigationTransitionWhile],
+            intercept: transition[NavigationIntercept],
           })
         );
       }
@@ -542,13 +542,13 @@ export class Navigation<S = unknown>
         yield transition.dispatchEvent(
           createEvent({
             type: "finish",
-            transitionWhile: transition[NavigationTransitionWhile],
+            intercept: transition[NavigationIntercept],
           })
         );
         yield transition.dispatchEvent(
           createEvent({
             type: "navigatesuccess",
-            transitionWhile: transition[NavigationTransitionWhile],
+            intercept: transition[NavigationIntercept],
           })
         );
       }

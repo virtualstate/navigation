@@ -87,7 +87,7 @@ export async function assertNavigation(
     localNavigation.addEventListener("navigate", (event) => {
       if (isWindowNavigation(localNavigation)) {
         // Add a default navigation to disable network features
-        event.transitionWhile(Promise.resolve());
+        event.intercept(Promise.resolve());
       }
     });
 

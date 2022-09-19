@@ -18,17 +18,17 @@ export interface RouteFn<S = unknown, R = void | unknown> {
 
 export interface ErrorFn<S = unknown> {
   (
-    error: unknown,
-    event: NavigateEvent<S>,
-    match?: URLPatternResult
+      error: unknown,
+      event: NavigateEvent<S>,
+      match?: URLPatternResult
   ): RouteFnReturn;
 }
 
 export interface PatternErrorFn<S = unknown> {
   (
-    error: unknown,
-    event: NavigateEvent<S>,
-    match: URLPatternResult
+      error: unknown,
+      event: NavigateEvent<S>,
+      match: URLPatternResult
   ): RouteFnReturn;
 }
 
@@ -61,7 +61,7 @@ const Attached = Symbol.for("@virtualstate/navigation/routes/attached");
 const Detach = Symbol.for("@virtualstate/navigation/routes/detach");
 
 export function isRouter<S = unknown, R = void | unknown>(
-  value: unknown
+    value: unknown
 ): value is Router<S, R> {
   function isRouterLike(value: unknown): value is { [Routes]: unknown } {
     return !!value;
@@ -72,9 +72,9 @@ export function isRouter<S = unknown, R = void | unknown>(
 const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 export class Router<
-  S = unknown,
-  R = void | unknown
-> extends NavigationNavigation<S> {
+    S = unknown,
+    R = void | unknown
+    > extends NavigationNavigation<S> {
   [Routes]: RouteRecord = {
     router: [],
     route: [],
@@ -121,10 +121,10 @@ export class Router<
   then(pattern: string | URLPattern, fn: PatternThenFn<S, R>): this;
   then(fn: ThenFn<S, R>): this;
   then(
-    ...args: [string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>]
+      ...args: [string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>]
   ): this;
   then(
-    ...args: [string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>]
+      ...args: [string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -146,7 +146,7 @@ export class Router<
   catch(fn: ErrorFn<S>): this;
   catch(...args: [string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>]): this;
   catch(
-    ...args: [string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>]
+      ...args: [string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -167,10 +167,10 @@ export class Router<
   route(pattern: string | URLPattern, fn: PatternRouteFn<S, R>): this;
   route(fn: RouteFn<S, R>): this;
   route(
-    ...args: [string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>]
+      ...args: [string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>]
   ): this;
   route(
-    ...args: [string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>]
+      ...args: [string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -190,15 +190,15 @@ export class Router<
 
   [Detach](router: Router) {
     const index = this[Routes].router.findIndex(
-      (route) => route.router === router
+        (route) => route.router === router
     );
     if (index > -1) {
       this[Routes].router.splice(index, 1);
     }
 
     const length = Object.values(this[Routes]).reduce(
-      (sum, routes) => sum + routes.length,
-      0
+        (sum, routes) => sum + routes.length,
+        0
     );
 
     if (length === 0) {
@@ -241,36 +241,38 @@ export class Router<
   };
 
   #navigate = (event: NavigateEvent<S>) => {
-    event.transitionWhile(this.#navigationTransition(event));
+    event.intercept(this.#navigationTransition(event));
   };
 
   #navigationTransition = async (event: NavigateEvent<S>) => {
     const router = this;
+
+    const promises: Promise<unknown>[] = [];
 
     const {
       destination: { url },
       signal,
     } = event;
 
-    return transition(
+    transition(
         "route",
         (route, match) => route.fn(event, match),
         handleResolve,
         handleReject
     );
 
-    async function transition(
-      type: RouteType,
-      fn: (route: Route, match?: URLPatternResult) => unknown,
-      resolve = handleResolve,
-      reject = handleReject
+    if (promises.length) {
+      await Promise.all(promises);
+    }
+
+    function transition(
+        type: RouteType,
+        fn: (route: Route, match?: URLPatternResult) => unknown,
+        resolve = handleResolve,
+        reject = handleReject
     ) {
-      const promises: Promise<unknown>[] = [];
       let isRoute = false;
       resolveRouter(router);
-      if (promises.length) {
-        await Promise.all(promises);
-      }
       return isRoute;
 
       function matchRoute(route: Route, parentMatch?: URLPatternResult) {
@@ -284,10 +286,23 @@ export class Router<
         }
 
         if (router) {
-          resolveRouter(router, match);
-        } else {
-          isRoute = true;
-          return fn(route, match);
+          return resolveRouter(router, match);
+        }
+
+        isRoute = true;
+        try {
+          const maybe = fn(route, match);
+          if (isPromise(maybe)) {
+            promises.push(
+                maybe
+                    .then(resolve)
+                    .catch(reject)
+            );
+          } else {
+            resolve(maybe);
+          }
+        } catch (error) {
+          reject(error);
         }
       }
 
@@ -297,50 +312,33 @@ export class Router<
         function resolveRoutes(routes: Route[]) {
           for (const route of routes) {
             if (signal?.aborted) break;
-            resolveRoute(route, match);
+            matchRoute(route, match);
           }
         }
       }
 
-      function resolveRoute(route: Route, match?: URLPatternResult) {
-        try {
-          const maybe = matchRoute(route, match);
-          if (isPromise(maybe)) {
-            promises.push(
-              maybe
-                .then(resolve)
-                .catch(reject)
-            );
-          } else {
-            promises.push(resolve(maybe));
-          }
-        } catch (error) {
-          promises.push(reject(error));
-        }
-      }
     }
 
-    async function asyncNoop() {}
+    function noop() {}
 
-    async function handleResolve(value: unknown) {
-      await transition(
-        "resolve",
-        (route, match) => route.fn(value, event, match),
-        asyncNoop,
-        handleReject
+    function handleResolve(value: unknown) {
+      transition(
+          "resolve",
+          (route, match) => route.fn(value, event, match),
+          noop,
+          handleReject
       );
-      return value;
     }
 
-    async function handleReject(error: unknown) {
-      const isRoute = await transition(
-        "reject",
-        (route, match) => route.fn(error, event, match),
-        asyncNoop,
-        (error) => Promise.reject(error)
+    function handleReject(error: unknown) {
+      const isRoute = transition(
+          "reject",
+          (route, match) => route.fn(error, event, match),
+          noop,
+          (error) => Promise.reject(error)
       );
       if (!isRoute) {
-        throw await Promise.reject(error);
+        throw error;
       }
     }
 

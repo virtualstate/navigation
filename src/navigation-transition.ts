@@ -1,5 +1,6 @@
 import {
   NavigationHistoryEntry as NavigationHistoryEntryPrototype,
+  NavigationIntercept as NavigationInterceptPrototype,
   NavigationNavigationOptions,
   NavigationNavigationType,
   NavigationResult,
@@ -16,6 +17,7 @@ import {
 } from "./navigation-errors";
 import { Event, EventTarget } from "./event-target";
 import { AbortController } from "./import-abort-controller";
+import {isPromise} from "./is";
 
 export const Rollback = Symbol.for("@virtualstate/navigation/rollback");
 export const Unset = Symbol.for("@virtualstate/navigation/unset");
@@ -71,8 +73,8 @@ export const NavigationTransitionPromises = Symbol.for(
   "@virtualstate/navigation/transition/promises"
 );
 
-export const NavigationTransitionWhile = Symbol.for(
-  "@virtualstate/navigation/transition/while"
+export const NavigationIntercept = Symbol.for(
+  "@virtualstate/navigation/intercept"
 );
 export const NavigationTransitionIsOngoing = Symbol.for(
   "@virtualstate/navigation/transition/isOngoing"
@@ -114,9 +116,9 @@ export const NavigationTransitionAbort = Symbol.for(
   "@virtualstate/navigation/transition/abort"
 );
 
-export interface NavigationTransitionInit<S = unknown>
+export interface NavigationTransitionInit<S = unknown, R = unknown | void>
   extends Omit<NavigationTransitionInitPrototype, "finished"> {
-  rollback(options?: NavigationNavigationOptions): NavigationResult;
+  rollback(options?: NavigationNavigationOptions): NavigationResult<S>;
   [NavigationTransitionFinishedDeferred]?: Deferred<NavigationHistoryEntry<S>>;
   [NavigationTransitionCommittedDeferred]?: Deferred<NavigationHistoryEntry<S>>;
   [NavigationTransitionNavigationType]: InternalNavigationNavigationType;
@@ -129,7 +131,7 @@ export interface NavigationTransitionInit<S = unknown>
   [NavigationTransitionParentEventTarget]: EventTarget;
 }
 
-export class NavigationTransition<S = unknown>
+export class NavigationTransition<S = unknown, R = unknown | void>
   extends EventTarget
   implements NavigationTransitionPrototype<S>
 {
@@ -141,7 +143,7 @@ export class NavigationTransition<S = unknown>
   readonly from: NavigationHistoryEntryPrototype<S>;
   readonly navigationType: NavigationNavigationType;
 
-  readonly #options: NavigationTransitionInit<S>;
+  readonly #options: NavigationTransitionInit<S, R>;
 
   readonly [NavigationTransitionFinishedDeferred] =
     deferred<NavigationHistoryEntry<S>>();
@@ -188,7 +190,7 @@ export class NavigationTransition<S = unknown>
     return this.#promises;
   }
 
-  constructor(init: NavigationTransitionInit<S>) {
+  constructor(init: NavigationTransitionInit<S, R>) {
     super();
     this[NavigationTransitionFinishedDeferred] =
       init[NavigationTransitionFinishedDeferred] ??
@@ -379,24 +381,40 @@ export class NavigationTransition<S = unknown>
     this[NavigationTransitionFinishedDeferred].reject(reason);
   };
 
-  [NavigationTransitionWhile] = (promise: Promise<unknown>): void => {
+  [NavigationIntercept] = (options: NavigationInterceptPrototype<R>): void => {
+    const promise = getPromise();
     this[NavigationTransitionIsOngoing] = true;
-    // console.log({ NavigationTransitionWhile, promise });
+    // console.log({ NavigationIntercept, promise });
     const statusPromise = promise
-      .then(
-        (): PromiseSettledResult<void> => ({
-          status: "fulfilled",
-          value: undefined,
-        })
-      )
-      .catch(async (reason): Promise<PromiseSettledResult<void>> => {
-        await this[NavigationTransitionRejected](reason);
-        return {
-          status: "rejected",
-          reason,
-        };
-      });
+        .then(
+            (): PromiseSettledResult<void> => ({
+              status: "fulfilled",
+              value: undefined,
+            })
+        )
+        .catch(async (reason): Promise<PromiseSettledResult<void>> => {
+          await this[NavigationTransitionRejected](reason);
+          return {
+            status: "rejected",
+            reason,
+          };
+        });
     this.#promises.add(statusPromise);
+
+
+    function getPromise(): Promise<R> {
+      if (isPromise<R>(options)) {
+        return options;
+      }
+      if (typeof options === "function") {
+        return options();
+      }
+      const { handler } = options;
+      if (typeof handler !== "function") {
+        throw new Error("Expected handler");
+      }
+      return handler();
+    }
   };
 
   [NavigationTransitionWait] = async (): Promise<NavigationHistoryEntry> => {
@@ -454,7 +472,7 @@ export class NavigationTransition<S = unknown>
       type: NavigationTransitionFinish,
       transition: this,
       entry: this[NavigationTransitionEntry],
-      transitionWhile: this[NavigationTransitionWhile],
+      intercept: this[NavigationIntercept],
     });
   };
 }

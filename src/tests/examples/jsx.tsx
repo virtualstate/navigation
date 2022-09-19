@@ -36,7 +36,7 @@ export async function jsxExample(navigation: Navigation) {
   let bodyUpdated!: Promise<void>;
 
   navigation.addEventListener("currentchange", async (event) => {
-    await (event.transitionWhile ?? ((promise) => promise))(
+    await (event.intercept ?? ((promise) => promise))(
       (bodyUpdated = handler())
     );
     async function handler() {
