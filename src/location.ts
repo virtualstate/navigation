@@ -70,7 +70,7 @@ export class NavigationLocation implements Location {
       }
     });
 
-    this.#navigation.addEventListener("currentchange", reset);
+    this.#navigation.addEventListener("currententrychange", reset);
   }
 
   readonly ancestorOrigins: DOMStringList;

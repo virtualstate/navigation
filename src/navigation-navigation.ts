@@ -48,8 +48,8 @@ export class NavigationNavigation<S = unknown> implements Navigation<S> {
     return this[Navigation].currentEntry;
   }
 
-  set oncurrentchange(value: Navigation["oncurrentchange"]) {
-    this[Navigation].oncurrentchange = value;
+  set oncurrententrychange(value: Navigation["oncurrententrychange"]) {
+    this[Navigation].oncurrententrychange = value;
   }
   set onnavigate(value: Navigation["onnavigate"]) {
     this[Navigation].onnavigate = value;

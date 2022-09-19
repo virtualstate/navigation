@@ -19,7 +19,7 @@ export interface NavigationEventMap<S = unknown, R = void | unknown> {
   navigate: NavigateEvent<S, R>;
   navigatesuccess: Event;
   navigateerror: Event & { error?: unknown };
-  currentchange: NavigationCurrentEntryChangeEvent<S, R>;
+  currententrychange: NavigationCurrentEntryChangeEvent<S, R>;
 }
 
 export interface NavigationResult<S = unknown> {
@@ -56,7 +56,7 @@ export interface Navigation<S = unknown, R = unknown | void> extends EventTarget
   onnavigateerror?:
     | ((this: Navigation, ev: ErrorEvent) => unknown | void)
     | null;
-  oncurrentchange?:
+  oncurrententrychange?:
     | ((this: Navigation, ev: NavigationCurrentEntryChangeEvent<S>) => unknown)
     | null;
 
@@ -194,14 +194,14 @@ export interface NavigationInterceptOptions<R> {
 export type NavigationIntercept<R> = NavigationInterceptFn<R> | NavigationInterceptOptions<R> | Promise<R>;
 
 export interface NavigationCurrentEntryChangeEvent<S = unknown, R = unknown | void>
-  extends Event,
+  extends Event<"currententrychange">,
     NavigationCurrentEntryChangeEventInit {
   readonly navigationType?: NavigationNavigationType;
   readonly from?: NavigationHistoryEntry<S>;
   intercept?(options: NavigationIntercept<R>): void;
 }
 
-export interface NavigateEvent<S = unknown, R = unknown | void> extends Event {
+export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"navigate"> {
   preventDefault(): void;
 
   readonly navigationType: NavigationNavigationType;

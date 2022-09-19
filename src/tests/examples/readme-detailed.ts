@@ -17,7 +17,7 @@ import { deferred } from "../../util/deferred";
 
 export async function initialNavigateThenBack(navigation: Navigation) {
   let navigateCalled = false,
-    currentChangeCalled = false;
+    currentEntryChangeCalled = false;
   navigation.addEventListener(
     "navigate",
     (event) => {
@@ -26,8 +26,8 @@ export async function initialNavigateThenBack(navigation: Navigation) {
     },
     { once: true }
   );
-  navigation.addEventListener("currentchange", () => {
-    currentChangeCalled = true;
+  navigation.addEventListener("currententrychange", () => {
+    currentEntryChangeCalled = true;
   });
   const { committed, finished } = navigation.navigate("/test", {
     state: {
@@ -37,7 +37,7 @@ export async function initialNavigateThenBack(navigation: Navigation) {
 
   // These are called sync after navigate is called no matter what
   assert<true>(navigateCalled);
-  assert<true>(currentChangeCalled);
+  assert<true>(currentEntryChangeCalled);
 
   // This ties in the async update requirement
   const updatedCurrent = navigation.currentEntry;
@@ -67,13 +67,13 @@ export async function initialNavigateThenBack(navigation: Navigation) {
 
 export async function initialNavigateThenBackAssigned(navigation: Navigation) {
   let navigateCalled = false,
-    currentChangeCalled = false;
+      currentEntryChangeCalled = false;
   navigation.onnavigate = (event) => {
     navigateCalled = true;
     event.intercept(new Promise<void>(queueMicrotask));
   };
-  navigation.oncurrentchange = () => {
-    currentChangeCalled = true;
+  navigation.oncurrententrychange = () => {
+    currentEntryChangeCalled = true;
   };
   const { committed, finished } = navigation.navigate("/test", {
     state: {
@@ -83,7 +83,7 @@ export async function initialNavigateThenBackAssigned(navigation: Navigation) {
 
   // These are called sync after navigate is called no matter what
   assert<true>(navigateCalled);
-  assert<true>(currentChangeCalled);
+  assert<true>(currentEntryChangeCalled);
 
   // This ties in the async update requirement
   const updatedCurrent = navigation.currentEntry;
@@ -236,9 +236,9 @@ export async function currentReloadExample(navigation: Navigation) {
   ok(navigation.currentEntry?.getState<{ test: number }>().test === 3);
 }
 
-export async function currentChangeExample(navigation: Navigation) {
+export async function currentEntryChangeExample(navigation: Navigation) {
   let changedEvent!: NavigationCurrentEntryChangeEvent;
-  navigation.addEventListener("currentchange", (event) => {
+  navigation.addEventListener("currententrychange", (event) => {
     changedEvent = event;
   });
   if (!isWindowNavigation(navigation)) {
@@ -454,8 +454,8 @@ export async function disposeExample(navigation: Navigation) {
   console.log(JSON.stringify(values));
 }
 
-export async function currentChangeMonitoringExample(navigation: Navigation) {
-  navigation.addEventListener("currentchange", () => {
+export async function currentEntryChangeMonitoringExample(navigation: Navigation) {
+  navigation.addEventListener("currententrychange", () => {
     navigation.currentEntry?.addEventListener("dispose", genericDisposeHandler);
   });
 
@@ -512,7 +512,7 @@ export async function rollbackExample(navigation: Navigation) {
 
   ok(!toasts.length);
 
-  // Reject after committed using currentchange, or before committed using navigate
+  // Reject after committed using currententrychange, or before committed using navigate
   navigation.addEventListener(
     "navigate",
     (event) => {

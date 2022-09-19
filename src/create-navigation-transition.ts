@@ -75,7 +75,7 @@ export interface NavigationTransitionResult<S> {
   known: Set<NavigationHistoryEntry<S>>;
   destination: NavigationDestination<S>;
   navigate: NavigateEvent<S>;
-  currentChange: NavigationCurrentEntryChangeEvent<S>;
+  currentEntryChange: NavigationCurrentEntryChangeEvent<S>;
   navigationType: InternalNavigationNavigationType;
 }
 
@@ -202,9 +202,9 @@ export function createNavigationTransition<S = unknown>(
     type: "navigate",
     scroll: noop
   });
-  const currentChange: NavigationCurrentEntryChangeEvent = createEvent({
+  const currentEntryChange: NavigationCurrentEntryChangeEvent = createEvent({
     from: currentEntry,
-    type: "currentchange",
+    type: "currententrychange",
     navigationType: navigate.navigationType,
     intercept,
   });
@@ -242,7 +242,7 @@ export function createNavigationTransition<S = unknown>(
     entries: resolvedEntries,
     known,
     index: nextIndex,
-    currentChange,
+    currentEntryChange,
     destination,
     navigate,
     navigationType,

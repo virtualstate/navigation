@@ -389,7 +389,7 @@ export class Navigation<S = unknown, R = unknown | void>
       });
       await this.dispatchEvent(
         createEvent({
-          type: "currentchange",
+          type: "currententrychange",
         })
       );
       committed = true;
@@ -482,7 +482,7 @@ export class Navigation<S = unknown, R = unknown | void>
       transitionResult: NavigationTransitionResult<S>
     ): Iterable<Promise<unknown>> {
       const microtask = new Promise<void>(queueMicrotask);
-      const { known, entries, index, currentChange, navigate } =
+      const { known, entries, index, currentEntryChange, navigate } =
         transitionResult;
 
       const navigateAbort = navigate[EventAbortController].abort.bind(
@@ -512,7 +512,7 @@ export class Navigation<S = unknown, R = unknown | void>
         known: known,
       });
       if (entry.sameDocument) {
-        yield transition.dispatchEvent(currentChange);
+        yield transition.dispatchEvent(currentEntryChange);
       }
       committed = true;
       if (typeof navigationType === "string") {
@@ -639,13 +639,13 @@ export class Navigation<S = unknown, R = unknown | void>
     // Instant change
     currentEntry[NavigationHistoryEntrySetState](options.state);
 
-    const currentChange: NavigationCurrentEntryChangeEvent = createEvent({
+    const currentEntryChange: NavigationCurrentEntryChangeEvent = createEvent({
       from: currentEntry,
-      type: "currentchange",
+      type: "currententrychange",
       navigationType: undefined,
     });
 
-    return this.dispatchEvent(currentChange);
+    return this.dispatchEvent(currentEntryChange);
   }
 }
 

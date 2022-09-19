@@ -474,7 +474,7 @@ const i = iframe;
 const testSteps = [];
 
 // Wait for all navigations to settle
-navigation.addEventListener("currentchange", () => {
+navigation.addEventListener("currententrychange", () => {
   const finished = navigation.transition?.finished;
   if (finished) {
     testSteps.push(async () => {

@@ -91,8 +91,8 @@ export async function assertNavigation(
       }
     });
 
-    // Add as very first currentchange listener, to allow location change to happen
-    localNavigation.addEventListener("currentchange", (event) => {
+    // Add as very first currententrychange listener, to allow location change to happen
+    localNavigation.addEventListener("currententrychange", (event) => {
       const { currentEntry } = localNavigation;
       if (!currentEntry) return;
       const state = currentEntry.getState<{ title?: string }>() ?? {};
