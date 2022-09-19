@@ -213,7 +213,7 @@ export interface NavigateEvent<S = unknown, R = unknown | void> extends Event {
   readonly formData?: FormData;
   readonly info: unknown;
 
-  intercept(options: NavigationIntercept<R>): void;
+  intercept(options?: NavigationIntercept<R>): void;
   scroll(): void;
 }
 

@@ -384,7 +384,7 @@ export class NavigationTransition<S = unknown, R = unknown | void>
   [NavigationIntercept] = (options: NavigationInterceptPrototype<R>): void => {
     const promise = getPromise();
     this[NavigationTransitionIsOngoing] = true;
-    // console.log({ NavigationIntercept, promise });
+    if (!promise) return;
     const statusPromise = promise
         .then(
             (): PromiseSettledResult<void> => ({
@@ -401,8 +401,8 @@ export class NavigationTransition<S = unknown, R = unknown | void>
         });
     this.#promises.add(statusPromise);
 
-
-    function getPromise(): Promise<R> {
+    function getPromise(): Promise<R> | undefined {
+      if (!options) return undefined
       if (isPromise<R>(options)) {
         return options;
       }
@@ -446,8 +446,7 @@ export class NavigationTransition<S = unknown, R = unknown | void>
       return this[NavigationTransitionEntry];
     } catch (error) {
       await this.#onError(error);
-      await Promise.reject(error);
-      throw error;
+      throw await Promise.reject(error);
     } finally {
       await this[NavigationTransitionFinish]();
     }

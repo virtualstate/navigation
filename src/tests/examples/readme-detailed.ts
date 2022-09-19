@@ -122,7 +122,7 @@ export async function routeHandlerExample(navigation: Navigation) {
     if (routesTable.has(url)) {
       const routeHandler = routesTable.get(url);
       if (!routeHandler) return;
-      event.intercept(routeHandler());
+      event.intercept(routeHandler);
     }
   }
   navigation.addEventListener("navigate", handler);
@@ -627,7 +627,7 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
     seen.add(e);
     seen.add(e.intercept);
     e.intercept(
-      (async () => {
+      async () => {
         const result = determineAction(e.destination);
 
         if (result.type === "redirect") {
@@ -654,7 +654,7 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
           allowCount += 1;
           return;
         }
-      })()
+      }
     );
   });
 
@@ -844,7 +844,7 @@ export async function usingInfoExample(navigation: Navigation) {
 
   navigation.addEventListener("navigate", (e) => {
     e.intercept(
-      (async () => {
+      async () => {
         if (isPhotoNavigation(e)) {
           const { thumbnail, via } = e.info;
           switch (via) {
@@ -863,7 +863,7 @@ export async function usingInfoExample(navigation: Navigation) {
           }
         }
         await loadPhoto(e.destination.url);
-      })()
+      }
     );
   });
 
