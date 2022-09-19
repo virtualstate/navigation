@@ -28,7 +28,7 @@ export class NavigationHistoryEntry<S = unknown>
   extends NavigationEventTarget<NavigationHistoryEntryEventMap>
   implements NavigationHistoryEntryPrototype<S>
 {
-  #index: number | (() => number);
+  readonly #index: number | (() => number);
   #state: S | undefined;
 
   get index() {

@@ -56,10 +56,10 @@ import { createEvent } from "./event-target/create-event";
 export * from "./spec/navigation";
 
 export interface NavigationOptions {
-  initialUrl?: URL | string;
+  baseURL?: URL | string;
 }
 
-const baseUrl = "https://html.spec.whatwg.org/";
+const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 export class Navigation<S = unknown, R = unknown | void>
   extends NavigationEventTarget<NavigationEventMap<S, R>>
@@ -77,7 +77,7 @@ export class Navigation<S = unknown, R = unknown | void>
   // #upcomingNonTraverseTransition: NavigationTransition;
 
   #knownTransitions = new WeakSet();
-  #initialUrl: string;
+  #baseURL: string;
 
   get canGoBack() {
     return !!this.#entries[this.#currentIndex - 1];
@@ -102,9 +102,12 @@ export class Navigation<S = unknown, R = unknown | void>
 
   constructor(options?: NavigationOptions) {
     super();
-    const initialUrl = options?.initialUrl ?? "/";
-    this.#initialUrl = (
-      typeof initialUrl === "string" ? new URL(initialUrl, baseUrl) : initialUrl
+    const baseURL = options?.baseURL ?? "/";
+    this.#baseURL = (
+      baseURL ? new URL(
+          (baseURL ?? "/").toString(),
+          DEFAULT_BASE_URL
+      ) : DEFAULT_BASE_URL
     ).toString();
   }
 
@@ -154,8 +157,12 @@ export class Navigation<S = unknown, R = unknown | void>
     url: string,
     options?: NavigationNavigateOptions<S>
   ): NavigationResult {
-    const nextUrl = new URL(url, this.#initialUrl).toString();
-    // console.log({ nextUrl });
+    let baseURL = this.#baseURL
+    if (this.currentEntry?.url) {
+      // This allows use to use relative
+      baseURL = this.currentEntry?.url;
+    }
+    const nextUrl = new URL(url, baseURL).toString();
     const navigationType = options?.replace ? "replace" : "push";
     const entry = this.#createNavigationHistoryEntry({
       url: nextUrl,

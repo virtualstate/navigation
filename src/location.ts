@@ -8,7 +8,7 @@ import { Deferred } from "./util/deferred";
 
 export interface NavigationLocationOptions {
   navigation: Navigation;
-  initialUrl?: URL | string;
+  baseURL?: URL | string;
 }
 
 type WritableURLKey =
@@ -36,7 +36,7 @@ export const AppLocationUrl = Symbol.for(
 
 export interface NavigationLocation extends Location {}
 
-const baseUrl = "https://html.spec.whatwg.org/";
+const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
 
 /**
  * @experimental
@@ -51,7 +51,7 @@ export class NavigationLocation implements Location {
 
     const reset = () => {
       this.#transitioningURL = undefined;
-      this.#initialURL = undefined;
+      this.#baseURL = undefined;
     };
 
     this.#navigation.addEventListener("navigate", () => {
@@ -80,7 +80,7 @@ export class NavigationLocation implements Location {
 
   #transitioningURL: URL | undefined;
 
-  #initialURL: URL | undefined;
+  #baseURL: URL | undefined;
 
   get [AppLocationUrl]() {
     if (this.#transitioningURL) {
@@ -88,16 +88,16 @@ export class NavigationLocation implements Location {
     }
     const { currentEntry } = this.#navigation;
     if (!currentEntry) {
-      const initialUrl = this.#options.initialUrl ?? "/";
-      this.#initialURL =
-        typeof initialUrl === "string"
-          ? new URL(initialUrl, baseUrl)
-          : initialUrl;
-      return this.#initialURL;
+      const baseURL = this.#options.baseURL ?? "/";
+      this.#baseURL =
+          baseURL
+          ? new URL(baseURL, DEFAULT_BASE_URL)
+          : new URL(DEFAULT_BASE_URL);
+      return this.#baseURL;
     }
     const existing = this.#urls.get(currentEntry);
     if (existing) return existing;
-    const next = new URL(currentEntry.url, baseUrl);
+    const next = new URL(currentEntry.url, DEFAULT_BASE_URL);
     this.#urls.set(currentEntry, next);
     return next;
   }
@@ -236,7 +236,7 @@ export class NavigationLocation implements Location {
   }
 
   #awaitFinished = async (result?: NavigationResult) => {
-    this.#initialURL = undefined;
+    this.#baseURL = undefined;
     if (!result) return;
     const { committed, finished } = result;
     await Promise.all([
