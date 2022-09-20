@@ -15,3 +15,7 @@ export function ok(value: unknown, message = "Expected value"): asserts value {
         throw new Error(message);
     }
 }
+
+export function isPromiseRejectedResult(value: PromiseSettledResult<unknown>): value is PromiseRejectedResult {
+    return value.status === "rejected";
+}

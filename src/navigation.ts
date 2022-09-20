@@ -54,6 +54,7 @@ import {
 } from "./create-navigation-transition";
 import { createEvent } from "./event-target/create-event";
 import { getBaseURL } from "./base-url";
+import {isPromise, isPromiseRejectedResult} from "./is";
 
 export * from "./spec/navigation";
 
@@ -421,7 +422,7 @@ export class Navigation<S = unknown, R = unknown | void>
       });
 
       const microtask = new Promise<void>(queueMicrotask);
-      let promises: Promise<unknown>[] = [];
+      let promises: Promise<PromiseSettledResult<unknown>>[] = [];
       const iterator = transitionSteps(transitionResult)[Symbol.iterator]();
       const iterable = {
         [Symbol.iterator]: () => ({ next: () => iterator.next() }),
@@ -429,9 +430,10 @@ export class Navigation<S = unknown, R = unknown | void>
 
       async function syncTransition(): Promise<void> {
         for (const promise of iterable) {
-          if (promise && typeof promise === "object" && "then" in promise) {
-            promises.push(promise);
-            void promise.catch((error) => error);
+          if (isPromise(promise)) {
+            promises.push(Promise.allSettled([
+                promise
+            ]).then(([result]) => result));
           }
           if (committed && transition[NavigationTransitionIsAsync]) {
             return asyncTransition().then(syncTransition)
@@ -449,7 +451,13 @@ export class Navigation<S = unknown, R = unknown | void>
         const captured = [...promises];
         if (captured.length) {
           promises = [];
-          await Promise.all(captured);
+          const results = await Promise.all(captured);
+          const rejected = results.filter(isPromiseRejectedResult);
+          if (rejected.length === 1) {
+            throw await Promise.reject(rejected[0]);
+          } else if (rejected.length) {
+            throw new AggregateError(rejected, rejected[0].reason?.message);
+          }
         } else if (!transition[NavigationTransitionIsOngoing]) {
           await microtask;
         }
