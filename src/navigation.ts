@@ -427,7 +427,7 @@ export class Navigation<S = unknown, R = unknown | void>
         [Symbol.iterator]: () => ({ next: () => iterator.next() }),
       };
 
-      function syncTransition(): Promise<void> {
+      async function syncTransition(): Promise<void> {
         for (const promise of iterable) {
           if (promise && typeof promise === "object" && "then" in promise) {
             promises.push(promise);
@@ -443,8 +443,8 @@ export class Navigation<S = unknown, R = unknown | void>
         if (promises.length) {
           return asyncTransition();
         }
-        return Promise.resolve(); // We got through with no async
       }
+
       async function asyncTransition(): Promise<void> {
         const captured = [...promises];
         if (captured.length) {
