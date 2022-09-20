@@ -1,6 +1,6 @@
 import {
   NavigationHistoryEntry as NavigationHistoryEntryPrototype,
-  NavigationIntercept as NavigationInterceptPrototype,
+  NavigationIntercept as NavigationInterceptPrototype, NavigationInterceptOptions,
   NavigationNavigationOptions,
   NavigationNavigationType,
   NavigationResult,
@@ -118,6 +118,12 @@ export const NavigationTransitionFinally = Symbol.for(
 export const NavigationTransitionAbort = Symbol.for(
     "@virtualstate/navigation/transition/abort"
 );
+export const NavigationTransitionInterceptOptionsCommit = Symbol.for(
+    "@virtualstate/navigation/transition/intercept/options/commit"
+);
+export const NavigationTransitionCommitIsManual = Symbol.for(
+    "@virtualstate/navigation/transition/commit/isManual"
+);
 
 export interface NavigationTransitionInit<S = unknown, R = unknown | void>
   extends Omit<NavigationTransitionInitPrototype, "finished"> {
@@ -151,6 +157,11 @@ export class NavigationTransition<S = unknown, R = unknown | void>
    */
   [NavigationTransitionIsAsync] = false;
 
+  /**
+   * @experimental
+   */
+  readonly [NavigationTransitionInterceptOptionsCommit]: NavigationInterceptOptions<S>["commit"][]
+
   readonly #options: NavigationTransitionInit<S, R>;
 
   readonly [NavigationTransitionFinishedDeferred] =
@@ -172,6 +183,10 @@ export class NavigationTransition<S = unknown, R = unknown | void>
 
   get [NavigationTransitionInitialIndex](): number {
     return this.#options[NavigationTransitionInitialIndex];
+  }
+
+  get [NavigationTransitionCommitIsManual](): boolean {
+    return !!this[NavigationTransitionInterceptOptionsCommit]?.includes("manual")
   }
 
   [NavigationTransitionFinishedEntries]?: NavigationHistoryEntry<S>[];
@@ -200,6 +215,9 @@ export class NavigationTransition<S = unknown, R = unknown | void>
 
   constructor(init: NavigationTransitionInit<S, R>) {
     super();
+
+    this[NavigationTransitionInterceptOptionsCommit] = [];
+
     this[NavigationTransitionFinishedDeferred] =
       init[NavigationTransitionFinishedDeferred] ??
       this[NavigationTransitionFinishedDeferred];
@@ -390,7 +408,8 @@ export class NavigationTransition<S = unknown, R = unknown | void>
   };
 
   [NavigationIntercept] = (options: NavigationInterceptPrototype<R>): void => {
-    const promise = getPromise();
+    const transition = this;
+    const promise = parseOptions();
     this[NavigationTransitionIsOngoing] = true;
     if (!promise) return;
     this[NavigationTransitionIsAsync] = true;
@@ -410,7 +429,7 @@ export class NavigationTransition<S = unknown, R = unknown | void>
         });
     this.#promises.add(statusPromise);
 
-    function getPromise(): Promise<R> | undefined {
+    function parseOptions(): Promise<R> | undefined {
       if (!options) return undefined
       if (isPromise<R>(options)) {
         return options;
@@ -418,9 +437,12 @@ export class NavigationTransition<S = unknown, R = unknown | void>
       if (typeof options === "function") {
         return options();
       }
-      const { handler } = options;
+      const { handler, commit } = options;
+      if (commit && typeof commit === "string") {
+        transition[NavigationTransitionInterceptOptionsCommit].push(commit);
+      }
       if (typeof handler !== "function") {
-        throw new Error("Expected handler");
+        return;
       }
       return handler();
     }

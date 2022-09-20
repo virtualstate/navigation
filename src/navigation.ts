@@ -43,18 +43,19 @@ import {
   NavigationTransitionIsOngoing,
   NavigationTransitionFinishedDeferred,
   NavigationTransitionCommittedDeferred,
-  NavigationTransitionIsPending, NavigationTransitionIsAsync,
+  NavigationTransitionIsAsync, NavigationTransitionInterceptOptionsCommit, NavigationTransitionCommitIsManual,
 } from "./navigation-transition";
 import {
   NavigationTransitionResult,
   createNavigationTransition,
   EventAbortController,
   InternalNavigationNavigateOptions,
-  NavigationNavigateOptions,
+  NavigationNavigateOptions, NavigationTransitionCommitContext,
 } from "./create-navigation-transition";
 import { createEvent } from "./event-target/create-event";
 import { getBaseURL } from "./base-url";
 import {isPromise, isPromiseRejectedResult} from "./is";
+import {defer} from "@virtualstate/promise";
 
 export * from "./spec/navigation";
 
@@ -371,7 +372,8 @@ export class Navigation<S = unknown, R = unknown | void>
       performance?.mark?.(`same-document-navigation:${entry.id}`);
     }
 
-    let committed = false;
+    let currentEntryChangeEvent = false,
+        committedCurrentEntryChange = false;
 
     const { currentEntry } = this;
     void this.#activeTransition?.finished?.catch((error) => error);
@@ -390,6 +392,30 @@ export class Navigation<S = unknown, R = unknown | void>
       entry,
     });
 
+    const syncCommit = ({ entries, index, known }: NavigationTransitionCommitContext<S>) => {
+      if (transition.signal.aborted) return;
+      this.#entries = entries;
+      if (known) {
+        this.#known = new Set([...this.#known, ...known]);
+      }
+      this.#currentIndex = index;
+    };
+
+    const asyncCommit = async (commit: NavigationTransitionCommitContext<S>) => {
+      if (committedCurrentEntryChange) {
+        return;
+      }
+      committedCurrentEntryChange = true;
+      syncCommit(commit);
+      return transition.dispatchEvent(
+          createEvent({
+            type: NavigationTransitionCommit,
+            transition,
+            entry,
+          })
+      );
+    };
+
     const unsetTransition = async () => {
       await startEventPromise;
       if (!(typeof options?.index === "number" && options.entries))
@@ -404,7 +430,7 @@ export class Navigation<S = unknown, R = unknown | void>
           type: "currententrychange",
         })
       );
-      committed = true;
+      currentEntryChangeEvent = true;
       return entry;
     };
 
@@ -419,6 +445,7 @@ export class Navigation<S = unknown, R = unknown | void>
         options,
         transition,
         known: this.#known,
+        commit: asyncCommit
       });
 
       const microtask = new Promise<void>(queueMicrotask);
@@ -435,7 +462,10 @@ export class Navigation<S = unknown, R = unknown | void>
                 promise
             ]).then(([result]) => result));
           }
-          if (committed && transition[NavigationTransitionIsAsync]) {
+          if (
+              transition[NavigationTransitionCommitIsManual] ||
+              (currentEntryChangeEvent && transition[NavigationTransitionIsAsync])
+          ) {
             return asyncTransition().then(syncTransition)
           }
           if (transition.signal.aborted) {
@@ -471,39 +501,13 @@ export class Navigation<S = unknown, R = unknown | void>
         .then(() => entry);
     };
 
-    interface Commit {
-      entries: NavigationHistoryEntry<S>[];
-      index: number;
-      known?: Set<NavigationHistoryEntry<S>>;
-    }
-
-    const syncCommit = ({ entries, index, known }: Commit) => {
-      if (transition.signal.aborted) return;
-      this.#entries = entries;
-      if (known) {
-        this.#known = new Set([...this.#known, ...known]);
-      }
-      this.#currentIndex = index;
-    };
-
-    const asyncCommit = (commit: Commit) => {
-      syncCommit(commit);
-      return transition.dispatchEvent(
-        createEvent({
-          type: NavigationTransitionCommit,
-          transition,
-          entry,
-        })
-      );
-    };
-
     const dispose = async () => this.#dispose();
 
     function* transitionSteps(
       transitionResult: NavigationTransitionResult<S>
     ): Iterable<Promise<unknown>> {
       const microtask = new Promise<void>(queueMicrotask);
-      const { known, entries, index, currentEntryChange, navigate } =
+      const { known, entries, index, currentEntryChange, navigate, waitForCommit } =
         transitionResult;
 
       const navigateAbort = navigate[EventAbortController].abort.bind(
@@ -531,6 +535,10 @@ export class Navigation<S = unknown, R = unknown | void>
         yield transition.dispatchEvent(navigate);
       }
 
+      if (transition[NavigationTransitionCommitIsManual]) {
+         yield waitForCommit;
+      }
+
       yield asyncCommit({
         entries: entries,
         index: index,
@@ -539,7 +547,7 @@ export class Navigation<S = unknown, R = unknown | void>
       if (entry.sameDocument) {
         yield transition.dispatchEvent(currentEntryChange);
       }
-      committed = true;
+      currentEntryChangeEvent = true;
       if (typeof navigationType === "string") {
         yield entry.dispatchEvent(
           createEvent({

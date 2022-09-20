@@ -22,6 +22,8 @@ import {
 } from "./navigation-transition";
 import { createEvent } from "./event-target/create-event";
 import {getBaseURL} from "./base-url";
+import {defer} from "@virtualstate/promise";
+import {ok} from "./is";
 
 export const NavigationFormData = Symbol.for(
     "@virtualstate/navigation/formData"
@@ -64,7 +66,14 @@ export interface InternalNavigationNavigateOptions<S>
   navigationType?: NavigationNavigationType;
 }
 
+export interface NavigationTransitionCommitContext<S> {
+  entries: NavigationHistoryEntry<S>[];
+  index: number;
+  known?: Set<NavigationHistoryEntry<S>>;
+}
+
 export interface NavigationTransitionContext<S> {
+  commit(commit: NavigationTransitionCommitContext<S>): Promise<void>;
   transition: NavigationTransition<S>;
   options?: InternalNavigationNavigateOptions<S>;
   currentIndex: number;
@@ -81,6 +90,8 @@ export interface NavigationTransitionResult<S> {
   navigate: NavigateEvent<S>;
   currentEntryChange: NavigationCurrentEntryChangeEvent<S>;
   navigationType: InternalNavigationNavigationType;
+  waitForCommit: Promise<void | unknown>;
+  commit(): void;
 }
 
 function noop(): void {
@@ -103,6 +114,7 @@ export function createNavigationTransition<S = unknown>(
   context: NavigationTransitionContext<S>
 ): NavigationTransitionResult<S> {
   const {
+    commit: transitionCommit,
     currentIndex,
     options,
     known: initialKnown,
@@ -189,6 +201,17 @@ export function createNavigationTransition<S = unknown>(
     // console.log({ hashChange, currentUrlInstanceWithoutHash: currentUrlInstanceWithoutHash.toString(), before: destinationUrlInstanceWithoutHash.toString() })
   }
 
+  let contextToCommit: NavigationTransitionCommitContext<S>;
+
+  const { resolve: resolveCommit, promise: waitForCommit } = defer<Promise<void> | void>();
+
+  function commit() {
+    ok(contextToCommit, "Expected contextToCommit");
+    resolveCommit(
+        transitionCommit(contextToCommit)
+    );
+  }
+
   const navigateController = new AbortController();
   const navigate: NavigateEvent<S> = createEvent({
     [EventAbortController]: navigateController,
@@ -210,6 +233,10 @@ export function createNavigationTransition<S = unknown>(
     destination,
     preventDefault: transition[NavigationTransitionAbort].bind(transition),
     intercept,
+    /**
+     * @experimental may be removed, proof of concept for immediate commit from userland
+     */
+    commit,
     /**
      * @deprecated
      */
@@ -257,6 +284,11 @@ export function createNavigationTransition<S = unknown>(
     resolvedEntries.push(entry);
   }
   known.add(entry);
+  contextToCommit = {
+    entries: resolvedEntries,
+    index: nextIndex,
+    known
+  };
   return {
     entries: resolvedEntries,
     known,
@@ -265,5 +297,7 @@ export function createNavigationTransition<S = unknown>(
     destination,
     navigate,
     navigationType,
+    waitForCommit,
+    commit
   };
 }

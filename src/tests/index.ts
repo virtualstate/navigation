@@ -36,6 +36,7 @@ async function runTests() {
   await import("./routes");
   await import("./transition");
   await import("./wpt");
+  await import("./commit");
 }
 
 if (typeof window === "undefined") {

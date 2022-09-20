@@ -189,6 +189,10 @@ export interface NavigationInterceptOptions<R> {
   handler?: NavigationInterceptFn<R>;
   focusReset?: "after-transition" | "manual";
   scroll?: "after-transition" | "manual";
+  /**
+   * @experimental
+   */
+  commit?: "manual" | string;
 }
 
 export type NavigationIntercept<R> = NavigationInterceptFn<R> | NavigationInterceptOptions<R> | Promise<R>;
@@ -216,6 +220,11 @@ export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"n
 
   intercept(options?: NavigationIntercept<R>): void;
   scroll(): void;
+
+  /**
+   * @experimental
+   */
+  commit?(): void;
 }
 
 export interface NavigateEventInit<S = unknown> extends EventInit {
