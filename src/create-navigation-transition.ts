@@ -132,13 +132,15 @@ export function createNavigationTransition<S = unknown>(
   } else if (navigationType === "traverse" || navigationType === "reload") {
     destinationIndex = getEntryIndex(previousEntries, entry);
     nextIndex = destinationIndex;
-  } else if (navigationType === "replace" && currentIndex !== -1) {
-    destinationIndex = currentIndex;
-    nextIndex = currentIndex;
   } else if (navigationType === "replace") {
-    navigationType = "push";
-    destinationIndex = currentIndex + 1;
-    nextIndex = destinationIndex;
+    if (currentIndex === -1) {
+      navigationType = "push";
+      destinationIndex = currentIndex + 1;
+      nextIndex = destinationIndex;
+    } else {
+      destinationIndex = currentIndex;
+      nextIndex = currentIndex;
+    }
   } else {
     destinationIndex = currentIndex + 1;
     nextIndex = destinationIndex;
@@ -174,16 +176,16 @@ export function createNavigationTransition<S = unknown>(
   // console.log({ currentHash, destinationHash });
   if (currentHash !== destinationHash) {
     const currentUrlInstanceWithoutHash = new URL(
-      currentUrlInstance.toString()
+        currentUrlInstance.toString()
     );
     currentUrlInstanceWithoutHash.hash = "";
     const destinationUrlInstanceWithoutHash = new URL(
-      destinationUrlInstance.toString()
+        destinationUrlInstance.toString()
     );
     destinationUrlInstanceWithoutHash.hash = "";
     hashChange =
-      currentUrlInstanceWithoutHash.toString() ===
-      destinationUrlInstanceWithoutHash.toString();
+        currentUrlInstanceWithoutHash.toString() ===
+        destinationUrlInstanceWithoutHash.toString();
     // console.log({ hashChange, currentUrlInstanceWithoutHash: currentUrlInstanceWithoutHash.toString(), before: destinationUrlInstanceWithoutHash.toString() })
   }
 

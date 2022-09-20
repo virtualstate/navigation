@@ -32,6 +32,11 @@ const browsers = [
   ["chromium", Playwright.chromium, { esm: true, args: [], FLAG: "" }] as const,
 ] as const;
 
+const SKIPPED = [
+    "/navigate-event/intercept-detach.html",
+    "/navigate-event/intercept-detach-multiple.html"
+]
+
 // webkit and firefox do not support importmap
 for (const [
   browserName,
@@ -86,7 +91,9 @@ for (const [
     linesPassCovered = 0,
     urlsPass: string[] = [],
     urlsFailed: string[] = [],
-    urlsSkipped: string[] = [];
+    urlsSkipped: string[] = [
+        ...SKIPPED
+    ];
 
   if (ONLY) {
     console.log(ONLY);
@@ -104,8 +111,9 @@ for (const [
 
   if (!INCLUDE_SERVICE_WORKER && !ONLY) {
     urlsSkipped.push(...urls.filter((url) => url.includes("service-worker")));
-    urls = urls.filter((url) => !url.includes("service-worker"));
   }
+
+  urls = urls.filter((url) => !urlsSkipped.includes(url));
 
   let result = {};
 
@@ -263,6 +271,18 @@ async function run(
   await page.route("**/*", async (route, request) => {
     const routeUrl = new URL(request.url());
     const { pathname } = routeUrl;
+
+    // console.log(pathname);
+
+    if (pathname.endsWith(".py")) {
+      return route.fulfill({
+        body: "",
+        headers: {
+          "Content-Type": "application/python",
+          "Access-Control-Allow-Origin": "*",
+        }
+      })
+    }
 
     if (pathname.endsWith("foo.html")) {
       return route.abort();

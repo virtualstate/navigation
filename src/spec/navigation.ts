@@ -113,7 +113,7 @@ export interface NavigationHistoryEntryInit<S = unknown>
   [EventTargetListeners]?: EventDescriptor[];
 }
 
-export interface NavigationHistoryEntry<S = unknown> extends EventTarget {
+export interface NavigationHistoryEntry<S = Record<string, unknown>> extends EventTarget {
   readonly key: string;
   readonly id: string;
   readonly url?: string;

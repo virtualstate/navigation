@@ -27,7 +27,7 @@ export async function syncLocationExample(navigation: Navigation) {
   await finished(navigation);
 }
 
-export async function syncHistoryExample(navigation: Navigation) {
+export async function syncHistoryExample(navigation: Navigation<Record<string, unknown>>) {
   const sync = new NavigationSync({ navigation }),
     history: History = sync;
 
@@ -40,7 +40,8 @@ export async function syncHistoryExample(navigation: Navigation) {
     "",
     expectedUrl
   );
-  ok(history.state[expected] === expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()[expected] === expected);
 
   await finished(navigation);
 
@@ -54,44 +55,52 @@ export async function syncHistoryExample(navigation: Navigation) {
   history.back();
 
   await finished(navigation);
-  ok(history.state?.[expected] !== expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()?.[expected] !== expected);
 
   history.back();
 
   await finished(navigation);
-  ok(history.state?.[expected] !== expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()?.[expected] !== expected);
 
   history.back();
 
   await finished(navigation);
 
-  ok(history.state[expected] === expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()[expected] === expected);
   ok(navigation.currentEntry.url === expectedUrl.toString());
 
   history.forward();
 
   await finished(navigation);
-  ok(history.state?.[expected] !== expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()?.[expected] !== expected);
 
   history.go(-1);
 
   await finished(navigation);
-  ok(history.state[expected] === expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()[expected] === expected);
 
   history.go(1);
 
   await finished(navigation);
-  ok(history.state?.[expected] !== expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()?.[expected] !== expected);
 
   history.go(-1);
 
   await finished(navigation);
-  ok(history.state[expected] === expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()[expected] === expected);
 
   history.go(0);
 
   await finished(navigation);
-  ok(history.state[expected] === expected);
+  ok(!history.state);
+  ok(navigation.currentEntry.getState()[expected] === expected);
 }
 
 async function finished(navigation: Navigation) {

@@ -6,12 +6,18 @@ import {
   AppLocationTransitionURL,
 } from "./location";
 import { InvalidStateError } from "./navigation-errors";
+import {type} from "os";
+
+const State = Symbol.for("@virtualstate/navigation/history/state");
 
 export interface NavigationHistoryOptions extends NavigationLocationOptions {
   navigation: Navigation;
+  [State]?: unknown
 }
 
 export interface NavigationHistory<S extends object> {}
+
+
 
 /**
  * @experimental
@@ -35,8 +41,12 @@ export class NavigationHistory<S extends object>
 
   scrollRestoration: ScrollRestoration = "manual";
 
-  get state(): S {
-    return this.#navigation.currentEntry.getState<S>();
+  get state(): unknown {
+    const currentState = this.#navigation.currentEntry?.getState();
+    if (typeof currentState === "string" || typeof currentState === "number" || typeof currentState === "boolean") {
+      return currentState;
+    }
+    return this.#options[State] ?? null;
   }
 
   back(): unknown;
