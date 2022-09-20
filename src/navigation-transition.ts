@@ -82,6 +82,9 @@ export const NavigationTransitionIsOngoing = Symbol.for(
 export const NavigationTransitionIsPending = Symbol.for(
   "@virtualstate/navigation/transition/isPending"
 );
+export const NavigationTransitionIsAsync = Symbol.for(
+    "@virtualstate/navigation/transition/isAsync"
+);
 export const NavigationTransitionWait = Symbol.for(
   "@virtualstate/navigation/transition/wait"
 );
@@ -113,7 +116,7 @@ export const NavigationTransitionFinally = Symbol.for(
   "@virtualstate/navigation/transition/finally"
 );
 export const NavigationTransitionAbort = Symbol.for(
-  "@virtualstate/navigation/transition/abort"
+    "@virtualstate/navigation/transition/abort"
 );
 
 export interface NavigationTransitionInit<S = unknown, R = unknown | void>
@@ -142,6 +145,11 @@ export class NavigationTransition<S = unknown, R = unknown | void>
   readonly committed: Promise<NavigationHistoryEntryPrototype<S>>;
   readonly from: NavigationHistoryEntryPrototype<S>;
   readonly navigationType: NavigationNavigationType;
+
+  /**
+   * true if transition has an async intercept
+   */
+  [NavigationTransitionIsAsync] = false;
 
   readonly #options: NavigationTransitionInit<S, R>;
 
@@ -385,6 +393,7 @@ export class NavigationTransition<S = unknown, R = unknown | void>
     const promise = getPromise();
     this[NavigationTransitionIsOngoing] = true;
     if (!promise) return;
+    this[NavigationTransitionIsAsync] = true;
     const statusPromise = promise
         .then(
             (): PromiseSettledResult<void> => ({

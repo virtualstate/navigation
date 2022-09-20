@@ -43,7 +43,7 @@ import {
   NavigationTransitionIsOngoing,
   NavigationTransitionFinishedDeferred,
   NavigationTransitionCommittedDeferred,
-  NavigationTransitionIsPending,
+  NavigationTransitionIsPending, NavigationTransitionIsAsync,
 } from "./navigation-transition";
 import {
   NavigationTransitionResult,
@@ -427,18 +427,21 @@ export class Navigation<S = unknown, R = unknown | void>
         [Symbol.iterator]: () => ({ next: () => iterator.next() }),
       };
 
-      function syncTransition() {
+      function syncTransition(): Promise<void> {
         for (const promise of iterable) {
           if (promise && typeof promise === "object" && "then" in promise) {
             promises.push(promise);
             void promise.catch((error) => error);
           }
-          if (committed) {
-            return asyncTransition();
+          if (committed && transition[NavigationTransitionIsAsync]) {
+            return asyncTransition().then(syncTransition)
           }
           if (transition.signal.aborted) {
             break;
           }
+        }
+        if (promises.length) {
+          return asyncTransition();
         }
         return Promise.resolve(); // We got through with no async
       }
@@ -450,7 +453,6 @@ export class Navigation<S = unknown, R = unknown | void>
         } else if (!transition[NavigationTransitionIsOngoing]) {
           await microtask;
         }
-        return syncTransition();
       }
 
       // console.log("Returning", { entry });
