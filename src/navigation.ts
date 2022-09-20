@@ -578,12 +578,6 @@ export class Navigation<S = unknown, R = unknown | void>
           })
         );
       }
-      // If we have more length here, we have added more transition
-      if (transition[NavigationTransitionIsPending]) {
-        yield Promise.reject(
-          new InvalidStateError("Unexpected pending promises after finish")
-        );
-      }
     }
 
     const maybeSyncTransition = () => {
