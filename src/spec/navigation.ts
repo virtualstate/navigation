@@ -190,9 +190,9 @@ export interface NavigationInterceptOptions<R> {
   focusReset?: "after-transition" | "manual";
   scroll?: "after-transition" | "manual";
   /**
-   * @experimental
+   * @experimental not part of spec yet
    */
-  commit?: "manual" | string;
+  commit?: "manual" | "immediate" | string;
 }
 
 export type NavigationIntercept<R> = NavigationInterceptFn<R> | NavigationInterceptOptions<R> | Promise<R>;
@@ -202,6 +202,11 @@ export interface NavigationCurrentEntryChangeEvent<S = unknown, R = unknown | vo
     NavigationCurrentEntryChangeEventInit {
   readonly navigationType?: NavigationNavigationType;
   readonly from?: NavigationHistoryEntry<S>;
+
+  /**
+   * @internal
+   * @experimental
+   */
   intercept?(options: NavigationIntercept<R>): void;
 }
 
@@ -222,9 +227,13 @@ export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"n
   scroll(): void;
 
   /**
-   * @experimental
+   * @experimental not part of spec yet
    */
   commit?(): void;
+  /**
+   * @experimental not part of spec yet
+   */
+  reportError?(reason: unknown): void;
 }
 
 export interface NavigateEventInit<S = unknown> extends EventInit {

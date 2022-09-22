@@ -22,7 +22,7 @@ import {
 } from "./navigation-transition";
 import { createEvent } from "./event-target/create-event";
 import {getBaseURL} from "./base-url";
-import {defer} from "@virtualstate/promise";
+import {defer, Deferred} from "./defer";
 import {ok} from "./is";
 
 export const NavigationFormData = Symbol.for(
@@ -80,6 +80,7 @@ export interface NavigationTransitionContext<S> {
   known: Set<NavigationHistoryEntry<S>>;
   startTime?: number;
   currentEntry?: NavigationHistoryEntry<S>;
+  reportError?(reason: unknown): void;
 }
 
 export interface NavigationTransitionResult<S> {
@@ -125,6 +126,7 @@ export function createNavigationTransition<S = unknown>(
       [NavigationTransitionEntry]: entry,
       [NavigationIntercept]: intercept,
     },
+    reportError
   } = context;
   let {
     transition: { [NavigationTransitionNavigationType]: navigationType },
@@ -203,7 +205,7 @@ export function createNavigationTransition<S = unknown>(
 
   let contextToCommit: NavigationTransitionCommitContext<S>;
 
-  const { resolve: resolveCommit, promise: waitForCommit } = defer<Promise<void> | void>();
+  const { resolve: resolveCommit, promise: waitForCommit }: Deferred<unknown> = defer();
 
   function commit() {
     ok(contextToCommit, "Expected contextToCommit");
@@ -237,6 +239,10 @@ export function createNavigationTransition<S = unknown>(
      * @experimental may be removed, proof of concept for immediate commit from userland
      */
     commit,
+    /**
+     * @experimental
+     */
+    reportError,
     /**
      * @deprecated
      */

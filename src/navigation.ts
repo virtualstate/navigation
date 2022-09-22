@@ -43,7 +43,10 @@ import {
   NavigationTransitionIsOngoing,
   NavigationTransitionFinishedDeferred,
   NavigationTransitionCommittedDeferred,
-  NavigationTransitionIsAsync, NavigationTransitionInterceptOptionsCommit, NavigationTransitionCommitIsManual,
+  NavigationTransitionIsAsync,
+  NavigationTransitionInterceptOptionsCommit,
+  NavigationTransitionCommitIsManual,
+  NavigationTransitionRejected,
 } from "./navigation-transition";
 import {
   NavigationTransitionResult,
@@ -386,6 +389,8 @@ export class Navigation<S = unknown, R = unknown | void>
     this.#activeTransition?.[NavigationTransitionAbort]();
     this.#activeTransition = transition;
 
+    let reportedError: unknown = undefined;
+
     const startEventPromise = transition.dispatchEvent({
       type: NavigationTransitionStart,
       transition,
@@ -445,7 +450,8 @@ export class Navigation<S = unknown, R = unknown | void>
         options,
         transition,
         known: this.#known,
-        commit: asyncCommit
+        commit: asyncCommit,
+        reportError: transition[NavigationTransitionRejected]
       });
 
       const microtask = new Promise<void>(queueMicrotask);
