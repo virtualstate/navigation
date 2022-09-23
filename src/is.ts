@@ -1,9 +1,6 @@
 export function isPromise<T>(value: unknown): value is Promise<T> {
-    function isPromiseLike(value: unknown): value is Promise<unknown> {
-        return !!value
-    }
     return (
-        isPromiseLike(value) &&
+        like<Promise<unknown>>(value) &&
         typeof value.then === "function"
     )
 }
@@ -18,4 +15,8 @@ export function ok(value: unknown, message = "Expected value"): asserts value {
 
 export function isPromiseRejectedResult(value: PromiseSettledResult<unknown>): value is PromiseRejectedResult {
     return value.status === "rejected";
+}
+
+export function like<T>(value: unknown): value is T {
+    return !!value;
 }

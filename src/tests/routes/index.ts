@@ -31,26 +31,25 @@ const navigation = getNavigation();
     console.log("done resource", { id });
   });
 
-  router.navigate("/test");
-  router.navigate("/");
-  router.navigate("/test");
-  router.navigate("/resource/1");
+  navigation.navigate("/test");
+  navigation.navigate("/");
+  navigation.navigate("/test");
+  navigation.navigate("/resource/1");
 
-  await router.transition?.finished;
+  await navigation.transition?.finished;
 
   console.log("finished first round");
 
   // router is a navigation, so it can be shared
   // note, navigation in one, navigates the other
-  const another = new Router(router);
+  const another = new Router(navigation);
 
-  another.navigate("/resource/2");
+  navigation.navigate("/resource/2");
 
-  await router.transition?.finished;
-
-  ok(another.currentEntry.url === router.currentEntry.url);
+  await navigation.transition?.finished;
 
   console.log("finished second round");
+  ok(navigation.currentEntry.url.endsWith("/resource/2"));
 
   {
     const navigation = new Navigation();
@@ -62,12 +61,15 @@ const navigation = getNavigation();
     // This copies the routes over, allowing separate navigation
     third.routes(router);
 
-    third.navigate("/resource/3");
+    navigation.navigate("/resource/3");
 
-    await third.transition?.finished;
+    await navigation.transition?.finished;
 
-    ok(third.currentEntry.url !== router.currentEntry.url);
+    ok(navigation.currentEntry.url.endsWith("/resource/3"));
   }
+
+  ok(!navigation.currentEntry.url.endsWith("/resource/3"));
+  ok(navigation.currentEntry.url.endsWith("/resource/2"));
 }
 
 {
@@ -132,7 +134,8 @@ const navigation = getNavigation();
 }
 
 {
-  const router = new Router(new Navigation());
+  const navigation = new Navigation();
+  const router = new Router(navigation);
 
   router.catch((error) => {
     console.error(error);
@@ -142,7 +145,7 @@ const navigation = getNavigation();
     throw new Error("Error");
   });
 
-  await router.navigate("/").finished;
+  await navigation.navigate("/").finished;
 }
 
 {

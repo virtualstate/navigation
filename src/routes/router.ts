@@ -1,7 +1,7 @@
-import { NavigationNavigation } from "../navigation-navigation";
-import { Navigation, NavigateEvent } from "../spec/navigation";
+import { NavigateEvent, NavigationDestination} from "../spec/navigation";
 import { URLPattern } from "urlpattern-polyfill";
-import { NoOperationNavigation } from "../noop-navigation";
+import { Event } from "../event-target";
+import {isPromise, like, ok} from "../is";
 
 type NonNil<T> = T extends null | undefined ? never : T;
 export type URLPatternResult = NonNil<ReturnType<URLPattern["exec"]>>;
@@ -12,81 +12,101 @@ export interface Fn {
   (...args: unknown[]): RouteFnReturn;
 }
 
-export interface RouteFn<S = unknown, R = void | unknown> {
-  (event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn<R>;
+export interface RouteFn<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>> {
+  (event: E, match?: URLPatternResult): RouteFnReturn<R>;
 }
 
-export interface ErrorFn<S = unknown> {
+export interface ErrorFn<S = unknown, E extends Event = NavigateEvent<S>> {
   (
       error: unknown,
-      event: NavigateEvent<S>,
+      event: E,
       match?: URLPatternResult
   ): RouteFnReturn;
 }
 
-export interface PatternErrorFn<S = unknown> {
+export interface PatternErrorFn<S = unknown, E extends Event = NavigateEvent<S>> {
   (
       error: unknown,
-      event: NavigateEvent<S>,
+      event: E,
       match: URLPatternResult
   ): RouteFnReturn;
 }
 
-export interface ThenFn<S = unknown, R = unknown> {
-  (value: R, event: NavigateEvent<S>, match?: URLPatternResult): RouteFnReturn;
+export interface ThenFn<S = unknown, R = unknown, E extends Event = NavigateEvent<S>> {
+  (value: R, event: E, match?: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternThenFn<S = unknown, R = unknown> {
-  (value: R, event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn;
+export interface PatternThenFn<S = unknown, R = unknown, E extends Event = NavigateEvent<S>> {
+  (value: R, event: E, match: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternRouteFn<S = unknown, R = void | unknown> {
-  (event: NavigateEvent<S>, match: URLPatternResult): RouteFnReturn<R>;
+export interface PatternRouteFn<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>> {
+  (event: E, match: URLPatternResult): RouteFnReturn<R>;
 }
 
-interface Route {
+interface Route<S, R, E extends Event> {
   pattern?: URLPattern;
   fn?: Fn;
-  router?: Router;
+  router?: Router<S, R, E>;
 }
 
 type RouteType = "route" | "reject" | "resolve";
 
-interface RouteRecord extends Record<RouteType, Route[]> {
-  router: Route[];
+interface RouteRecord<S, R, E extends Event> extends Record<RouteType, Route<S, R, E>[]> {
+  router: Route<S, R, E>[];
 }
 
 const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
 const Attached = Symbol.for("@virtualstate/navigation/routes/attached");
 const Detach = Symbol.for("@virtualstate/navigation/routes/detach");
+const Target = Symbol.for("@virtualstate/navigation/routes/target");
+const TargetType = Symbol.for("@virtualstate/navigation/routes/target/type");
 
-export function isRouter<S = unknown, R = void | unknown>(
+export function isRouter<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
     value: unknown
-): value is Router<S, R> {
+): value is Router<S, R, E> {
   function isRouterLike(value: unknown): value is { [Routes]: unknown } {
     return !!value;
   }
   return isRouterLike(value) && !!value[Routes];
 }
 
-const DEFAULT_BASE_URL = "https://html.spec.whatwg.org/";
+interface RouterListeningFn<E extends Event> {
+  (event: E): RouteFnReturn
+}
+
+interface RouterListenFn<E extends Event = NavigateEvent> {
+  (fn: RouterListeningFn<E>): void;
+}
+
+interface EventListenerTarget<E extends Event> {
+  addEventListener(type: E["type"], handler: RouterListeningFn<E>): void;
+  removeEventListener(type: E["type"], handler: RouterListeningFn<E>): void;
+}
+
+type RouterListenTarget<E extends Event> = RouterListenFn<E> | EventListenerTarget<E>
 
 export class Router<
-    S = unknown,
-    R = void | unknown
-    > extends NavigationNavigation<S> {
-  [Routes]: RouteRecord = {
+  S = unknown,
+  R = void | unknown,
+  E extends Event = NavigateEvent<S>
+> {
+  [Routes]: RouteRecord<S, R, E> = {
     router: [],
     route: [],
     reject: [],
     resolve: [],
   };
-  [Attached] = new Set<Router<S>>();
+  [Attached] = new Set<Router<S, R, E>>();
+  [Target]: RouterListenTarget<E>;
+  [TargetType]: E["type"];
 
   private listening = false;
 
-  constructor(navigation: Navigation<S> = new NoOperationNavigation<S>()) {
-    super(navigation);
+  constructor(target?: RouterListenTarget<E>, type?: E["type"]) {
+
+    this[Target] = target;
+    this[TargetType] = type;
 
     // Catch use override types with
     // arrow functions so need to bind manually
@@ -96,10 +116,10 @@ export class Router<
     this.catch = this.catch.bind(this);
   }
 
-  routes(pattern: string | URLPattern, router: Router<S, R>): this;
-  routes(router: Router<S, R>): this;
-  routes(...args: [string | URLPattern, Router<S, R>] | [Router<S, R>]): this;
-  routes(...args: [string | URLPattern, Router<S, R>] | [Router<S, R>]): this {
+  routes(pattern: string | URLPattern, router: Router<S, R, E>): this;
+  routes(router: Router<S, R, E>): this;
+  routes(...args: [string | URLPattern, Router<S, R, E>] | [Router<S, R, E>]): this;
+  routes(...args: [string | URLPattern, Router<S, R, E>] | [Router<S, R, E>]): this {
     let router, pattern;
     if (args.length === 1) {
       [router] = args;
@@ -142,11 +162,11 @@ export class Router<
     return this;
   }
 
-  catch(pattern: string | URLPattern, fn: PatternErrorFn<S>): this;
-  catch(fn: ErrorFn<S>): this;
-  catch(...args: [string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>]): this;
+  catch(pattern: string | URLPattern, fn: PatternErrorFn<S, E>): this;
+  catch(fn: ErrorFn<S, E>): this;
+  catch(...args: [string | URLPattern, PatternErrorFn<S, E>] | [ErrorFn<S, E>]): this;
   catch(
-      ...args: [string | URLPattern, PatternErrorFn<S>] | [ErrorFn<S>]
+      ...args: [string | URLPattern, PatternErrorFn<S, E>] | [ErrorFn<S, E>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -164,13 +184,13 @@ export class Router<
     return this;
   }
 
-  route(pattern: string | URLPattern, fn: PatternRouteFn<S, R>): this;
-  route(fn: RouteFn<S, R>): this;
+  route(pattern: string | URLPattern, fn: PatternRouteFn<S, R, E>): this;
+  route(fn: RouteFn<S, R, E>): this;
   route(
-      ...args: [string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>]
+      ...args: [string | URLPattern, PatternRouteFn<S, R, E>] | [RouteFn<S, R, E>]
   ): this;
   route(
-      ...args: [string | URLPattern, PatternRouteFn<S, R>] | [RouteFn<S, R>]
+      ...args: [string | URLPattern, PatternRouteFn<S, R, E>] | [RouteFn<S, R, E>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -188,7 +208,7 @@ export class Router<
     return this;
   }
 
-  [Detach](router: Router) {
+  [Detach](router: Router<S, R, E>) {
     const index = this[Routes].router.findIndex(
         (route) => route.router === router
     );
@@ -211,7 +231,9 @@ export class Router<
       this.#deinit();
     }
     for (const attached of this[Attached]) {
-      attached[Detach](this);
+      if (isRouter<S, R, E>(attached)) {
+        attached[Detach](this);
+      }
     }
     this[Attached] = new Set();
   };
@@ -228,32 +250,75 @@ export class Router<
     if (this.listening) {
       return;
     }
+    const target = this[Target];
+    if (!target) return;
     this.listening = true;
-    this.addEventListener("navigate", this.#navigate);
+    if (typeof target === "function") {
+      return target(this.#navigate);
+    }
+    const type = this[TargetType] ?? "navigate";
+    target.addEventListener(type, this.#navigate);
   };
 
   #deinit = () => {
     if (!this.listening) {
       return;
     }
+    const target = this[Target];
+    if (!target) return;
+    if (typeof target === "function") {
+      throw new Error("Cannot stop listening");
+    }
     this.listening = false;
-    this.removeEventListener("navigate", this.#navigate);
+    const type = this[TargetType] ?? "navigate";
+    target.removeEventListener(type, this.#navigate);
   };
 
-  #navigate = (event: NavigateEvent<S>) => {
+  #navigate = (event: E) => {
     if (!event.canIntercept) return;
-    event.intercept(this.#navigationTransition(event));
+
+    if (isIntercept(event)) {
+      event.intercept(this.#navigationTransition(event));
+    } else if (isTransitionWhile(event)) {
+      event.transitionWhile(this.#navigationTransition(event));
+    } else if (isRespondWith(event)) {
+      event.respondWith(this.#navigationTransition(event));
+    } else {
+      return this.#navigationTransition(event);
+    }
+
+    function isIntercept(event: E): event is E & { intercept(promise: Promise<unknown>): void } {
+      return (
+          like<{ intercept: unknown }>(event) &&
+          typeof event.intercept === "function"
+      )
+    }
+
+    function isTransitionWhile(event: E): event is E & { transitionWhile(promise: Promise<unknown>): void } {
+      return (
+          like<{ transitionWhile: unknown }>(event) &&
+          typeof event.transitionWhile === "function"
+      )
+    }
+
+    function isRespondWith(event: E): event is E & { respondWith(promise: Promise<unknown>): void } {
+      return (
+          like<{ respondWith: unknown }>(event) &&
+          typeof event.respondWith === "function"
+      )
+    }
   };
 
-  #navigationTransition = async (event: NavigateEvent<S>) => {
+  #navigationTransition = async (event: E) => {
     const router = this;
 
     const promises: Promise<unknown>[] = [];
 
     const {
-      destination: { url },
       signal,
     } = event;
+
+    const url: string | URL = getURL(event);
 
     transition(
         "route",
@@ -268,7 +333,7 @@ export class Router<
 
     function transition(
         type: RouteType,
-        fn: (route: Route, match?: URLPatternResult) => unknown,
+        fn: (route: Route<S, R, E>, match?: URLPatternResult) => unknown,
         resolve = handleResolve,
         reject = handleReject
     ) {
@@ -276,7 +341,7 @@ export class Router<
       resolveRouter(router);
       return isRoute;
 
-      function matchRoute(route: Route, parentMatch?: URLPatternResult) {
+      function matchRoute(route: Route<S, R, E>, parentMatch?: URLPatternResult) {
         const { router, pattern } = route;
 
         let match = parentMatch;
@@ -286,7 +351,7 @@ export class Router<
           if (!match) return;
         }
 
-        if (router) {
+        if (isRouter<S, R, E>(router)) {
           return resolveRouter(router, match);
         }
 
@@ -307,10 +372,10 @@ export class Router<
         }
       }
 
-      function resolveRouter(router: Router, match?: URLPatternResult) {
+      function resolveRouter(router: Router<S, R, E>, match?: URLPatternResult) {
         resolveRoutes(router[Routes][type]);
         resolveRoutes(router[Routes].router);
-        function resolveRoutes(routes: Route[]) {
+        function resolveRoutes(routes: Route<S, R, E>[]) {
           for (const route of routes) {
             if (signal?.aborted) break;
             matchRoute(route, match);
@@ -343,11 +408,44 @@ export class Router<
       }
     }
 
-    function isPromise(value: unknown): value is Promise<unknown> {
-      function isPromiseLike(value: unknown): value is Promise<unknown> {
-        return !!(value && typeof value === "object" && "then" in value);
+    function getURL<E extends Event>(event: E) {
+      if (isDestination(event)) {
+        return event.destination.url;
+      } else if (isRequest(event)) {
+        return event.request.url;
+      } else if (isURL(event)) {
+        return event.url;
       }
-      return isPromiseLike(value) && typeof value.then === "function";
+      throw new Error("Could not get url from event");
+
+      function isDestination(event: E): event is E & { destination: NavigationDestination } {
+        return (
+            like<{ destination: unknown }>(event) &&
+            !!event.destination
+        )
+      }
+
+      function isRequest(event: E): event is E & { request: Request } {
+        return (
+            like<{ request: unknown }>(event) &&
+            !!event.request
+        )
+      }
+
+      function isURL(event: E): event is E & { url: string | URL } {
+        return (
+            like<{ url: unknown }>(event) &&
+            !!(
+                event.url && (
+                    typeof event.url === "string" ||
+                    event.url instanceof URL
+                )
+            )
+        )
+      }
     }
+
+
+
   };
 }
