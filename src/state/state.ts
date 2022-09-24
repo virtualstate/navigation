@@ -1,4 +1,4 @@
-import {NavigateEvent, Navigation} from "../spec/navigation";
+import {NavigateEvent, Navigation, NavigationHistoryEntry} from "../spec/navigation";
 import {getNavigation} from "../get-navigation";
 import {Push} from "@virtualstate/promise";
 import {Event} from "../event-target";
@@ -45,17 +45,18 @@ export function state<S>(navigation: Navigation<S> = getNavigation()) {
     }
 }
 
-export async function * stateGenerator<S>(navigation: Navigation<S> = getNavigation()) {
+export async function * stateGenerator<S>(navigation: Navigation<S> = getNavigation()): AsyncIterableIterator<S> {
 
     let lastState: S | undefined = undefined,
         wasState = false;
 
-    // Wait for the initial transition to finish until we watch additional state
-    const finishedEntry = await navigation?.transition.finished
+    let currentEntry: NavigationHistoryEntry<S> | undefined = navigation.currentEntry;
+
+    if (navigation.transition) {
+        currentEntry = await navigation.transition?.finished;
+    }
 
     const push = new Push<S>();
-
-    const currentEntry = finishedEntry ?? navigation.currentEntry;
 
     ok(currentEntry, "Expected a currentEntry");
 

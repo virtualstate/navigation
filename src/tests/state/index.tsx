@@ -4,6 +4,7 @@ import {getNavigation} from "../../get-navigation";
 import {ok} from "../../is";
 import {descendants, h} from "@virtualstate/focus";
 import {Navigation} from "../../navigation";
+import {transition} from "../../transition";
 
 {
     const navigation = getNavigation()
@@ -164,5 +165,62 @@ import {Navigation} from "../../navigation";
         ok(changes.length > 3);
         ok(changes.at(-1) === "Test 7");
     }
+
+}
+
+
+{
+    const navigation = new Navigation();
+
+    await navigation.navigate("/", { }).finished;
+
+    const changes = state(navigation);
+
+    const controller = new AbortController();
+
+    async function app(signal: AbortSignal): Promise<void> {
+        console.log("Running app loop");
+        if (signal.aborted) return;
+
+        for await (const change of changes) {
+            console.log({ change });
+        }
+
+        // We will be in a navigation transition here
+        await navigation.transition?.finished;
+
+        return app(signal);
+    }
+
+    void app(controller.signal);
+
+    // The below is "simulating" navigation, without watching
+    // what effects happen from it, in real apps this would be happening
+    // all over the place
+    // Some state might be missed if it is immediately updated during
+    // or right after a transition
+
+    navigation.navigate("/a", { state: "Loading!" });
+
+    await transition(navigation);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    navigation.updateCurrentEntry({ state: "Value!" });
+
+    await transition(navigation)
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    navigation.navigate("/a/route", { state: "Some other value" });
+
+    await transition(navigation);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    navigation.updateCurrentEntry({ state: "Updated value!" });
+
+    await transition(navigation);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    controller.abort();
+
 
 }
