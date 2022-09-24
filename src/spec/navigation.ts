@@ -227,6 +227,11 @@ export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"n
   scroll(): void;
 
   /**
+   * @deprecated use intercept
+   */
+  transitionWhile?(options?: NavigationIntercept<R>): void;
+
+  /**
    * @experimental not part of spec yet
    */
   commit?(): void;

@@ -62,6 +62,7 @@ export async function * stateGenerator<S>(navigation: Navigation<S> = getNavigat
 
     pushState();
 
+    navigation.addEventListener("navigate", onNavigate);
     navigation.addEventListener("navigatesuccess", onNavigateSuccess);
     navigation.addEventListener("navigateerror", onNavigateError, { once: true });
     navigation.addEventListener("currententrychange", pushState);
@@ -85,6 +86,13 @@ export async function * stateGenerator<S>(navigation: Navigation<S> = getNavigat
         }
     }
 
+    function onNavigate(event: NavigateEvent) {
+        // Indicate that we have intercepted navigation
+        // and are using it as a state tracker
+        event.intercept?.(Promise.resolve());
+        event.transitionWhile?.(Promise.resolve());
+    }
+
     function onNavigateSuccess() {
         if (navigation.currentEntry.id !== currentEntry.id) {
             close();
@@ -97,6 +105,7 @@ export async function * stateGenerator<S>(navigation: Navigation<S> = getNavigat
     }
 
     function close() {
+        navigation.removeEventListener("navigate", onNavigate);
         navigation.removeEventListener("navigatesuccess", onNavigateSuccess);
         navigation.removeEventListener("navigateerror", onNavigateError);
         navigation.removeEventListener("currententrychange", pushState);
