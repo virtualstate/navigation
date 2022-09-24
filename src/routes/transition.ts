@@ -4,7 +4,7 @@ import {Event} from "../event-target";
 import {NavigationDestination} from "../spec/navigation";
 import {getRouterRoutes, isRouter, Router} from "./router";
 
-export async function transition<E extends Event, R>(router: Router<E, R>, event: E): Promise<void> {
+export async function transitionEvent<E extends Event, R>(router: Router<E, R>, event: E): Promise<void> {
     const promises: Promise<unknown>[] = [];
 
     const {

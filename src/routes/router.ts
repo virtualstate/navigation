@@ -12,7 +12,7 @@ import {
   RouterListenTarget,
   ThenFn
 } from "./types";
-import {transition} from "./transition";
+import {transitionEvent} from "./transition";
 
 const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
 const Attached = Symbol.for("@virtualstate/navigation/routes/attached");
@@ -37,7 +37,7 @@ export function isRouter<E extends Event = NavigateEvent, R = void | unknown>(
 }
 
 export class Router<
-    E extends Event = NavigateEvent, 
+    E extends Event = NavigateEvent,
     R = void | unknown,
     T extends RouterListenTarget<E> = RouterListenTarget<E>
 > {
@@ -269,6 +269,6 @@ export class Router<
   };
 
   #transition = async (event: E): Promise<void> => {
-    return transition(this, event);
+    return transitionEvent(this, event);
   };
 }
