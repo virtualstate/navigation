@@ -47,7 +47,7 @@ export function routes<E extends Event = NavigateEvent, R = void | unknown>(
   router: Router<E, R>
 ): Router<E, R>;
 export function routes<E extends Event = NavigateEvent, R = void | unknown>(): Router<E, R>;
-export function routes<S = unknown, R = void | unknown, E extends Event = Event>(
+export function routes<E extends Event, R>(
   ...args:
     | [string | URLPattern]
     | [string | URLPattern, Router<E, R> | undefined]
