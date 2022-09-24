@@ -1,4 +1,4 @@
-import { Navigation } from "../../navigation";
+import {NavigateEvent, Navigation} from "../../navigation";
 import { Router } from "../../routes";
 import { children, h, name, properties } from "@virtualstate/focus";
 import { defer } from "@virtualstate/promise";
@@ -18,7 +18,7 @@ declare global {
   }
 
   const navigation = new Navigation<State>();
-  const { route, then } = new Router<State>(navigation);
+  const { route, then } = new Router<NavigateEvent<State>>(navigation);
 
   const { resolve: render, promise } = defer<unknown>();
 

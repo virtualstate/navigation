@@ -23,13 +23,13 @@ const TargetType = Symbol.for("@virtualstate/navigation/routes/target/type");
 /**
  * @internal
  */
-export function getRouterRoutes<S, R, E extends Event>(router: Router<S, R, E>): RouteRecord<S, R, E> {
+export function getRouterRoutes<E extends Event, R>(router: Router<E, R>): RouteRecord<E, R> {
   return router[Routes];
 }
 
-export function isRouter<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
+export function isRouter<E extends Event = NavigateEvent, R = void | unknown>(
     value: unknown
-): value is Router<S, R, E> {
+): value is Router<E, R> {
   function isRouterLike(value: unknown): value is { [Routes]: unknown } {
     return !!value;
   }
@@ -37,23 +37,23 @@ export function isRouter<S = unknown, R = void | unknown, E extends Event = Navi
 }
 
 export class Router<
-  S = unknown,
-  R = void | unknown,
-  E extends Event = NavigateEvent<S>
+    E extends Event = NavigateEvent, 
+    R = void | unknown,
+    T extends RouterListenTarget<E> = RouterListenTarget<E>
 > {
-  [Routes]: RouteRecord<S, R, E> = {
+  [Routes]: RouteRecord<E, R> = {
     router: [],
     route: [],
     reject: [],
     resolve: [],
   };
-  [Attached] = new Set<Router<S, R, E>>();
-  [Target]: RouterListenTarget<E>;
+  [Attached] = new Set<Router<E, R>>();
+  [Target]: T;
   [TargetType]: E["type"];
 
   private listening = false;
 
-  constructor(target?: RouterListenTarget<E>, type?: E["type"]) {
+  constructor(target?: T, type?: E["type"]) {
 
     this[Target] = target;
     this[TargetType] = type;
@@ -66,10 +66,10 @@ export class Router<
     this.catch = this.catch.bind(this);
   }
 
-  routes(pattern: string | URLPattern, router: Router<S, R, E>): this;
-  routes(router: Router<S, R, E>): this;
-  routes(...args: [string | URLPattern, Router<S, R, E>] | [Router<S, R, E>]): this;
-  routes(...args: [string | URLPattern, Router<S, R, E>] | [Router<S, R, E>]): this {
+  routes(pattern: string | URLPattern, router: Router<E, R>): this;
+  routes(router: Router<E, R>): this;
+  routes(...args: [string | URLPattern, Router<E, R>] | [Router<E, R>]): this;
+  routes(...args: [string | URLPattern, Router<E, R>] | [Router<E, R>]): this {
     let router, pattern;
     if (args.length === 1) {
       [router] = args;
@@ -88,13 +88,13 @@ export class Router<
     return this;
   }
 
-  then(pattern: string | URLPattern, fn: PatternThenFn<S, R>): this;
-  then(fn: ThenFn<S, R>): this;
+  then(pattern: string | URLPattern, fn: PatternThenFn<E, R>): this;
+  then(fn: ThenFn<E, R>): this;
   then(
-      ...args: [string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>]
+      ...args: [string | URLPattern, PatternThenFn<E, R>] | [ThenFn<E, R>]
   ): this;
   then(
-      ...args: [string | URLPattern, PatternThenFn<S, R>] | [ThenFn<S, R>]
+      ...args: [string | URLPattern, PatternThenFn<E, R>] | [ThenFn<E, R>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -112,11 +112,11 @@ export class Router<
     return this;
   }
 
-  catch(pattern: string | URLPattern, fn: PatternErrorFn<S, E>): this;
-  catch(fn: ErrorFn<S, E>): this;
-  catch(...args: [string | URLPattern, PatternErrorFn<S, E>] | [ErrorFn<S, E>]): this;
+  catch(pattern: string | URLPattern, fn: PatternErrorFn<E>): this;
+  catch(fn: ErrorFn<E>): this;
+  catch(...args: [string | URLPattern, PatternErrorFn<E>] | [ErrorFn<E>]): this;
   catch(
-      ...args: [string | URLPattern, PatternErrorFn<S, E>] | [ErrorFn<S, E>]
+      ...args: [string | URLPattern, PatternErrorFn<E>] | [ErrorFn<E>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -134,13 +134,13 @@ export class Router<
     return this;
   }
 
-  route(pattern: string | URLPattern, fn: PatternRouteFn<S, R, E>): this;
-  route(fn: RouteFn<S, R, E>): this;
+  route(pattern: string | URLPattern, fn: PatternRouteFn<E, R>): this;
+  route(fn: RouteFn<E, R>): this;
   route(
-      ...args: [string | URLPattern, PatternRouteFn<S, R, E>] | [RouteFn<S, R, E>]
+      ...args: [string | URLPattern, PatternRouteFn<E, R>] | [RouteFn<E, R>]
   ): this;
   route(
-      ...args: [string | URLPattern, PatternRouteFn<S, R, E>] | [RouteFn<S, R, E>]
+      ...args: [string | URLPattern, PatternRouteFn<E, R>] | [RouteFn<E, R>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
@@ -158,7 +158,7 @@ export class Router<
     return this;
   }
 
-  [Detach](router: Router<S, R, E>) {
+  [Detach](router: Router<E, R>) {
     const index = this[Routes].router.findIndex(
         (route) => route.router === router
     );
@@ -181,7 +181,7 @@ export class Router<
       this.#deinit();
     }
     for (const attached of this[Attached]) {
-      if (isRouter<S, R, E>(attached)) {
+      if (isRouter<E, R>(attached)) {
         attached[Detach](this);
       }
     }

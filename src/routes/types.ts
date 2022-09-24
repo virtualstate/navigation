@@ -12,11 +12,11 @@ export interface Fn {
     (...args: unknown[]): RouteFnReturn;
 }
 
-export interface RouteFn<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>> {
+export interface RouteFn<E extends Event = NavigateEvent, R = void | unknown> {
     (event: E, match?: URLPatternResult): RouteFnReturn<R>;
 }
 
-export interface ErrorFn<S = unknown, E extends Event = NavigateEvent<S>> {
+export interface ErrorFn<E extends Event = NavigateEvent> {
     (
         error: unknown,
         event: E,
@@ -24,7 +24,7 @@ export interface ErrorFn<S = unknown, E extends Event = NavigateEvent<S>> {
     ): RouteFnReturn;
 }
 
-export interface PatternErrorFn<S = unknown, E extends Event = NavigateEvent<S>> {
+export interface PatternErrorFn<E extends Event = NavigateEvent> {
     (
         error: unknown,
         event: E,
@@ -32,28 +32,28 @@ export interface PatternErrorFn<S = unknown, E extends Event = NavigateEvent<S>>
     ): RouteFnReturn;
 }
 
-export interface ThenFn<S = unknown, R = unknown, E extends Event = NavigateEvent<S>> {
+export interface ThenFn<E extends Event = NavigateEvent, R = void | unknown> {
     (value: R, event: E, match?: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternThenFn<S = unknown, R = unknown, E extends Event = NavigateEvent<S>> {
+export interface PatternThenFn<E extends Event = NavigateEvent, R = void | unknown> {
     (value: R, event: E, match: URLPatternResult): RouteFnReturn;
 }
 
-export interface PatternRouteFn<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>> {
+export interface PatternRouteFn<E extends Event = NavigateEvent, R = void | unknown> {
     (event: E, match: URLPatternResult): RouteFnReturn<R>;
 }
 
-export interface Route<S, R, E extends Event> {
+export interface Route<E extends Event, R> {
     pattern?: URLPattern;
     fn?: Fn;
-    router?: Router<S, R, E>;
+    router?: Router<E, R>;
 }
 
 export type RouteType = "route" | "reject" | "resolve";
 
-export interface RouteRecord<S, R, E extends Event> extends Record<RouteType, Route<S, R, E>[]> {
-    router: Route<S, R, E>[];
+export interface RouteRecord<E extends Event, R> extends Record<RouteType, Route<E, R>[]> {
+    router: Route<E, R>[];
 }
 
 export interface RouterListeningFn<E extends Event> {

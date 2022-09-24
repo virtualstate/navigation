@@ -1,5 +1,5 @@
 import { getRouter, route, Router, routes } from "../../routes";
-import { Navigation } from "../../navigation";
+import {NavigateEvent, Navigation} from "../../navigation";
 import { ok } from "../util";
 import { getNavigation } from "../../get-navigation";
 
@@ -229,8 +229,8 @@ const navigation = getNavigation();
     key: number;
   }
 
-  const navigation = new Navigation();
-  const { route, then } = new Router<State, number>(navigation);
+  const navigation = new Navigation<State>();
+  const { route, then } = new Router<NavigateEvent<State>>(navigation);
 
   let setValue: unknown = undefined;
 

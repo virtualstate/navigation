@@ -4,7 +4,7 @@ import {Event} from "../event-target";
 import {NavigationDestination} from "../spec/navigation";
 import {getRouterRoutes, isRouter, Router} from "./router";
 
-export async function transition<S, R, E extends Event>(router: Router<S, R, E>, event: E): Promise<void> {
+export async function transition<E extends Event, R>(router: Router<E, R>, event: E): Promise<void> {
     const promises: Promise<unknown>[] = [];
 
     const {
@@ -26,7 +26,7 @@ export async function transition<S, R, E extends Event>(router: Router<S, R, E>,
 
     function transitionPart(
         type: RouteType,
-        fn: (route: Route<S, R, E>, match?: URLPatternResult) => unknown,
+        fn: (route: Route<E, R>, match?: URLPatternResult) => unknown,
         resolve = handleResolve,
         reject = handleReject
     ) {
@@ -34,7 +34,7 @@ export async function transition<S, R, E extends Event>(router: Router<S, R, E>,
         resolveRouter(router);
         return isRoute;
 
-        function matchRoute(route: Route<S, R, E>, parentMatch?: URLPatternResult) {
+        function matchRoute(route: Route<E, R>, parentMatch?: URLPatternResult) {
             const { router, pattern } = route;
 
             let match = parentMatch;
@@ -44,7 +44,7 @@ export async function transition<S, R, E extends Event>(router: Router<S, R, E>,
                 if (!match) return;
             }
 
-            if (isRouter<S, R, E>(router)) {
+            if (isRouter<E, R>(router)) {
                 return resolveRouter(router, match);
             }
 
@@ -65,11 +65,11 @@ export async function transition<S, R, E extends Event>(router: Router<S, R, E>,
             }
         }
 
-        function resolveRouter(router: Router<S, R, E>, match?: URLPatternResult) {
+        function resolveRouter(router: Router<E, R>, match?: URLPatternResult) {
             const routes = getRouterRoutes(router);
             resolveRoutes(routes[type]);
             resolveRoutes(routes.router);
-            function resolveRoutes(routes: Route<S, R, E>[]) {
+            function resolveRoutes(routes: Route<E, R>[]) {
                 for (const route of routes) {
                     if (signal?.aborted) break;
                     matchRoute(route, match);

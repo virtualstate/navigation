@@ -5,73 +5,73 @@ import {Event} from "../event-target";
 import {NavigateEvent} from "../spec/navigation";
 import {PatternRouteFn, RouteFn} from "./types";
 
-let router: Router<unknown, unknown, Event>;
+let router: Router<Event>;
 
-export function getRouter<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(): Router<S, R, E> {
-  if (isRouter<S, R, E>(router)) {
+export function getRouter<E extends Event = NavigateEvent, R = void | unknown>(): Router<E, R> {
+  if (isRouter<E, R>(router)) {
     return router;
   }
   const navigation = getNavigation();
-  const local = new Router<S, R, E>(navigation, "navigate");
+  const local = new Router<E, R>(navigation, "navigate");
   router = local;
   return local;
 }
 
-export function route<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
+export function route<E extends Event = NavigateEvent, R = void | unknown>(
   pattern: string | URLPattern,
-  fn: PatternRouteFn<S, R, E>
-): Router<S, R, E>;
-export function route<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
-  fn: RouteFn<S, R, E>
-): Router<S, R, E>;
-export function route<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
-  ...args: [string | URLPattern, PatternRouteFn<S, R, E>] | [RouteFn<S, R, E>]
-): Router<S, R, E> {
+  fn: PatternRouteFn<E, R>
+): Router<E, R>;
+export function route<E extends Event = NavigateEvent, R = void | unknown>(
+  fn: RouteFn<E, R>
+): Router<E, R>;
+export function route<E extends Event = NavigateEvent, R = void | unknown>(
+  ...args: [string | URLPattern, PatternRouteFn<E, R>] | [RouteFn<E, R>]
+): Router<E, R> {
   let pattern, fn;
   if (args.length === 1) {
     [fn] = args;
   } else if (args.length === 2) {
     [pattern, fn] = args;
   }
-  return routes<S, R, E>(pattern).route(fn);
+  return routes<E, R>(pattern).route(fn);
 }
 
-export function routes<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
+export function routes<E extends Event = NavigateEvent, R = void | unknown>(
   pattern: string | URLPattern,
-  router: Router<S, R, E>
-): Router<S, R, E>;
-export function routes<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
+  router: Router<E, R>
+): Router<E, R>;
+export function routes<E extends Event = NavigateEvent, R = void | unknown>(
   pattern: string | URLPattern
-): Router<S, R, E>;
-export function routes<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
-  router: Router<S, R, E>
-): Router<S, R, E>;
-export function routes<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(): Router<S, R>;
+): Router<E, R>;
+export function routes<E extends Event = NavigateEvent, R = void | unknown>(
+  router: Router<E, R>
+): Router<E, R>;
+export function routes<E extends Event = NavigateEvent, R = void | unknown>(): Router<E, R>;
 export function routes<S = unknown, R = void | unknown, E extends Event = Event>(
   ...args:
     | [string | URLPattern]
-    | [string | URLPattern, Router<S, R, E> | undefined]
-    | [Router<S, R, E> | undefined]
+    | [string | URLPattern, Router<E, R> | undefined]
+    | [Router<E, R> | undefined]
     | []
-): Router<S, R, E> {
-  let router: Router<S, R, E>;
+): Router<E, R> {
+  let router: Router<E, R>;
   if (!args.length) {
-    router = new Router<S, R, E>();
-    getRouter<S, R, E>().routes(router);
+    router = new Router<E, R>();
+    getRouter<E, R>().routes(router);
   } else if (args.length === 1) {
     const [arg] = args;
-    if (isRouter<S, R, E>(arg)) {
+    if (isRouter<E, R>(arg)) {
       router = arg;
-      getRouter<S, R, E>().routes(router);
+      getRouter<E, R>().routes(router);
     } else {
       const pattern = arg;
       router = new Router();
-      getRouter<S, R, E>().routes(pattern, router);
+      getRouter<E, R>().routes(pattern, router);
     }
   } else if (args.length >= 2) {
     const [pattern, routerArg] = args;
     router = routerArg ?? new Router();
-    getRouter<S, R, E>().routes(pattern, router);
+    getRouter<E, R>().routes(pattern, router);
   }
   return router;
 }
