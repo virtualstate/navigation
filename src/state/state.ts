@@ -16,6 +16,9 @@ export function getState<S>(navigation: Navigation<S> = getNavigation()) {
 
 export async function * state<S>(navigation: Navigation<S> = getNavigation()) {
 
+    let lastState: S | undefined = undefined,
+        wasState = false;
+
     // Wait for the initial transition to finish until we watch additional state
     const finishedEntry = await navigation?.transition.finished
 
@@ -39,8 +42,13 @@ export async function * state<S>(navigation: Navigation<S> = getNavigation()) {
             return;
         }
         const state = currentEntry.getState()
-        if (typeof state !== "undefined") {
+        if (wasState || typeof state !== "undefined") {
+            if (lastState === state) {
+                return;
+            }
             push.push(state);
+            lastState = state;
+            wasState = true;
         }
     }
 
