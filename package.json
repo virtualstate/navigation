@@ -21,6 +21,9 @@
       "routes": [
         "./esnext/routes/index.d.ts"
       ],
+      "state": [
+        "./esnext/state/index.d.ts"
+      ],
       "polyfill": [
         "./esnext/polyfill.d.ts"
       ],
@@ -52,7 +55,8 @@
     "./event-target/sync": "./esnext/event-target/sync-event-target.js",
     "./esnext/polyfill": "./esnext/polyfill.js",
     "./polyfill": "./esnext/polyfill.js",
-    "./routes": "./esnext/routes/index.js"
+    "./routes": "./esnext/routes/index.js",
+    "./state": "./esnext/state/index.js"
   },
   "repository": {
     "type": "git",
