@@ -1,66 +1,31 @@
-import { NavigateEvent, NavigationDestination} from "../spec/navigation";
+import { NavigateEvent } from "../spec/navigation";
 import { URLPattern } from "urlpattern-polyfill";
 import { Event } from "../event-target";
-import {isPromise, like, ok} from "../is";
-
-type NonNil<T> = T extends null | undefined ? never : T;
-export type URLPatternResult = NonNil<ReturnType<URLPattern["exec"]>>;
-
-export type RouteFnReturn<R = void | unknown> = Promise<R> | R;
-
-export interface Fn {
-  (...args: unknown[]): RouteFnReturn;
-}
-
-export interface RouteFn<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>> {
-  (event: E, match?: URLPatternResult): RouteFnReturn<R>;
-}
-
-export interface ErrorFn<S = unknown, E extends Event = NavigateEvent<S>> {
-  (
-      error: unknown,
-      event: E,
-      match?: URLPatternResult
-  ): RouteFnReturn;
-}
-
-export interface PatternErrorFn<S = unknown, E extends Event = NavigateEvent<S>> {
-  (
-      error: unknown,
-      event: E,
-      match: URLPatternResult
-  ): RouteFnReturn;
-}
-
-export interface ThenFn<S = unknown, R = unknown, E extends Event = NavigateEvent<S>> {
-  (value: R, event: E, match?: URLPatternResult): RouteFnReturn;
-}
-
-export interface PatternThenFn<S = unknown, R = unknown, E extends Event = NavigateEvent<S>> {
-  (value: R, event: E, match: URLPatternResult): RouteFnReturn;
-}
-
-export interface PatternRouteFn<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>> {
-  (event: E, match: URLPatternResult): RouteFnReturn<R>;
-}
-
-interface Route<S, R, E extends Event> {
-  pattern?: URLPattern;
-  fn?: Fn;
-  router?: Router<S, R, E>;
-}
-
-type RouteType = "route" | "reject" | "resolve";
-
-interface RouteRecord<S, R, E extends Event> extends Record<RouteType, Route<S, R, E>[]> {
-  router: Route<S, R, E>[];
-}
+import { like } from "../is";
+import {
+  ErrorFn,
+  PatternErrorFn,
+  PatternRouteFn,
+  PatternThenFn,
+  RouteFn,
+  RouteRecord,
+  RouterListenTarget,
+  ThenFn
+} from "./types";
+import {transition} from "./transition";
 
 const Routes = Symbol.for("@virtualstate/navigation/routes/routes");
 const Attached = Symbol.for("@virtualstate/navigation/routes/attached");
 const Detach = Symbol.for("@virtualstate/navigation/routes/detach");
 const Target = Symbol.for("@virtualstate/navigation/routes/target");
 const TargetType = Symbol.for("@virtualstate/navigation/routes/target/type");
+
+/**
+ * @internal
+ */
+export function getRouterRoutes<S, R, E extends Event>(router: Router<S, R, E>): RouteRecord<S, R, E> {
+  return router[Routes];
+}
 
 export function isRouter<S = unknown, R = void | unknown, E extends Event = NavigateEvent<S>>(
     value: unknown
@@ -70,21 +35,6 @@ export function isRouter<S = unknown, R = void | unknown, E extends Event = Navi
   }
   return isRouterLike(value) && !!value[Routes];
 }
-
-interface RouterListeningFn<E extends Event> {
-  (event: E): RouteFnReturn
-}
-
-interface RouterListenFn<E extends Event = NavigateEvent> {
-  (fn: RouterListeningFn<E>): void;
-}
-
-interface EventListenerTarget<E extends Event> {
-  addEventListener(type: E["type"], handler: RouterListeningFn<E>): void;
-  removeEventListener(type: E["type"], handler: RouterListeningFn<E>): void;
-}
-
-type RouterListenTarget<E extends Event> = RouterListenFn<E> | EventListenerTarget<E>
 
 export class Router<
   S = unknown,
@@ -254,10 +204,10 @@ export class Router<
     if (!target) return;
     this.listening = true;
     if (typeof target === "function") {
-      return target(this.#navigate);
+      return target(this.#event);
     }
     const type = this[TargetType] ?? "navigate";
-    target.addEventListener(type, this.#navigate);
+    target.addEventListener(type, this.#event);
   };
 
   #deinit = () => {
@@ -271,20 +221,20 @@ export class Router<
     }
     this.listening = false;
     const type = this[TargetType] ?? "navigate";
-    target.removeEventListener(type, this.#navigate);
+    target.removeEventListener(type, this.#event);
   };
 
-  #navigate = (event: E) => {
+  #event = (event: E) => {
     if (!event.canIntercept) return;
 
     if (isIntercept(event)) {
-      event.intercept(this.#navigationTransition(event));
+      event.intercept(this.#transition(event));
     } else if (isTransitionWhile(event)) {
-      event.transitionWhile(this.#navigationTransition(event));
+      event.transitionWhile(this.#transition(event));
     } else if (isRespondWith(event)) {
-      event.respondWith(this.#navigationTransition(event));
+      event.respondWith(this.#transition(event));
     } else {
-      return this.#navigationTransition(event);
+      return this.#transition(event);
     }
 
     function isIntercept(event: E): event is E & { intercept(promise: Promise<unknown>): void } {
@@ -309,143 +259,7 @@ export class Router<
     }
   };
 
-  #navigationTransition = async (event: E) => {
-    const router = this;
-
-    const promises: Promise<unknown>[] = [];
-
-    const {
-      signal,
-    } = event;
-
-    const url: string | URL = getURL(event);
-
-    transition(
-        "route",
-        (route, match) => route.fn(event, match),
-        handleResolve,
-        handleReject
-    );
-
-    if (promises.length) {
-      await Promise.all(promises);
-    }
-
-    function transition(
-        type: RouteType,
-        fn: (route: Route<S, R, E>, match?: URLPatternResult) => unknown,
-        resolve = handleResolve,
-        reject = handleReject
-    ) {
-      let isRoute = false;
-      resolveRouter(router);
-      return isRoute;
-
-      function matchRoute(route: Route<S, R, E>, parentMatch?: URLPatternResult) {
-        const { router, pattern } = route;
-
-        let match = parentMatch;
-
-        if (pattern) {
-          match = pattern.exec(url);
-          if (!match) return;
-        }
-
-        if (isRouter<S, R, E>(router)) {
-          return resolveRouter(router, match);
-        }
-
-        isRoute = true;
-        try {
-          const maybe = fn(route, match);
-          if (isPromise(maybe)) {
-            promises.push(
-                maybe
-                    .then(resolve)
-                    .catch(reject)
-            );
-          } else {
-            resolve(maybe);
-          }
-        } catch (error) {
-          reject(error);
-        }
-      }
-
-      function resolveRouter(router: Router<S, R, E>, match?: URLPatternResult) {
-        resolveRoutes(router[Routes][type]);
-        resolveRoutes(router[Routes].router);
-        function resolveRoutes(routes: Route<S, R, E>[]) {
-          for (const route of routes) {
-            if (signal?.aborted) break;
-            matchRoute(route, match);
-          }
-        }
-      }
-
-    }
-
-    function noop() {}
-
-    function handleResolve(value: unknown) {
-      transition(
-          "resolve",
-          (route, match) => route.fn(value, event, match),
-          noop,
-          handleReject
-      );
-    }
-
-    function handleReject(error: unknown) {
-      const isRoute = transition(
-          "reject",
-          (route, match) => route.fn(error, event, match),
-          noop,
-          (error) => Promise.reject(error)
-      );
-      if (!isRoute) {
-        throw error;
-      }
-    }
-
-    function getURL<E extends Event>(event: E) {
-      if (isDestination(event)) {
-        return event.destination.url;
-      } else if (isRequest(event)) {
-        return event.request.url;
-      } else if (isURL(event)) {
-        return event.url;
-      }
-      throw new Error("Could not get url from event");
-
-      function isDestination(event: E): event is E & { destination: NavigationDestination } {
-        return (
-            like<{ destination: unknown }>(event) &&
-            !!event.destination
-        )
-      }
-
-      function isRequest(event: E): event is E & { request: Request } {
-        return (
-            like<{ request: unknown }>(event) &&
-            !!event.request
-        )
-      }
-
-      function isURL(event: E): event is E & { url: string | URL } {
-        return (
-            like<{ url: unknown }>(event) &&
-            !!(
-                event.url && (
-                    typeof event.url === "string" ||
-                    event.url instanceof URL
-                )
-            )
-        )
-      }
-    }
-
-
-
+  #transition = async (event: E) => {
+    await transition(this, event);
   };
 }

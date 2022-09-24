@@ -1,8 +1,9 @@
-import { isRouter, PatternRouteFn, RouteFn, Router } from "./router";
+import { isRouter, Router } from "./router";
 import { URLPattern } from "urlpattern-polyfill";
 import { getNavigation } from "../get-navigation";
 import {Event} from "../event-target";
 import {NavigateEvent} from "../spec/navigation";
+import {PatternRouteFn, RouteFn} from "./types";
 
 let router: Router<unknown, unknown, Event>;
 
