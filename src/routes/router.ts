@@ -231,6 +231,8 @@ export class Router<
       event.intercept(this.#transition(event));
     } else if (isTransitionWhile(event)) {
       event.transitionWhile(this.#transition(event));
+    } else if (isWaitUntil(event)) {
+      event.waitUntil(this.#transition(event));
     } else if (isRespondWith(event)) {
       event.respondWith(this.#transition(event));
     } else {
@@ -257,9 +259,16 @@ export class Router<
           typeof event.respondWith === "function"
       )
     }
+
+    function isWaitUntil(event: E): event is E & { waitUntil(promise: Promise<unknown>): void } {
+      return (
+          like<{ waitUntil: unknown }>(event) &&
+          typeof event.waitUntil === "function"
+      )
+    }
   };
 
-  #transition = async (event: E) => {
-    await transition(this, event);
+  #transition = async (event: E): Promise<void> => {
+    return transition(this, event);
   };
 }
