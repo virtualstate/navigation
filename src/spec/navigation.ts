@@ -20,6 +20,10 @@ export interface NavigationEventMap<S = unknown, R = void | unknown> {
   navigatesuccess: Event;
   navigateerror: Event & { error?: unknown };
   currententrychange: NavigationCurrentEntryChangeEvent<S, R>;
+  /**
+   * @experimental
+   */
+  entrieschange: Event;
 }
 
 export interface NavigationResult<S = unknown> {
@@ -59,6 +63,10 @@ export interface Navigation<S = unknown, R = unknown | void> extends EventTarget
   oncurrententrychange?:
     | ((this: Navigation, ev: NavigationCurrentEntryChangeEvent<S>) => unknown)
     | null;
+  /**
+   * @experimental
+   */
+  onentrieschange?: ((this: Navigation, ev: Event) => unknown | void) | null;
 
   addEventListener<K extends keyof NavigationEventMap<S, R>>(
     type: K,

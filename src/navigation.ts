@@ -389,8 +389,6 @@ export class Navigation<S = unknown, R = unknown | void>
     this.#activeTransition?.[NavigationTransitionAbort]();
     this.#activeTransition = transition;
 
-    let reportedError: unknown = undefined;
-
     const startEventPromise = transition.dispatchEvent({
       type: NavigationTransitionStart,
       transition,
@@ -412,13 +410,20 @@ export class Navigation<S = unknown, R = unknown | void>
       }
       committedCurrentEntryChange = true;
       syncCommit(commit);
-      return transition.dispatchEvent(
-          createEvent({
-            type: NavigationTransitionCommit,
-            transition,
-            entry,
-          })
-      );
+      await Promise.all([
+        transition.dispatchEvent(
+            createEvent({
+              type: NavigationTransitionCommit,
+              transition,
+              entry,
+            })
+        ),
+        this.dispatchEvent(
+            createEvent({
+              type: "entrieschange"
+            })
+        )
+      ]);
     };
 
     const unsetTransition = async () => {
@@ -689,8 +694,17 @@ export class Navigation<S = unknown, R = unknown | void>
       type: "currententrychange",
       navigationType: undefined,
     });
+    const entriesChange = createEvent({
+      type: "entrieschange",
+      updatedEntries: [
+          currentEntry
+      ]
+    });
 
-    return this.dispatchEvent(currentEntryChange);
+    return Promise.all([
+      this.dispatchEvent(currentEntryChange),
+      this.dispatchEvent(entriesChange)
+    ]) ;
   }
 }
 
