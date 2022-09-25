@@ -63,10 +63,10 @@ const execCache = new WeakMap<CompositeObjectKey, false | URLPatternResult>();
 
 export function exec(pattern: URLPattern, url: URL): URLPatternResult | undefined {
     const key = compositeKey(
-        url.origin,
-        url.username,
-        url.password,
-        ...patternParts.map(part => pattern[part])
+        pattern,
+        ...patternParts
+            .filter(part => !isURLPatternStringWildcard(pattern[part]))
+            .map(part => url[part])
     );
     const existing = execCache.get(key);
     if (existing) return existing;
