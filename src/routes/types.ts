@@ -44,7 +44,7 @@ export interface PatternRouteFn<E extends Event = NavigateEvent, R = void | unkn
     (event: E, match: URLPatternResult): RouteFnReturn<R>;
 }
 
-export interface Route<E extends Event, R> {
+export interface Route<E extends Event = Event, R = unknown> {
     string?: string;
     pattern?: URLPattern;
     fn?: Fn;

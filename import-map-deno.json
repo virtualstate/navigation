@@ -6,6 +6,7 @@
     "@virtualstate/examples": "https://cdn.skypack.dev/@virtualstate/examples",
     "@virtualstate/fringe": "https://cdn.skypack.dev/@virtualstate/fringe",
     "@virtualstate/kdl": "https://cdn.skypack.dev/@virtualstate/kdl",
+    "@virtualstate/composite-key": "https://cdn.skypack.dev/@virtualstate/composite-key",
     "@virtualstate/promise": "https://cdn.skypack.dev/@virtualstate/promise",
     "@virtualstate/focus": "https://cdn.skypack.dev/@virtualstate/focus",
     "@virtualstate/focus/static-h": "https://cdn.skypack.dev/@virtualstate/focus/static-h",

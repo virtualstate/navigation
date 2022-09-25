@@ -1440,6 +1440,11 @@
   dependencies:
     "@types/node" "*"
 
+"@virtualstate/composite-key@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@virtualstate/composite-key/-/composite-key-1.0.0.tgz#352b93df5b9199951cc370897bca8bb5b171a375"
+  integrity sha512-5G3RT87X1w39UQyBvqQpTfsxK9FjoKlXfonvIY9esAHe9d0vOWVGtbElJppwJKWzh508Ja6gWn7W7dWHwj50Jw==
+
 "@virtualstate/focus@^1.0.1-alpha.89":
   version "1.0.1-alpha.92"
   resolved "https://registry.npmjs.org/@virtualstate/focus/-/focus-1.0.1-alpha.92.tgz#327357b5ef2413284fbb4d4be11bd068d96c6bad"

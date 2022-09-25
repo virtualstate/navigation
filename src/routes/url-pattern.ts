@@ -1,5 +1,8 @@
 import { URLPattern as polyfillURLPattern } from "urlpattern-polyfill";
 import {globalURLPattern, URLPatternInit} from "./url-pattern-global";
+import {URLPatternResult} from "./types";
+import {Event} from "../event-target";
+import {compositeKey} from "@virtualstate/composite-key";
 
 export { URLPatternInit } from "./url-pattern-global";
 
@@ -21,11 +24,11 @@ const patternSymbols = Object.values({
     asterisk: "*"
 } as const);
 
-const patternParts = [
-    "username",
-    "password",
+export const patternParts = [
     "protocol",
     "hostname",
+    "username",
+    "password",
     "port",
     "pathname",
     "search",
@@ -52,4 +55,23 @@ export function isURLPatternPlainPathname(pattern: URLPattern) {
         }
     }
     return true;
+}
+
+type CompositeObjectKey = Readonly<{ __proto__: null }>;
+
+const execCache = new WeakMap<CompositeObjectKey, false | URLPatternResult>();
+
+export function exec(pattern: URLPattern, url: URL): URLPatternResult | undefined {
+    const key = compositeKey(
+        url.origin,
+        url.username,
+        url.password,
+        ...patternParts.map(part => pattern[part])
+    );
+    const existing = execCache.get(key);
+    if (existing) return existing;
+    if (existing === false) return undefined;
+    const result = pattern.exec(url);
+    execCache.set(key, result ?? false);
+    return result;
 }
