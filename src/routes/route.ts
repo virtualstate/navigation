@@ -1,5 +1,5 @@
 import { isRouter, Router } from "./router";
-import { URLPattern } from "urlpattern-polyfill";
+import { URLPattern } from "./url-pattern-import";
 import { getNavigation } from "../get-navigation";
 import {Event} from "../event-target";
 import {NavigateEvent} from "../spec/navigation";

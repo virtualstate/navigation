@@ -1,5 +1,5 @@
 import { NavigateEvent } from "../spec/navigation";
-import { URLPattern } from "urlpattern-polyfill";
+import { URLPattern } from "./url-pattern-import";
 import { Event } from "../event-target";
 import { like } from "../is";
 import {
