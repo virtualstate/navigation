@@ -59,9 +59,19 @@ export function isURLPatternPlainPathname(pattern: URLPattern) {
 
 type CompositeObjectKey = Readonly<{ __proto__: null }>;
 
-const execCache = new WeakMap<CompositeObjectKey, false | URLPatternResult>();
+// Note, this weak map will contain all urls
+// matched in the current process.
+// This may not be wanted by everyone
+let execCache: WeakMap<CompositeObjectKey, false | URLPatternResult> | undefined = undefined;
+
+export function enableURLPatternCache() {
+    execCache = execCache ?? new WeakMap();
+}
 
 export function exec(pattern: URLPattern, url: URL): URLPatternResult | undefined {
+    if (!execCache) {
+        return pattern.exec(url);
+    }
     const key = compositeKey(
         pattern,
         ...patternParts
