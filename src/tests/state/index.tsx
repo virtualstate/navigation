@@ -178,21 +178,15 @@ import {transition} from "../../transition";
 
     const controller = new AbortController();
 
-    async function app(signal: AbortSignal): Promise<void> {
-        console.log("Running app loop");
-        if (signal.aborted) return;
-
+    async function app(): Promise<void> {
         for await (const change of changes) {
             console.log({ change });
         }
-
-        // We will be in a navigation transition here
-        await navigation.transition?.finished;
-
-        return app(signal);
     }
 
-    void app(controller.signal);
+    navigation.addEventListener("navigate", event => event.intercept(
+        () => void app()
+    ));
 
     // The below is "simulating" navigation, without watching
     // what effects happen from it, in real apps this would be happening
