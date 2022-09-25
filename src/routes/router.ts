@@ -1,5 +1,5 @@
 import { NavigateEvent } from "../spec/navigation";
-import { URLPattern } from "./url-pattern-import";
+import {isURLPatternPlainPathname, isURLPatternStringPlain, URLPattern} from "./url-pattern";
 import { Event } from "../event-target";
 import { like } from "../is";
 import {
@@ -34,6 +34,29 @@ export function isRouter<E extends Event = NavigateEvent, R = void | unknown>(
     return !!value;
   }
   return isRouterLike(value) && !!value[Routes];
+}
+
+function getPatternString(pattern?: string | URLPattern): string | undefined {
+  if (!pattern) return undefined;
+  if (typeof pattern === "string") {
+    if (isURLPatternStringPlain(pattern)) {
+      return pattern;
+    } else {
+      return undefined;
+    }
+  }
+  if (isURLPatternPlainPathname(pattern)) {
+    return pattern.pathname;
+  }
+  return undefined;
+}
+
+function getPattern(pattern?: string | URLPattern): URLPattern {
+  if (!pattern) return undefined;
+  if (typeof pattern !== "string") {
+    return pattern;
+  }
+  return new URLPattern({ pathname: pattern });
 }
 
 export class Router<
@@ -80,7 +103,8 @@ export class Router<
       throw new Error("Router already attached");
     }
     this[Routes].router.push({
-      pattern: this.#getPattern(pattern),
+      string: getPatternString(pattern),
+      pattern: getPattern(pattern),
       router,
     });
     router[Attached].add(this);
@@ -104,7 +128,8 @@ export class Router<
     } else {
       const [pattern, fn] = args;
       this[Routes].resolve.push({
-        pattern: this.#getPattern(pattern),
+        string: getPatternString(pattern),
+        pattern: getPattern(pattern),
         fn,
       });
     }
@@ -126,7 +151,8 @@ export class Router<
     } else {
       const [pattern, fn] = args;
       this[Routes].reject.push({
-        pattern: this.#getPattern(pattern),
+        string: getPatternString(pattern),
+        pattern: getPattern(pattern),
         fn,
       });
     }
@@ -150,7 +176,8 @@ export class Router<
     } else {
       const [pattern, fn] = args;
       this[Routes].route.push({
-        pattern: this.#getPattern(pattern),
+        string: getPatternString(pattern),
+        pattern: getPattern(pattern),
         fn,
       });
     }
@@ -187,14 +214,6 @@ export class Router<
     }
     this[Attached] = new Set();
   };
-
-  #getPattern = (pattern?: string | URLPattern): URLPattern => {
-    if (!pattern) return undefined;
-    if (typeof pattern !== "string") {
-      return pattern;
-    }
-    return new URLPattern({ pathname: pattern });
-  }
 
   #init = () => {
     if (this.listening) {

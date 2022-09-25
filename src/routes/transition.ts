@@ -11,7 +11,8 @@ export async function transitionEvent<E extends Event, R>(router: Router<E, R>, 
         signal,
     } = event;
 
-    const url: string | URL = getURL(event);
+    const url: URL = getURL(event);
+    const { pathname } = url;
 
     transitionPart(
         "route",
@@ -35,11 +36,15 @@ export async function transitionEvent<E extends Event, R>(router: Router<E, R>, 
         return isRoute;
 
         function matchRoute(route: Route<E, R>, parentMatch?: URLPatternResult) {
-            const { router, pattern } = route;
+            const { router, pattern, string } = route;
 
             let match = parentMatch;
 
-            if (pattern) {
+            if (string) {
+                if (string !== pathname) {
+                    return;
+                }
+            } else if (pattern) {
                 match = pattern.exec(url);
                 if (!match) return;
             }
@@ -104,11 +109,11 @@ export async function transitionEvent<E extends Event, R>(router: Router<E, R>, 
 
     function getURL<E extends Event>(event: E) {
         if (isDestination(event)) {
-            return event.destination.url;
+            return new URL(event.destination.url);
         } else if (isRequest(event)) {
-            return event.request.url;
+            return new URL(event.request.url);
         } else if (isURL(event)) {
-            return event.url;
+            return new URL(event.url);
         }
         throw new Error("Could not get url from event");
 
