@@ -70,6 +70,9 @@ export interface NavigationTransitionCommitContext<S> {
   entries: NavigationHistoryEntry<S>[];
   index: number;
   known?: Set<NavigationHistoryEntry<S>>;
+  updatedEntries: NavigationHistoryEntry<S>[];
+  addedEntries: NavigationHistoryEntry<S>[];
+  removedEntries: NavigationHistoryEntry<S>[];
 }
 
 export interface NavigationTransitionContext<S> {
@@ -92,7 +95,7 @@ export interface NavigationTransitionResult<S> {
   currentEntryChange: NavigationCurrentEntryChangeEvent<S>;
   navigationType: InternalNavigationNavigationType;
   waitForCommit: Promise<void | unknown>;
-  commit(): void;
+  commit(): Promise<void> | void;
 }
 
 function noop(): void {
@@ -250,6 +253,7 @@ export function createNavigationTransition<S = unknown>(
     type: "navigate",
     scroll: noop
   });
+
   const currentEntryChange: NavigationCurrentEntryChangeEvent = createEvent({
     from: currentEntry,
     type: "currententrychange",
@@ -260,6 +264,13 @@ export function createNavigationTransition<S = unknown>(
      */
     transitionWhile: intercept,
   });
+
+  let updatedEntries: NavigationHistoryEntry<S>[] = [],
+      removedEntries: NavigationHistoryEntry<S>[] = [],
+      addedEntries: NavigationHistoryEntry<S>[] = [];
+
+  const previousKeys = previousEntries.map(entry => entry.key);
+
   if (navigationType === Rollback) {
     const { entries } = options ?? { entries: undefined };
     if (!entries)
@@ -268,6 +279,10 @@ export function createNavigationTransition<S = unknown>(
       );
     resolvedEntries = entries;
     resolvedEntries.forEach((entry) => known.add(entry));
+
+    const keys = resolvedEntries.map(entry => entry.key);
+    removedEntries = previousEntries.filter(entry => !keys.includes(entry.key));
+    addedEntries = resolvedEntries.filter(entry => !previousKeys.includes(entry.key));
   }
   // Default next index is current entries length, aka
   // console.log({ navigationType, givenNavigationType, index: this.#currentIndex, resolvedNextIndex });
@@ -277,24 +292,44 @@ export function createNavigationTransition<S = unknown>(
     navigationType === "reload"
   ) {
     resolvedEntries[destination.index] = entry;
+    updatedEntries.push(entry);
     if (navigationType === "replace") {
       resolvedEntries = resolvedEntries.slice(0, destination.index + 1);
     }
+
+    const keys = resolvedEntries.map(entry => entry.key);
+    removedEntries = previousEntries.filter(entry => !keys.includes(entry.key));
+    if (previousKeys.includes(entry.id)) {
+      addedEntries = [entry];
+    }
   } else if (navigationType === "push") {
+    let removed = false;
     // Trim forward, we have reset our stack
     if (resolvedEntries[destination.index]) {
       // const before = [...this.#entries];
       resolvedEntries = resolvedEntries.slice(0, destination.index);
       // console.log({ before, after: [...this.#entries]})
+      removed = true;
     }
     resolvedEntries.push(entry);
+    addedEntries = [entry];
+    if (removed) {
+      const keys = resolvedEntries.map(entry => entry.key);
+      removedEntries = previousEntries.filter(entry => !keys.includes(entry.key));
+    }
   }
+
   known.add(entry);
+
   contextToCommit = {
     entries: resolvedEntries,
     index: nextIndex,
-    known
+    known,
+    updatedEntries,
+    addedEntries,
+    removedEntries
   };
+
   return {
     entries: resolvedEntries,
     known,

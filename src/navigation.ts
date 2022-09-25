@@ -420,7 +420,10 @@ export class Navigation<S = unknown, R = unknown | void>
         ),
         this.dispatchEvent(
             createEvent({
-              type: "entrieschange"
+              type: "entrieschange",
+              removedEntries: commit.removedEntries,
+              addedEntries: commit.addedEntries,
+              updatedEntries: commit.updatedEntries
             })
         )
       ]);
@@ -430,11 +433,23 @@ export class Navigation<S = unknown, R = unknown | void>
       await startEventPromise;
       if (!(typeof options?.index === "number" && options.entries))
         throw new InvalidStateError();
+
+      const previous = this.entries();
+      const previousKeys = previous.map(entry => entry.key);
+      const keys = options.entries.map(entry => entry.key);
+
+      const removedEntries = previous.filter(entry => !keys.includes(entry.key));
+      const addedEntries = options.entries.filter(entry => !previousKeys.includes(entry.key));
+
       await asyncCommit({
         entries: options.entries,
         index: options.index,
         known: options.known,
+        removedEntries,
+        addedEntries,
+        updatedEntries: []
       });
+
       await this.dispatchEvent(
         createEvent({
           type: "currententrychange",
@@ -516,9 +531,9 @@ export class Navigation<S = unknown, R = unknown | void>
 
     function* transitionSteps(
       transitionResult: NavigationTransitionResult<S>
-    ): Iterable<Promise<unknown>> {
+    ): Iterable<Promise<unknown> | unknown | void> {
       const microtask = new Promise<void>(queueMicrotask);
-      const { known, entries, index, currentEntryChange, navigate, waitForCommit } =
+      const { currentEntryChange, navigate, waitForCommit, commit } =
         transitionResult;
 
       const navigateAbort = navigate[EventAbortController].abort.bind(
@@ -546,15 +561,12 @@ export class Navigation<S = unknown, R = unknown | void>
         yield transition.dispatchEvent(navigate);
       }
 
-      if (transition[NavigationTransitionCommitIsManual]) {
-         yield waitForCommit;
+      if (!transition[NavigationTransitionCommitIsManual]) {
+        commit()
       }
 
-      yield asyncCommit({
-        entries: entries,
-        index: index,
-        known: known,
-      });
+      yield waitForCommit;
+
       if (entry.sameDocument) {
         yield transition.dispatchEvent(currentEntryChange);
       }
