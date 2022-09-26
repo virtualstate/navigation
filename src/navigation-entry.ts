@@ -67,7 +67,7 @@ export class NavigationHistoryEntry<S = unknown>
     this.url = init.url ?? undefined;
     this.#index = init.index;
     this.sameDocument = init.sameDocument ?? true;
-    this.#state = init.state;
+    this.#state = init.state ?? undefined;
   }
 
   getState<ST extends S>(): ST;

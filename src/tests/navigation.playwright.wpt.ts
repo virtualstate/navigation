@@ -655,14 +655,14 @@ function assert_false(value, message = "Expected false") {
 function assert_equals(left, right) {
   details.assert_equals += 1;
   // console.log(JSON.stringify({ left, right }));
-  if (left !== right) {
+  if ((left ?? undefined) !== (right ?? undefined)) {
     throw new Error("Expected values to equal");
   }
 }
 function assert_not_equals(left, right) {
   details.assert_not_equals += 1;
   // console.log(JSON.stringify({ left, right }));
-  if (left === right) {
+  if ((left ?? undefined) === (right ?? undefined)) {
     throw new Error("Expected values to not equal");
   }
 }

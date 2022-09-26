@@ -18,6 +18,7 @@ import {
 import { Event, EventTarget } from "./event-target";
 import { AbortController } from "./import-abort-controller";
 import {isPromise} from "./is";
+import {defer} from "./defer";
 
 export const Rollback = Symbol.for("@virtualstate/navigation/rollback");
 export const Unset = Symbol.for("@virtualstate/navigation/unset");
@@ -74,7 +75,7 @@ export const NavigationTransitionPromises = Symbol.for(
 );
 
 export const NavigationIntercept = Symbol.for(
-  "@virtualstate/navigation/intercept"
+    "@virtualstate/navigation/intercept"
 );
 export const NavigationTransitionIsOngoing = Symbol.for(
   "@virtualstate/navigation/transition/isOngoing"
@@ -446,6 +447,7 @@ export class NavigationTransition<S = unknown, R = unknown | void>
       }
       return handler();
     }
+
   };
 
   [NavigationTransitionWait] = async (): Promise<NavigationHistoryEntry> => {
