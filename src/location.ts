@@ -167,8 +167,13 @@ export class NavigationLocation implements Location {
 
   #setUrlValue = (key: WritableURLKey, value: string) => {
     const currentUrlString = this[AppLocationUrl].toString();
-    const nextUrl = new URL(currentUrlString);
-    nextUrl[key] = value;
+    let nextUrl: URL;
+    if (key === "href") {
+      nextUrl = new URL(value, currentUrlString)
+    } else {
+      nextUrl = new URL(currentUrlString);
+      nextUrl[key] = value;
+    }
     const nextUrlString = nextUrl.toString();
     if (currentUrlString === nextUrlString) {
       return;
