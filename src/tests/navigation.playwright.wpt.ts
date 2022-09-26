@@ -2,6 +2,7 @@
 import * as Playwright from "playwright";
 import { deferred } from "../util/deferred";
 import fs from "fs";
+import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { getConfig } from "./config";
 import * as Cheerio from "cheerio";
@@ -17,6 +18,27 @@ const resourcesInput = "/resources";
 const resourcesTarget = "/node_modules/wpt/resources";
 const testWrapperFnName = `tests${v4().replace(/[^a-z0-9]/g, "")}`;
 
+const {
+  dependencies,
+  devDependencies
+} = JSON.parse(await readFile("package.json", "utf-8"))
+
+const allDependencies = {
+  ...dependencies,
+  ...devDependencies
+};
+
+const wptDependency = allDependencies.wpt;
+const [wptUrl, wptCommit] = wptDependency.split(/\.git#?/);
+
+/*
+{
+  wptUrl: 'https://github.com/web-platform-tests/wpt',
+  wptCommit: '86d251acc8f2176cda0177e900f551d939de5c8f'
+}
+ */
+// console.log({ wptUrl, wptCommit });
+
 console.log({ testWrapperFnName });
 
 const DEBUG = getConfig().FLAGS?.includes("DEBUG") || false;
@@ -24,7 +46,7 @@ const DEVTOOLS = getConfig().FLAGS?.includes("DEVTOOLS") || false;
 const ONLY_FAILED = getConfig().FLAGS?.includes("ONLY_FAILED") || false;
 const INCLUDE_SERVICE_WORKER =
   getConfig().FLAGS?.includes("INCLUDE_SERVICE_WORKER") || false;
-const AT_A_TIME = DEBUG ? 1 : 60;
+const AT_A_TIME = DEBUG ? 1 : 10;
 const TEST_RESULTS_PATH = "./node_modules/.wpt.test-results.json";
 const ONLY = getConfig().ONLY;
 const DEVTOOLS_SLOW_MO: number | undefined = undefined;
@@ -159,6 +181,28 @@ for (const [
     console.log("\nSKIPPED:");
     urlsSkipped.forEach((url) => console.log(`  - ${url}`));
   }
+
+  function getUrlMarkdown(url: string) {
+    return `- [${url}](${wptUrl}/blob/${wptCommit ?? "master"}${namespaceBundlePath}${url})`;
+  }
+
+  const markdown = `
+# Web Platform Tests
+
+## Passed
+
+${urlsPass.map(getUrlMarkdown).join("\n")}
+
+## Failed
+
+${urlsFailed.map(getUrlMarkdown).join("\n")}
+
+## Skipped
+
+${urlsSkipped.map(getUrlMarkdown).join("\n")}
+  `.trim();
+
+  await writeFile("WPT.md", markdown, "utf-8");
 
   await writeState({
     urlsPass,
