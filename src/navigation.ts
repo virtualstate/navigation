@@ -12,9 +12,8 @@ import {
   NavigationResult,
   NavigationUpdateCurrentOptions,
   NavigationTransition as NavigationTransitionPrototype,
-  NavigationCurrentEntryChangeEvent,
   NavigationNavigationOptions,
-  NavigationNavigationType, NavigationEntriesChangeEvent,
+  NavigationNavigationType, NavigationEntriesChangeEvent
 } from "./spec/navigation";
 import { NavigationEventTarget } from "./navigation-event-target";
 import { InvalidStateError } from "./navigation-errors";
@@ -58,6 +57,7 @@ import {
 import { createEvent } from "./event-target/create-event";
 import { getBaseURL } from "./base-url";
 import {isPromise, isPromiseRejectedResult} from "./is";
+import {NavigationCurrentEntryChangeEvent} from "./events";
 
 export * from "./spec/navigation";
 
@@ -80,6 +80,8 @@ export class Navigation<S = unknown, R = unknown | void>
   #knownTransitions = new WeakSet();
   readonly #baseURL: string | URL;
 
+  #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
+
   get canGoBack() {
     return !!this.#entries[this.#currentIndex - 1];
   }
@@ -90,7 +92,16 @@ export class Navigation<S = unknown, R = unknown | void>
 
   get currentEntry() {
     if (this.#currentIndex === -1) {
-      return undefined;
+      if (!this.#initialEntry) {
+        this.#initialEntry = new NavigationHistoryEntry<S>({
+          navigationType: "push",
+          index: -1,
+          sameDocument: false,
+          url: this.#baseURL.toString()
+        });
+      }
+
+      return this.#initialEntry;
     }
     return this.#entries[this.#currentIndex];
   }
@@ -542,12 +553,10 @@ export class Navigation<S = unknown, R = unknown | void>
       transitionResult: NavigationTransitionResult<S>
     ): Iterable<Promise<unknown> | unknown | void> {
       const microtask = new Promise<void>(queueMicrotask);
-      const { currentEntryChange, navigate, waitForCommit, commit } =
+      const { currentEntryChange, navigate, waitForCommit, commit, abortController } =
         transitionResult;
 
-      const navigateAbort = navigate[EventAbortController].abort.bind(
-        navigate[EventAbortController]
-      );
+      const navigateAbort = abortController.abort.bind(abortController);
       transition.signal.addEventListener("abort", navigateAbort, {
         once: true,
       });
@@ -711,9 +720,8 @@ export class Navigation<S = unknown, R = unknown | void>
     // Instant change
     currentEntry[NavigationHistoryEntrySetState](options.state);
 
-    const currentEntryChange: NavigationCurrentEntryChangeEvent = createEvent({
+    const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
       from: currentEntry,
-      type: "currententrychange",
       navigationType: undefined,
     });
     const entriesChange: NavigationEntriesChangeEvent = createEvent({

@@ -241,19 +241,11 @@ export async function currentEntryChangeExample(navigation: Navigation) {
   navigation.addEventListener("currententrychange", (event) => {
     changedEvent = event;
   });
-  if (!isWindowNavigation(navigation)) {
-    ok(!navigation.currentEntry);
-  } else {
-    ok(navigation.currentEntry);
-  }
+  ok(navigation.currentEntry);
   await navigation.navigate("/").finished;
   assert<NavigationCurrentEntryChangeEvent>(changedEvent);
   ok(changedEvent.navigationType);
-  if (!isWindowNavigation(navigation)) {
-    ok(!changedEvent.from);
-  } else {
-    ok(changedEvent.from);
-  }
+  ok(changedEvent.from);
   const initial = navigation.currentEntry;
   assert<NavigationHistoryEntry>(initial);
   await navigation.navigate("/1").finished;
@@ -658,9 +650,7 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
     );
   });
 
-  if (!isWindowNavigation(navigation)) {
-    ok(!navigation.currentEntry);
-  }
+  ok(navigation.currentEntry)
 
   await navigation.navigate("/").finished;
 

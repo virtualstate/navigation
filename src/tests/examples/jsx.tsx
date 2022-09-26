@@ -36,9 +36,7 @@ export async function jsxExample(navigation: Navigation) {
   let bodyUpdated!: Promise<void>;
 
   navigation.addEventListener("currententrychange", async (event) => {
-    await (event.intercept ?? ((promise) => promise))(
-      (bodyUpdated = handler())
-    );
+    await (bodyUpdated = handler());
     async function handler() {
       body.innerKDL = await new Promise((resolve, reject) =>
         toKDLString(

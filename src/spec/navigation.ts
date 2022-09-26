@@ -185,7 +185,7 @@ export interface NavigationReloadOptions<S = unknown>
 export interface NavigationCurrentEntryChangeEventInit<S = unknown>
   extends EventInit {
   navigationType?: NavigationNavigationType;
-  from?: NavigationHistoryEntry<S>;
+  from: NavigationHistoryEntry<S>;
   startTime?: number;
 }
 
@@ -209,13 +209,7 @@ export interface NavigationCurrentEntryChangeEvent<S = unknown, R = unknown | vo
   extends Event<"currententrychange">,
     NavigationCurrentEntryChangeEventInit<S> {
   readonly navigationType?: NavigationNavigationType;
-  readonly from?: NavigationHistoryEntry<S>;
-
-  /**
-   * @internal
-   * @experimental
-   */
-  intercept?(options: NavigationIntercept<R>): void;
+  readonly from: NavigationHistoryEntry<S>;
 }
 
 export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"navigate"> {

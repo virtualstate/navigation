@@ -2,7 +2,6 @@ import { AbortController } from "./import-abort-controller";
 import { InvalidStateError } from "./navigation-errors";
 import { WritableProps } from "./util/writable";
 import {
-  NavigationCurrentEntryChangeEvent,
   NavigationDestination,
   NavigateEvent as NavigateEventPrototype,
   NavigationNavigateOptions as NavigationNavigateOptionsPrototype,
@@ -23,6 +22,7 @@ import { createEvent } from "./event-target/create-event";
 import {getBaseURL} from "./base-url";
 import {defer, Deferred} from "./defer";
 import {ok} from "./is";
+import {NavigateEvent, NavigationCurrentEntryChangeEvent} from "./events";
 
 export const NavigationFormData = Symbol.for(
     "@virtualstate/navigation/formData"
@@ -53,10 +53,6 @@ export interface AbortControllerEvent {
   [EventAbortController]: AbortController;
 }
 
-export interface NavigateEvent<S>
-  extends NavigateEventPrototype<S>,
-    AbortControllerEvent {}
-
 export interface InternalNavigationNavigateOptions<S>
   extends NavigationNavigateOptions<S> {
   entries?: NavigationHistoryEntry<S>[];
@@ -79,7 +75,7 @@ export interface NavigationTransitionContext<S> {
   currentIndex: number;
   known: Set<NavigationHistoryEntry<S>>;
   startTime?: number;
-  currentEntry?: NavigationHistoryEntry<S>;
+  currentEntry: NavigationHistoryEntry<S>;
   reportError?(reason: unknown): void;
 }
 
@@ -92,6 +88,7 @@ export interface NavigationTransitionResult<S> {
   currentEntryChange: NavigationCurrentEntryChangeEvent<S>;
   navigationType: InternalNavigationNavigationType;
   waitForCommit: Promise<void | unknown>;
+  abortController: AbortController;
   commit(): Promise<void> | void;
 }
 
@@ -214,52 +211,34 @@ export function createNavigationTransition<S = unknown>(
     );
   }
 
-  const navigateController = new AbortController();
-  const navigate: NavigateEvent<S> = createEvent({
-    [EventAbortController]: navigateController,
-    signal: navigateController.signal,
+  const abortController = new AbortController();
+  const event = new NavigateEvent<S>("navigate", {
+    signal: abortController.signal,
     info: undefined,
     ...options,
     canIntercept: options?.[NavigationCanIntercept] ?? true,
-    /**
-     * @deprecated
-     */
-    canTransition: options?.[NavigationCanIntercept] ?? true,
     formData: options?.[NavigationFormData] ?? undefined,
     downloadRequest: options?.[NavigationDownloadRequest] ?? undefined,
     hashChange,
     navigationType:
-      options?.navigationType ??
-      (typeof navigationType === "string" ? navigationType : "replace"),
+        options?.navigationType ??
+        (typeof navigationType === "string" ? navigationType : "replace"),
     userInitiated: options?.[NavigationUserInitiated] ?? false,
     destination,
-    preventDefault: transition[NavigationTransitionAbort].bind(transition),
-    intercept,
-    /**
-     * @experimental may be removed, proof of concept for immediate commit from userland
-     */
-    commit,
-    /**
-     * @experimental
-     */
-    reportError,
-    /**
-     * @deprecated
-     */
-    transitionWhile: intercept,
-    type: "navigate",
-    scroll: noop
-  });
+  })
 
-  const currentEntryChange: NavigationCurrentEntryChangeEvent = createEvent({
+  event.intercept = intercept;
+  event.transitionWhile = intercept;
+  event.commit = commit;
+  if (reportError) {
+    event.reportError = reportError;
+  }
+  event.scroll = noop;
+  event.preventDefault = transition[NavigationTransitionAbort].bind(transition);
+
+  const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
     from: currentEntry,
-    type: "currententrychange",
-    navigationType: navigate.navigationType,
-    intercept,
-    /**
-     * @deprecated
-     */
-    transitionWhile: intercept,
+    navigationType: event.navigationType,
   });
 
   let updatedEntries: NavigationHistoryEntry<S>[] = [],
@@ -345,9 +324,10 @@ export function createNavigationTransition<S = unknown>(
     index: nextIndex,
     currentEntryChange,
     destination,
-    navigate,
+    navigate: event,
     navigationType,
     waitForCommit,
-    commit
+    commit,
+    abortController
   };
 }

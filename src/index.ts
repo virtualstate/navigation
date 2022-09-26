@@ -12,3 +12,6 @@ export {
 } from "./create-navigation-transition";
 export * from "./transition";
 export * from "./event-target/intercept-event";
+export {
+  NavigationCurrentEntryChangeEvent
+} from "./events";

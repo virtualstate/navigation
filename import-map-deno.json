@@ -91,6 +91,9 @@
     "./src/is": "./src/is.ts",
     "./src/base-url": "./src/base-url.ts",
     "./src/defer": "./src/defer.ts",
+    "./src/events": "./src/events/index.ts",
+    "./src/events/navigation-current-entry-change-event": "./src/events/navigation-current-entry-change-event.ts",
+    "./src/events/navigate-event": "./src/events/navigate-event.ts",
     "cheerio": "./scripts/nop/index.js"
   }
 }

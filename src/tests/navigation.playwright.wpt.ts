@@ -46,7 +46,7 @@ const DEVTOOLS = getConfig().FLAGS?.includes("DEVTOOLS") || false;
 const ONLY_FAILED = getConfig().FLAGS?.includes("ONLY_FAILED") || false;
 const INCLUDE_SERVICE_WORKER =
   getConfig().FLAGS?.includes("INCLUDE_SERVICE_WORKER") || false;
-const AT_A_TIME = DEBUG ? 1 : 10;
+const AT_A_TIME = DEBUG ? 1 : 75;
 const TEST_RESULTS_PATH = "./node_modules/.wpt.test-results.json";
 const ONLY = getConfig().ONLY;
 const DEVTOOLS_SLOW_MO: number | undefined = undefined;
@@ -172,6 +172,10 @@ for (const [
   await browser.close();
 
   console.log("Playwright tests complete");
+
+  urlsPass.sort();
+  urlsFailed.sort();
+  urlsSkipped.sort();
 
   console.log("PASSED:");
   urlsPass.forEach((url) => console.log(`  - ${url}`));
@@ -403,6 +407,8 @@ async function run(
           "a",
           "form",
           "submit",
+          "NavigationCurrentEntryChangeEvent",
+          "NavigateEvent"
         ];
 
         const targetUrl = `${namespaceBundlePath}${url}.js?exportAs=${testWrapperFnName}&globals=${globalNames.join(
@@ -424,7 +430,9 @@ const {
   NavigationSync, 
   EventTarget, 
   NavigationUserInitiated, 
-  NavigationFormData
+  NavigationFormData,
+  NavigationCurrentEntryChangeEvent,
+  NavigateEvent
 } = await import("/esnext/index.js");
 
 // if (${DEVTOOLS}) {
