@@ -14,7 +14,7 @@ import {
   NavigationTransition as NavigationTransitionPrototype,
   NavigationCurrentEntryChangeEvent,
   NavigationNavigationOptions,
-  NavigationNavigationType,
+  NavigationNavigationType, NavigationEntriesChangeEvent,
 } from "./spec/navigation";
 import { NavigationEventTarget } from "./navigation-event-target";
 import { InvalidStateError } from "./navigation-errors";
@@ -58,7 +58,6 @@ import {
 import { createEvent } from "./event-target/create-event";
 import { getBaseURL } from "./base-url";
 import {isPromise, isPromiseRejectedResult} from "./is";
-import {defer} from "@virtualstate/promise";
 
 export * from "./spec/navigation";
 
@@ -135,6 +134,7 @@ export class Navigation<S = unknown, R = unknown | void>
     );
   }
 
+  /**
   /**
    * @deprecated use traverseTo
    */
@@ -410,24 +410,31 @@ export class Navigation<S = unknown, R = unknown | void>
       }
       committedCurrentEntryChange = true;
       syncCommit(commit);
-      await Promise.all([
+      const { entriesChange } = commit;
+
+      const promises = [
         transition.dispatchEvent(
             createEvent({
               type: NavigationTransitionCommit,
               transition,
               entry,
             })
-        ),
-        this.dispatchEvent(
-            createEvent({
-              type: "entrieschange",
-              removedEntries: commit.removedEntries,
-              addedEntries: commit.addedEntries,
-              updatedEntries: commit.updatedEntries
-            })
         )
-      ]);
-    };
+      ];
+
+      if (entriesChange) {
+        promises.push(
+            this.dispatchEvent(
+                createEvent<NavigationEntriesChangeEvent<S>>({
+                  type: "entrieschange",
+                  ...entriesChange
+                })
+            )
+        )
+      }
+
+      await Promise.all(promises);
+    }
 
     const unsetTransition = async () => {
       await startEventPromise;
@@ -445,9 +452,11 @@ export class Navigation<S = unknown, R = unknown | void>
         entries: options.entries,
         index: options.index,
         known: options.known,
-        removedEntries,
-        addedEntries,
-        updatedEntries: []
+        entriesChange: (removedEntries.length || addedEntries.length) ? {
+          removedEntries,
+          addedEntries,
+          updatedEntries: []
+        } : undefined
       });
 
       await this.dispatchEvent(
@@ -662,6 +671,7 @@ export class Navigation<S = unknown, R = unknown | void>
 
   #dispose = async () => {
     // console.log(JSON.stringify({ known: [...this.#known], entries: this.#entries }));
+
     for (const known of this.#known) {
       const index = this.#entries.findIndex((entry) => entry.key === known.key);
       if (index !== -1) {
@@ -706,8 +716,10 @@ export class Navigation<S = unknown, R = unknown | void>
       type: "currententrychange",
       navigationType: undefined,
     });
-    const entriesChange = createEvent({
+    const entriesChange: NavigationEntriesChangeEvent = createEvent({
       type: "entrieschange",
+      addedEntries: [],
+      removedEntries: [],
       updatedEntries: [
           currentEntry
       ]

@@ -18,9 +18,9 @@ export function isEvent(value: unknown): value is Event {
   );
 }
 
-export function assertEvent<T extends string | symbol, E extends Event<T>>(
-  value: unknown,
-  type?: T
+export function assertEvent<E extends Event>(
+    value: unknown,
+    type?: E["type"]
 ): asserts value is E {
   if (!isEvent(value)) {
     throw new Error("Expected event");

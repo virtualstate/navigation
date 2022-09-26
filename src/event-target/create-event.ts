@@ -1,6 +1,6 @@
 import { assertEvent, Event } from "./event";
 
-export function createEvent<T extends string | symbol, E extends Event<T>>(
+export function createEvent<E extends Event>(
   event: E
 ): E {
   if (typeof CustomEvent !== "undefined" && typeof event.type === "string") {
@@ -12,7 +12,7 @@ export function createEvent<T extends string | symbol, E extends Event<T>>(
       detail: detail ?? rest,
     });
     Object.assign(customEvent, rest);
-    assertEvent<T, E>(customEvent, event.type);
+    assertEvent<E>(customEvent, event.type);
     return customEvent;
   }
   return event;

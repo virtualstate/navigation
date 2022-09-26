@@ -6,7 +6,7 @@ import {
   NavigationDestination,
   NavigateEvent as NavigateEventPrototype,
   NavigationNavigateOptions as NavigationNavigateOptionsPrototype,
-  NavigationNavigationType,
+  NavigationNavigationType, NavigationEntriesChangeEventInit,
 } from "./spec/navigation";
 import { NavigationHistoryEntry } from "./navigation-entry";
 import {
@@ -14,7 +14,6 @@ import {
   NavigationTransitionAbort,
   NavigationTransitionEntry,
   NavigationTransitionInitialEntries,
-  NavigationTransitionKnown,
   NavigationTransitionNavigationType,
   NavigationIntercept,
   InternalNavigationNavigationType,
@@ -70,9 +69,7 @@ export interface NavigationTransitionCommitContext<S> {
   entries: NavigationHistoryEntry<S>[];
   index: number;
   known?: Set<NavigationHistoryEntry<S>>;
-  updatedEntries: NavigationHistoryEntry<S>[];
-  addedEntries: NavigationHistoryEntry<S>[];
-  removedEntries: NavigationHistoryEntry<S>[];
+  entriesChange?: NavigationEntriesChangeEventInit<S>
 }
 
 export interface NavigationTransitionContext<S> {
@@ -292,7 +289,11 @@ export function createNavigationTransition<S = unknown>(
     navigationType === "reload"
   ) {
     resolvedEntries[destination.index] = entry;
-    updatedEntries.push(entry);
+
+    if (navigationType !== "traverse") {
+      updatedEntries.push(entry);
+    }
+
     if (navigationType === "replace") {
       resolvedEntries = resolvedEntries.slice(0, destination.index + 1);
     }
@@ -321,13 +322,21 @@ export function createNavigationTransition<S = unknown>(
 
   known.add(entry);
 
+  let entriesChange: NavigationEntriesChangeEventInit<S> | undefined = undefined;
+
+  if (updatedEntries.length || addedEntries.length || removedEntries.length) {
+    entriesChange = {
+      updatedEntries,
+      addedEntries,
+      removedEntries
+    };
+  }
+
   contextToCommit = {
     entries: resolvedEntries,
     index: nextIndex,
     known,
-    updatedEntries,
-    addedEntries,
-    removedEntries
+    entriesChange
   };
 
   return {

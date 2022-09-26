@@ -23,7 +23,7 @@ export interface NavigationEventMap<S = unknown, R = void | unknown> {
   /**
    * @experimental
    */
-  entrieschange: Event;
+  entrieschange: NavigationEntriesChangeEvent<S>;
 }
 
 export interface NavigationResult<S = unknown> {
@@ -207,7 +207,7 @@ export type NavigationIntercept<R> = NavigationInterceptFn<R> | NavigationInterc
 
 export interface NavigationCurrentEntryChangeEvent<S = unknown, R = unknown | void>
   extends Event<"currententrychange">,
-    NavigationCurrentEntryChangeEventInit {
+    NavigationCurrentEntryChangeEventInit<S> {
   readonly navigationType?: NavigationNavigationType;
   readonly from?: NavigationHistoryEntry<S>;
 
@@ -269,4 +269,15 @@ export interface NavigationDestination<S = unknown> {
   readonly sameDocument: boolean;
   getState<GS extends S = S>(): GS;
   getState(): S;
+}
+
+export interface NavigationEntriesChangeEventInit<S> {
+  addedEntries: NavigationHistoryEntry<S>[]
+  removedEntries: NavigationHistoryEntry<S>[]
+  updatedEntries: NavigationHistoryEntry<S>[]
+}
+
+export interface NavigationEntriesChangeEvent<S = unknown>
+    extends Event<"entrieschange">,
+        NavigationEntriesChangeEventInit<S> {
 }

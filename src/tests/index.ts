@@ -21,23 +21,30 @@ if (typeof process !== "undefined" && process.on) {
 }
 
 async function runTests() {
+  const flags = getConfig().FLAGS;
+  const WPT = flags?.includes("WEB_PLATFORM_TESTS"),
+      playright = flags?.includes("PLAYWRIGHT")
+
   await import("./navigation.class");
   if (typeof window === "undefined" && typeof process !== "undefined") {
     await import("./navigation.imported");
-    if (getConfig().FLAGS?.includes("WEB_PLATFORM_TESTS")) {
+    if (WPT) {
       await import("./navigation.playwright.wpt");
     }
-    if (getConfig().FLAGS?.includes("PLAYWRIGHT")) {
+    if (playright) {
       await import("./navigation.playwright");
     }
   } else {
     // await import("./navigation.scope");
   }
-  await import("./routes");
-  await import("./transition");
-  await import("./wpt");
-  await import("./commit");
-  await import("./state");
+  if (!(WPT || playright)) {
+    await import("./routes");
+    await import("./transition");
+    await import("./wpt");
+    await import("./commit");
+    await import("./state");
+    await import("./entrieschange");
+  }
 }
 
 if (typeof window === "undefined") {
