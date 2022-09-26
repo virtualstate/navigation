@@ -46,7 +46,7 @@ export class NavigationHistory<S extends object>
     if (typeof currentState === "string" || typeof currentState === "number" || typeof currentState === "boolean") {
       return currentState;
     }
-    return this.#options[State] ?? null;
+    return this.#options[State] ?? undefined;
   }
 
   back(): unknown;

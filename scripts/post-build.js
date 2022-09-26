@@ -109,8 +109,8 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   )
 
   const wptResults = await fs.readFile("coverage/wpt.results.json", "utf8").then(JSON.parse).catch(() => ({}));
-  if (wptResults?.total) {
-    const message = `${wptResults.pass}/${wptResults.total}`;
+  if (wptResults?.pass) {
+    const message = `${wptResults.pass}/${wptResults.pass + wptResults.fail}`;
     const name = "Web Platform Tests";
     badges.push(
         `![${name} ${message}](https://img.shields.io/badge/${encodeURIComponent(name)}-${encodeURIComponent(message)}-brightgreen)`

@@ -55,8 +55,12 @@ const browsers = [
 ] as const;
 
 const SKIPPED = [
-    "/navigate-event/intercept-detach.html",
-    "/navigate-event/intercept-detach-multiple.html"
+  "/navigate-event/intercept-detach.html",
+  "/navigate-event/intercept-detach-multiple.html",
+  "/navigation-methods/sandboxing-back-parent.html",
+  "/navigation-methods/sandboxing-back-sibling.html",
+  "/navigation-methods/sandboxing-navigate-parent.html",
+  "/navigation-methods/sandboxing-navigate-sibling.html"
 ]
 
 // webkit and firefox do not support importmap
@@ -495,6 +499,16 @@ const window = {
     if (navigation.transition) {
       return navigation.transition.rollback();
     }
+  },
+  set onhashchange(fn) {
+    navigation.addEventListener("navigate", event => {
+      if (event.hashChange) {
+        fn();
+      }
+    });
+  },
+  doNavigationBack() {
+    return navigation.back();
   }
 };
 
@@ -519,6 +533,9 @@ const iframe = {
     set onload(value) {
       iframeEvents.addEventListener("load", value, { once: true });
     },
+    doNavigationBack() {
+      return iframeNavigation.back();
+    }
   },
   remove() {
     iframeNavigationTarget = new Navigation({
