@@ -1,6 +1,7 @@
 import { globalNavigation } from "./global-navigation";
 import type { Navigation } from "./spec/navigation";
 import { Navigation as NavigationPolyfill } from "./navigation";
+import { InvalidStateError } from "./navigation-errors";
 
 let navigation: Navigation;
 
@@ -16,20 +17,19 @@ export function getNavigation(): Navigation {
   if (typeof window !== "undefined" && window.history) {
     const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
 
-    let ignorePopState = false;
-    let ignoreCurrentEntryChange = false;
+    const ignorePopState = new Set<string>();
+    const ignoreCurrentEntryChange = new Set<string>();
 
     navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
-      if (ignoreCurrentEntryChange) return ignoreCurrentEntryChange = false;
-
       const { currentEntry } = navigation;
-      if (!currentEntry?.sameDocument) return;
-      const url = new URL(currentEntry.url, origin);
       const { key } = currentEntry;
+      if (ignoreCurrentEntryChange.delete(key) || !currentEntry?.sameDocument) return;
+
+      const url = new URL(currentEntry.url, origin);
       const state = currentEntry.getState<any>() ?? {};
       state["__key__"] = key;
 
-      switch(navigationType) {
+      switch (navigationType) {
         case "push":
           return history.pushState(state, "", url)
         case "replace":
@@ -39,19 +39,22 @@ export function getNavigation(): Navigation {
           const fromIdx = entries.findIndex(e => e === from)
           const currIdx = entries.findIndex(e => e === currentEntry)
           const delta = currIdx - fromIdx;
-          ignorePopState = true
+          ignorePopState.add(key);
           return history.go(delta);
-        case "reload":
-          return console.warn("TBD")
       }
     });
     window.addEventListener("popstate", (ev) => {
-      if (ignorePopState) return ignorePopState = false;
-
       const { __key__: key } = ev.state ?? {};
+      if (ignorePopState.delete(key)) return;
+
       if (key) {
-        ignoreCurrentEntryChange = true;
-        navigation.traverseTo(key)
+        ignoreCurrentEntryChange.add(key);
+        try {
+          navigation.traverseTo(key)
+        } catch (err) {
+          if (err instanceof InvalidStateError) {}
+          else { throw err }
+        }
       }
     })
   }
