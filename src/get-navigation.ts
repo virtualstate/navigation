@@ -87,8 +87,6 @@ export function getNavigation(): Navigation {
 
   if (!history) return navigation;
 
-  const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
-
   if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) {
     const navMeta = getState()?.[__nav__];
     if (navMeta?.currentIndex > -1) {
@@ -101,6 +99,8 @@ export function getNavigation(): Navigation {
     const ignorePopState = new Set<string>();
     const ignoreCurrentEntryChange = new Set<string>();
 
+    // const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
+
     const copyEntries = () => navigation.entries().map(({ id, key, url }) => ({ id, key, url }));
 
     navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
@@ -108,18 +108,16 @@ export function getNavigation(): Navigation {
       const { id, key, url } = currentEntry;
       if (ignoreCurrentEntryChange.delete(key) || !currentEntry?.sameDocument) return;
 
-      const fqUrl = new URL(url, origin);
+      // const { pathname } = new URL(url, origin);
       const state = currentEntry.getState<any>();
 
       if (PERSIST_ENTRIES_STATE && state != null) {
         const item = sessionStorage.getItem(id)
         if (item == null) {
           const raw = StructuredJSON.stringify(state)
-          if (raw != null) {
-            sessionStorage.setItem(id, raw);
-            // Cleaning up some session storage early... no biggie if we miss some
-            currentEntry.addEventListener("dispose", e => { sessionStorage.removeItem((e.detail as any)?.entry.id) });
-          }
+          sessionStorage.setItem(id, raw);
+          // Cleaning up some session storage early... no biggie if we miss some
+          currentEntry.addEventListener("dispose", e => { sessionStorage.removeItem((e.detail as any)?.entry.id) });
         }
       }
 
@@ -133,9 +131,9 @@ export function getNavigation(): Navigation {
 
       switch (navigationType) {
         case "push":
-          return pushState(hState, "", fqUrl)
+          return pushState(hState, "", url)
         case "replace":
-          return replaceState(hState, "", fqUrl)
+          return replaceState(hState, "", url)
         case "traverse":
           const delta = currentEntry.index - from.index;
           ignorePopState.add(key);
@@ -162,10 +160,14 @@ export function getNavigation(): Navigation {
               replaceState(hState, "", entry.url);
             }, () => {});
         } catch (err) {
-          if (err instanceof InvalidStateError) {}
+          if (err instanceof InvalidStateError && !PERSIST_ENTRIES) { /* ok */ }
           else { throw err }
         }
       }
+    })
+
+    window.addEventListener("hashchange", (ev) => {
+      // TODO
     })
   }
 
