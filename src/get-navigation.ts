@@ -43,6 +43,7 @@ export function getNavigation(): Navigation {
           return history.go(delta);
       }
     });
+
     window.addEventListener("popstate", (ev) => {
       const { __key__: key } = ev.state ?? {};
       if (ignorePopState.delete(key)) return;
@@ -57,6 +58,51 @@ export function getNavigation(): Navigation {
         }
       }
     })
+
+    // function preventDefault(e: MouseEvent) {
+    //   if (e.target instanceof HTMLAnchorElement) {
+    //     e.preventDefault(); // HACK: Instead of calling this immediately, should pass it along and call when intercept is called
+    //     const a = e.target;
+    //     a.download // TODO: Needs to fire the correct event with downloadRequest set to true
+    //     navigation.navigate(a.href);
+    //   }
+    //   else if (e.target instanceof HTMLFormElement) {
+    //     e.preventDefault();
+    //     // TODO
+    //   }
+    // }
+    // const mutObs = new MutationObserver(mutations => {
+    //   for (const { addedNodes, removedNodes } of mutations) {
+    //     const aLen = addedNodes.length;
+    //     const rLen = removedNodes.length;
+    //     for (let i = 0; i < aLen; i++) {
+    //       const el = addedNodes[i];
+    //       if (!(el instanceof Element)) continue;
+
+    //       const as = el.querySelectorAll('a');
+    //       for (let j = 0; j < as.length; j++) {
+    //         as[j].addEventListener("click", preventDefault);
+    //       }
+    //       // TODO: forms
+    //     }
+    //     for (let i = 0; i < rLen; i++) {
+    //       const el = removedNodes[i];
+    //       if (!(el instanceof Element)) continue;
+
+    //       const as = el.querySelectorAll('a');
+    //       for (let j = 0; j < as.length; j++) {
+    //         as[j].removeEventListener("click", preventDefault);
+    //       }
+    //       // TODO: forms
+    //     }
+    //   }
+    // });
+    // mutObs.observe(document.body, {
+    //   subtree: true, 
+    //   childList: true, 
+    //   attributes: false, 
+    //   characterData: false
+    // })
   }
 
   return navigation;
