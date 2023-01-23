@@ -54,16 +54,15 @@ export const DRAG_ENTRIES_STATE = true;
  * Could solve issues when combining Navigation API with frameworks that use History API, 
  * or cause additional issues instead 🤷‍♂️.
  * 
- * **NOTE**: This does some crazy prototype acrobatics to hide the real history state from the application,
- * you might want to disable it for this reason alone.
+ * **NOTE**: This performs some crazy prototype acrobatics to hide the real history state from the application.
+ * If this sounds scary you might want to disable this.
  */
 const PATCH_HISTORY = true;
 
 /**
- * __Experimental__:
- * Adds a `MutationObserver` to spy on `<a/>` tags and prevent default behavior.
- * If your app uses Navigation/History APIs exclusively, you're likely not going to need need this.
- * __WIP__: Only works for the most basic cases. Adds performance overhead. No download support. No form support.
+ * __EXPERIMENTAL__: Attempts to intercept clicks an `<a/>` tags and `<form/>` submissions.
+ * Only works for the most basic cases. No download support. No form support. 
+ * Doesn't fire the correct navigation events. Basically does nothing except prevent default.
  */
 const SPY_ON_DOM = false;
 
@@ -167,7 +166,7 @@ export function getNavigation(): Navigation {
   }
 
   if (PATCH_HISTORY) {
-    // FIXME: use defineproperty?
+    // FIXME: use defineproperty on prototype instead?
     history.pushState = (state, _t, url) => { navigation.navigate(url!, { history: "push", state }) };
     history.replaceState = (state, _t, url) => { navigation.navigate(url!, { history: "replace", state }) };
     history.go = delta => { navigation.traverseTo(navigation.entries()[navigation.currentEntry.index + delta]?.key) };
@@ -178,56 +177,42 @@ export function getNavigation(): Navigation {
   }
 
   if (SPY_ON_DOM) {
-    function clickCallback(ev: MouseEvent) {
-      const a = ev.target as HTMLAnchorElement;
+    function clickCallback(ev: MouseEvent, aEl: HTMLAnchorElement) {
       ev.preventDefault(); // HACK: Instead of calling this immediately, should pass it along and call when intercept is called
-      a.download // TODO: Needs to fire the correct event with downloadRequest set to true
-      navigation.navigate(a.href); // FIXME: needs a private method that dispatches the correct event
+      aEl.download // FIXME: Needs to fire the correct event with downloadRequest set to true
+      navigation.navigate(aEl.href); // FIXME: needs a private method that dispatches the correct event
     }
-    function submitCallback(ev: SubmitEvent) {
-      // TODO
-      // const form = ev.target as HTMLFormElement;
-      // ev.preventDefault(); // HACK: Instead of calling this immediately, should pass it along and call when intercept is called
+    function submitCallback(ev: SubmitEvent, form: HTMLFormElement) {
+      ev.preventDefault(); // HACK: Instead of calling this immediately, should pass it along and call when intercept is called
+      // navigation.navigate(f.href); // FIXME: needs a private method that dispatches the correct event
     }
-    function addListeners(el: HTMLElement) {
-      if (el instanceof HTMLAnchorElement)
-        el.addEventListener("click", clickCallback);
-      const as = el.getElementsByTagName('a');
-      const asLength = as.length;
-      for (let i = 0; i < asLength; i++)
-        as[i].addEventListener("click", clickCallback);
-      // TODO: forms
-    }
-    function removeListeners(el: HTMLElement) {
-      if (el instanceof HTMLAnchorElement)
-        el.removeEventListener("click", clickCallback);
-      const as = el.getElementsByTagName('a');
-      const asLength = as.length;
-      for (let i = 0; i < asLength; i++)
-        as[i].removeEventListener("click", clickCallback);
-      // TODO: forms
-    }
-    const mutationObserver = new MutationObserver(mutations => {
-      for (const mutation of mutations) {
-        const addedNodes = mutation.addedNodes;
-        const removedNodes = mutation.removedNodes;
-        const addedLength = addedNodes.length;
-        const removedLength = removedNodes.length;
-        for (let i = 0; i < addedLength; i++) {
-          const el = addedNodes[i];
-          if (el instanceof HTMLElement)
-            addListeners(el);
-        }
-        for (let i = 0; i < removedLength; i++) {
-          const el = removedNodes[i];
-          if (el instanceof HTMLElement)
-            removeListeners(el)
-        }
+    document.body.addEventListener("click", (ev: MouseEvent) => {
+      if (ev.defaultPrevented) return;
+      if (ev.target instanceof Element) {
+        const aEl = matchAncestors(ev.target, "a[href]");
+        if (aEl)
+          clickCallback(ev, aEl as HTMLAnchorElement);
       }
     });
-    mutationObserver.observe(document.body, { subtree: true, childList: true });
-    addListeners(document.body);
+    document.body.addEventListener("submit", (ev: SubmitEvent) => {
+      if (ev.defaultPrevented) return;
+      if (ev.target instanceof Element) {
+        const form = matchAncestors(ev.target, "form");
+        if (form) 
+          submitCallback(ev, form as HTMLFormElement);
+      }
+    });
   }
 
   return navigation;
+}
+
+/** Checks if this element or any of its parents matches a given `selector` */
+export function matchAncestors(el: Element | null, selector: string): Element | null {
+  let curr = el;
+  while (curr != null) {
+    if (curr.matches(selector)) return curr;
+    curr = curr.parentNode instanceof Element ? curr.parentNode : null;
+  }
+  return null;
 }

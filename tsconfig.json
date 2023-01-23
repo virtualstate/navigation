@@ -7,7 +7,6 @@
             "dom",
         ],
         "types": [
-          "jest",
             "node"
         ],
         "esModuleInterop": true,
