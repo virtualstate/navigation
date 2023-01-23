@@ -19,9 +19,9 @@ export function debug(...messages: unknown[]) {
   }
 }
 
-declare global {
-  const navigation: Navigation;
-}
+// declare global {
+//   const navigation: Navigation;
+// }
 
 export function isWindowNavigation(navigation: Navigation): boolean {
   return typeof window !== "undefined" && window.navigation === navigation;
