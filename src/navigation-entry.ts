@@ -7,6 +7,8 @@ import {
 import { NavigationEventTarget } from "./navigation-event-target";
 import { EventTargetListeners } from "./event-target";
 import { v4 } from "./util/uuid-or-random";
+import * as StructuredJSON from "@worker-tools/structured-json"
+import { DRAG_ENTRIES_STATE, getState as getHistoryState, __nav__ } from "./get-navigation";
 
 export const NavigationHistoryEntryNavigationType = Symbol.for(
   "@virtualstate/navigation/entry/navigationType"
@@ -73,7 +75,21 @@ export class NavigationHistoryEntry<S = unknown>
   getState<ST extends S>(): ST;
   getState(): S;
   getState(): unknown {
-    const state = this.#state;
+    let state = this.#state;
+    
+    if (state == null && typeof window !== "undefined" && window.history) {
+      const hState = getHistoryState();
+      if (hState?.[__nav__].key === this.key) {
+        state = this.#state = hState.state;
+      }
+      if (state == null && DRAG_ENTRIES_STATE) {
+        const raw = sessionStorage.getItem(this.id);
+        if (raw != null) {
+          state = this.#state = StructuredJSON.parse(raw);
+        }
+      }
+    }
+
     /**
      * https://github.com/WICG/app-history/blob/7c0332b30746b14863f717404402bc49e497a2b2/spec.bs#L1406
      * Note that in general, unless the state value is a primitive, entry.getState() !== entry.getState(), since a fresh copy is returned each time.
