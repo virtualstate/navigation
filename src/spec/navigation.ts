@@ -42,7 +42,7 @@ export interface Navigation<S = unknown, R = unknown | void> extends EventTarget
   updateCurrentEntry(options: NavigationUpdateCurrentOptions<S>): void;
 
   navigate(
-    url: string,
+    url: string|URL,
     options?: NavigationNavigateOptions<S>
   ): NavigationResult<S>;
   reload(

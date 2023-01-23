@@ -79,7 +79,6 @@ export class NavigationHistoryEntry<S = unknown>
      * Note that in general, unless the state value is a primitive, entry.getState() !== entry.getState(), since a fresh copy is returned each time.
      */
     if (
-      typeof state === "undefined" ||
       typeof state === "number" ||
       typeof state === "boolean" ||
       typeof state === "symbol" ||
@@ -100,6 +99,10 @@ export class NavigationHistoryEntry<S = unknown>
       );
       console.warn("a function would not be usable.");
     }
+    if (typeof window !== "undefined" && window.history) {
+      return history.state;
+    }
+    if (typeof state === "undefined") return state;
     return {
       ...state,
     };

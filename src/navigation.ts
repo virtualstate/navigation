@@ -82,6 +82,24 @@ export class Navigation<S = unknown, R = unknown | void>
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
+  __restoreEntries(idx: number, xs: { id: string, key: string, url: string, sameDocument: boolean, state: S }[]) {
+    this.#currentIndex = idx;
+    this.#entries = xs.map(x => {
+      const { id, key, url, sameDocument, state } = x;
+      const entry = new NavigationHistoryEntry<S>({
+        navigationType: "push",
+        index: xs.indexOf(x),
+        sameDocument,
+        url,
+        key,
+        state: state as S
+      });
+      // @ts-ignore
+      entry.id = id;
+      return entry;
+    });
+  }
+
   get canGoBack() {
     return !!this.#entries[this.#currentIndex - 1];
   }

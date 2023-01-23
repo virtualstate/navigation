@@ -16,14 +16,16 @@ if (
   typeof window !== "undefined"
 ) {
   console.log("Polyfill checking loading");
-  // Add usage of intercept for initial navigation to prevent network navigation
-  navigation.addEventListener(
-    "navigate",
-    (event) => event.intercept(Promise.resolve()),
-    { once: true }
-  );
-  await navigation.navigate(window.location.href, window.history?.state)
-    .finished;
+  if (navigation.entries().length === 0) {
+    navigation.addEventListener(
+      "navigate",
+      // Add usage of intercept for initial navigation to prevent network navigation
+      (event) => event.intercept(Promise.resolve()),
+      { once: true }
+    );
+    await navigation.navigate(window.location.href, window.history?.state)
+      .finished;
+  }
   console.log("Polyfill checking loaded");
   try {
     Object.defineProperty(window, "navigation", {
