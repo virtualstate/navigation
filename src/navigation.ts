@@ -65,6 +65,8 @@ export interface NavigationOptions {
   baseURL?: URL | string;
 }
 
+export const NavigationRestore = Symbol.for("@qwtel/navigation/restore");
+
 export class Navigation<S = unknown, R = unknown | void>
   extends NavigationEventTarget<NavigationEventMap<S, R>>
   implements NavigationPrototype<S, R>
@@ -82,20 +84,18 @@ export class Navigation<S = unknown, R = unknown | void>
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
-  __restoreEntries(idx: number, entries: Pick<NavigationHistoryEntry, "id"|"key"|"url"|"sameDocument"|"state">[]) {
-    this.#currentIndex = idx;
-    this.#entries = entries.map(ent => {
-      const { id, key, url, sameDocument, state } = ent;
+  [NavigationRestore](index: number, entries: Pick<NavigationHistoryEntry, "id"|"key"|"url">[]) {
+    this.#currentIndex = index;
+    this.#entries = entries.map((data, index) => {
+      const { id, key, url } = data;
       const entry = new NavigationHistoryEntry<S>({
-        navigationType: "push",
-        index: entries.indexOf(ent),
-        sameDocument,
+        navigationType: "push", // XXX: required?
+        sameDocument: true,
+        index,
         url,
-        key,
-        state: state as S
+        key
       });
-      // @ts-ignore
-      entry.id = id;
+      (entry as any).id = id;
       return entry;
     });
   }

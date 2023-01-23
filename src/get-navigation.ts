@@ -1,6 +1,6 @@
 import { globalNavigation } from "./global-navigation";
 import type { Navigation } from "./spec/navigation";
-import { Navigation as NavigationPolyfill } from "./navigation";
+import { Navigation as NavigationPolyfill, NavigationRestore } from "./navigation";
 import { InvalidStateError } from "./navigation-errors";
 import * as StructuredJSON from "@worker-tools/structured-json"
 import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationUserInitiated } from "./create-navigation-transition";
@@ -25,48 +25,54 @@ export const getState = stateGetter?.bind(history);
 /**
  * Integrate polyfilled Navigation API with legacy History API. 
  * Specifically, `popstate` will trigger navigation traversal and 
- * Navigation API navigates will push state on History API.
+ * navigates will push state on History API.
  * This enables forward/backward to work in most cases, but not after page refresh, etc. 
- * See {@link DRAG_ENTRIES}.
+ * See {@link PERSIST_ENTRIES}.
  * 
- * __WIP__: No consideration given to iframes and other edge cases. `hashchange` not implemented.
+ * __WIP__: No consideration given to iframes and other edge cases. 
+ * `hashchange` not implemented. `scroll` not implemented.
  */
 const HISTORY_INTEGRATION = true;
 
 /** 
- * Dragging along all navigation entries in the history state. 
- * This enables forward/backward to work after hard refresh, closing/reopening tab, etc...
- * but comes at the cost of copying the navigation history entries array _for every history frame_.
+ * Persists all navigation entries in history state. 
+ * This enables forward/backward to work after hard refresh, closing/reopening tab, etc.
+ * but comes at the cost of storing all navigation history entries _on every history frame_.
+ * This isn't quite as crazy as it seems, as each entry only consists of `url`, `key` and `id`.
+ * 
+ * __WIP__: Maybe store entries in session storage instead and only keep an id in history state,
+ * same as entries state? What's worse, sync access + stringification or endless duplication on history frames 🤔 
  */
-const DRAG_ENTRIES = true;
+const PERSIST_ENTRIES = true;
 
 /**
- * Like {@link DRAG_ENTRIES}, except also stores the state for each navigation entry.
- * Note that you might not need this if you only ever request the state from the current navigation entry, 
+ * Like {@link PERSIST_ENTRIES}, except also stores the state for each navigation entry.
+ * Note that you might not need this if you only need the state from the current navigation entry, 
  * which works with {@link HISTORY_INTEGRATION} alone.
- * Setting to true allows getting the state of any navigation entry even faster hard refresh.
+ * Enabled this allows getting the state of any navigation entry even after a hard refresh.
  * 
  * __NOTE__: State is stringified and stored in `sessionStorage`. This works for small objects, 
  * but gets awkward when storing large array buffers, etc...
  */
-const DRAG_ENTRIES_STATE = true;
+const PERSIST_ENTRIES_STATE = true;
 
 /**
- * Monkey-patches History API to call new Navigation API methods instead.
+ * Monkey-patches History methods to call new Navigation API methods internally instead.
+ * Combine with {@link HISTORY_INTEGRATION} to
  * Could solve issues when combining Navigation API with frameworks that use History API, 
  * or cause additional issues instead 🤷‍♂️.
  * 
- * **NOTE**: This performs some crazy prototype acrobatics to hide the real history state from the application.
+ * __NOTE__: This performs some crazy prototype acrobatics to hide the real history state from the application.
  * If this sounds scary you might want to disable this.
  */
 const PATCH_HISTORY = true;
 
 /**
- * __EXPERIMENTAL__: Attempts to intercept clicks an `<a/>` tags and `<form/>` submissions.
+ * Intercepts clicks on `a` tags and `form` submissions.
  * Only works for the most basic cases. ~No download support. No form support.~
  * ~Doesn't fire the correct navigation events. Basically does nothing except prevent default.~
  */
-const SPY_ON_DOM = true;
+const INTERCEPT_EVENTS = true;
 
 export const __nav__ = "__nav__";
 
@@ -79,29 +85,23 @@ export function getNavigation(): Navigation {
   }
   navigation = new NavigationPolyfill()
 
-  function copyEntries() {
-    try {
-      // console.time("copyEntries")
-      return navigation.entries().map(({ id, key, url, sameDocument }) => ({ id, key, url, sameDocument }));
-    } finally {
-      // console.timeEnd("copyEntries")
-    }
-  }
-
   if (!history) return navigation;
 
   const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
 
-  if (DRAG_ENTRIES || DRAG_ENTRIES_STATE) {
+  if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) {
     const navMeta = getState()?.[__nav__];
-    if (navMeta && navMeta.currentIndex > -1) {
-      (navigation as NavigationPolyfill).__restoreEntries(navMeta.currentIndex, navMeta.entries);
+    if (navMeta?.currentIndex > -1) {
+      const polyfilled = navigation as NavigationPolyfill;
+      polyfilled[NavigationRestore](navMeta.currentIndex, navMeta.entries);
     }
   }
 
   if (HISTORY_INTEGRATION) {
     const ignorePopState = new Set<string>();
     const ignoreCurrentEntryChange = new Set<string>();
+
+    const copyEntries = () => navigation.entries().map(({ id, key, url }) => ({ id, key, url }));
 
     navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
       const { currentEntry } = navigation;
@@ -111,19 +111,21 @@ export function getNavigation(): Navigation {
       const fqUrl = new URL(url, origin);
       const state = currentEntry.getState<any>();
 
-      if (DRAG_ENTRIES_STATE && state != null) {
+      if (PERSIST_ENTRIES_STATE && state != null) {
         const item = sessionStorage.getItem(id)
-        if (!item) {
+        if (item == null) {
           const raw = StructuredJSON.stringify(state)
-          raw != null && sessionStorage.setItem(id, raw);
-          // Cleaning up some session storage early:
-          currentEntry.addEventListener("dispose", e => { sessionStorage.removeItem((e.detail as any)?.entry.id) });
+          if (raw != null) {
+            sessionStorage.setItem(id, raw);
+            // Cleaning up some session storage early... no biggie if we miss some
+            currentEntry.addEventListener("dispose", e => { sessionStorage.removeItem((e.detail as any)?.entry.id) });
+          }
         }
       }
 
       const navMeta = { 
         key, 
-        ...DRAG_ENTRIES || DRAG_ENTRIES_STATE 
+        ...PERSIST_ENTRIES || PERSIST_ENTRIES_STATE 
           ? { currentIndex: currentEntry.index, entries: copyEntries() } 
           : {},
       };
@@ -149,7 +151,7 @@ export function getNavigation(): Navigation {
         ignoreCurrentEntryChange.add(key);
         try {
           const committed = navigation.traverseTo(key).committed;
-          if (DRAG_ENTRIES || DRAG_ENTRIES_STATE) 
+          if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) 
             committed.then(entry => {
               const navMeta = {
                 key,
@@ -178,39 +180,48 @@ export function getNavigation(): Navigation {
     Object.defineProperty(PopStateEvent.prototype, "state", { get() { return eventStateGetter.call(this)?.state }, ...eventDesc });
   }
 
-  if (SPY_ON_DOM) {
+  if (INTERCEPT_EVENTS) {
     function clickCallback(ev: MouseEvent, aEl: HTMLAnchorElement) {
-      const options = { 
-        history: "auto",
-        [NavigationUserInitiated]: true,
-        [NavigationDownloadRequest]: aEl.download,
-        [NavigationOriginalEvent]: ev,
-      } satisfies InternalNavigationNavigateOptions
-      navigation.navigate(aEl.href, options);
+      // Move to back of task queue to let other event listeners run that 
+      // are also registered on `window` (e.g. Solid.js event delegation). 
+      // This gives them a chance to call `preventDefault` themselves, which should be respected by nav api.
+      queueMicrotask(() => {
+        if (!isAppNavigation(ev)) return;
+        const options = { 
+          history: "auto",
+          [NavigationUserInitiated]: true,
+          [NavigationDownloadRequest]: aEl.download,
+          [NavigationOriginalEvent]: ev,
+        } satisfies InternalNavigationNavigateOptions
+        navigation.navigate(aEl.href, options);
+      });
     }
     function submitCallback(ev: SubmitEvent, form: HTMLFormElement) {
-      const action = ev.submitter && 'formAction' in ev.submitter
-        ? ev.submitter.formAction as string
-        : form.action
-      const options = { 
-        history: "auto",
-        [NavigationUserInitiated]: true,
-        [NavigationFormData]: new FormData(form),
-        [NavigationOriginalEvent]: ev,
-      } satisfies InternalNavigationNavigateOptions
-      navigation.navigate(action, options); 
+      queueMicrotask(() => {
+        if (ev.defaultPrevented) return;
+        const action = ev.submitter && 'formAction' in ev.submitter
+          ? ev.submitter.formAction as string
+          : form.action
+        const options = { 
+          history: "auto",
+          [NavigationUserInitiated]: true,
+          [NavigationFormData]: new FormData(form),
+          [NavigationOriginalEvent]: ev,
+        } satisfies InternalNavigationNavigateOptions
+        navigation.navigate(action, options); 
+      });
     }
-    document.body.addEventListener("click", (ev: MouseEvent) => {
+    window.addEventListener("click", (ev: MouseEvent) => {
       if (ev.defaultPrevented) return;
-      if (ev.target instanceof Element) {
+      if (ev.target instanceof Element && ev.target.ownerDocument === document) {
         const aEl = matchAncestors(ev.target, "a[href]");
         if (aEl)
           clickCallback(ev, aEl as HTMLAnchorElement);
       }
     });
-    document.body.addEventListener("submit", (ev: SubmitEvent) => {
+    window.addEventListener("submit", (ev: SubmitEvent) => {
       if (ev.defaultPrevented) return;
-      if (ev.target instanceof Element) {
+      if (ev.target instanceof Element && ev.target.ownerDocument === document) {
         const form = matchAncestors(ev.target, "form");
         if (form) 
           submitCallback(ev, form as HTMLFormElement);
@@ -219,6 +230,15 @@ export function getNavigation(): Navigation {
   }
 
   return navigation;
+}
+
+function isAppNavigation(evt: MouseEvent) {
+  return evt.button === 0 &&
+    !evt.defaultPrevented &&
+    !evt.metaKey &&
+    !evt.altKey &&
+    !evt.ctrlKey &&
+    !evt.shiftKey
 }
 
 /** Checks if this element or any of its parents matches a given `selector` */
