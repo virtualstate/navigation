@@ -82,13 +82,13 @@ export class Navigation<S = unknown, R = unknown | void>
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
-  __restoreEntries(idx: number, xs: { id: string, key: string, url: string, sameDocument: boolean, state: S }[]) {
+  __restoreEntries(idx: number, entries: Pick<NavigationHistoryEntry, "id"|"key"|"url"|"sameDocument"|"state">[]) {
     this.#currentIndex = idx;
-    this.#entries = xs.map(x => {
-      const { id, key, url, sameDocument, state } = x;
+    this.#entries = entries.map(ent => {
+      const { id, key, url, sameDocument, state } = ent;
       const entry = new NavigationHistoryEntry<S>({
         navigationType: "push",
-        index: xs.indexOf(x),
+        index: entries.indexOf(ent),
         sameDocument,
         url,
         key,
