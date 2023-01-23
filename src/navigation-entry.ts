@@ -8,7 +8,7 @@ import { NavigationEventTarget } from "./navigation-event-target";
 import { EventTargetListeners } from "./event-target";
 import { v4 } from "./util/uuid-or-random";
 import * as StructuredJSON from "@worker-tools/structured-json"
-import { DRAG_ENTRIES_STATE, getState as getHistoryState, __nav__ } from "./get-navigation";
+import { getState as getHistoryState, __nav__ } from "./get-navigation";
 
 export const NavigationHistoryEntryNavigationType = Symbol.for(
   "@virtualstate/navigation/entry/navigationType"
@@ -82,7 +82,7 @@ export class NavigationHistoryEntry<S = unknown>
       if (hState?.[__nav__].key === this.key) {
         state = this.#state = hState.state;
       }
-      if (state == null && DRAG_ENTRIES_STATE) {
+      if (state == null) {
         const raw = sessionStorage.getItem(this.id);
         if (raw != null) {
           state = this.#state = StructuredJSON.parse(raw);

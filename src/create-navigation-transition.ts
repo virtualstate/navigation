@@ -36,6 +36,9 @@ export const NavigationCanIntercept = Symbol.for(
 export const NavigationUserInitiated = Symbol.for(
   "@virtualstate/navigation/userInitiated"
 );
+export const NavigationOriginalEvent = Symbol.for(
+  "@qwtel/navigation/originalEvent"
+);
 
 export interface NavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptionsPrototype<S> {
@@ -43,6 +46,7 @@ export interface NavigationNavigateOptions<S = unknown>
   [NavigationDownloadRequest]?: string;
   [NavigationCanIntercept]?: boolean;
   [NavigationUserInitiated]?: boolean;
+  [NavigationOriginalEvent]?: Event;
 }
 
 export const EventAbortController = Symbol.for(
@@ -53,7 +57,7 @@ export interface AbortControllerEvent {
   [EventAbortController]: AbortController;
 }
 
-export interface InternalNavigationNavigateOptions<S>
+export interface InternalNavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptions<S> {
   entries?: NavigationHistoryEntry<S>[];
   index?: number;
@@ -61,14 +65,14 @@ export interface InternalNavigationNavigateOptions<S>
   navigationType?: NavigationNavigationType;
 }
 
-export interface NavigationTransitionCommitContext<S> {
+export interface NavigationTransitionCommitContext<S = unknown> {
   entries: NavigationHistoryEntry<S>[];
   index: number;
   known?: Set<NavigationHistoryEntry<S>>;
   entriesChange?: NavigationEntriesChangeEventInit<S>
 }
 
-export interface NavigationTransitionContext<S> {
+export interface NavigationTransitionContext<S = unknown> {
   commit(commit: NavigationTransitionCommitContext<S>): Promise<void>;
   transition: NavigationTransition<S>;
   options?: InternalNavigationNavigateOptions<S>;
@@ -79,7 +83,7 @@ export interface NavigationTransitionContext<S> {
   reportError?(reason: unknown): void;
 }
 
-export interface NavigationTransitionResult<S> {
+export interface NavigationTransitionResult<S = unknown> {
   entries: NavigationHistoryEntry<S>[];
   index: number;
   known: Set<NavigationHistoryEntry<S>>;
@@ -227,14 +231,21 @@ export function createNavigationTransition<S = unknown>(
     destination,
   })
 
-  event.intercept = intercept;
+  const originalEvent: Event = options?.[NavigationOriginalEvent];
+
+  event.intercept = originalEvent 
+    ? x => (originalEvent.preventDefault(), intercept(x)) 
+    : intercept;
   event.transitionWhile = intercept;
   event.commit = commit;
   if (reportError) {
     event.reportError = reportError;
   }
   event.scroll = noop;
-  event.preventDefault = transition[NavigationTransitionAbort].bind(transition);
+  event.preventDefault = originalEvent
+    ? transition[NavigationTransitionAbort].bind(transition)
+    : () => (originalEvent.preventDefault(), transition[NavigationTransitionAbort].call(transition));
+
 
   const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
     from: currentEntry,

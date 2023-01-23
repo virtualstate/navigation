@@ -3,10 +3,12 @@ import type { Navigation } from "./spec/navigation";
 import { Navigation as NavigationPolyfill } from "./navigation";
 import { InvalidStateError } from "./navigation-errors";
 import * as StructuredJSON from "@worker-tools/structured-json"
+import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationUserInitiated } from "./create-navigation-transition";
 
 let navigation: Navigation;
 
-export const history: History|null = typeof window !== "undefined" && window.history
+const history = typeof window !== "undefined" && window.history
+
 export const pushState = history?.pushState.bind(history);
 export const replaceState = history?.replaceState.bind(history);
 export const historyGo = history?.go.bind(history);
@@ -15,7 +17,7 @@ export const forward = history?.forward.bind(history);
 const { get: stateGetter, ...stateDesc } = history
   ? Object.getOwnPropertyDescriptor(Object.getPrototypeOf(history), "state")
   : { get: undefined };
-const { get: eventStateGetter, ...eventDesc } = history
+const { get: eventStateGetter, ...eventDesc } = history && window.PopStateEvent
   ? Object.getOwnPropertyDescriptor(PopStateEvent.prototype, "state")
   : { get: undefined };
 export const getState = stateGetter?.bind(history);
@@ -47,7 +49,7 @@ const DRAG_ENTRIES = true;
  * __NOTE__: State is stringified and stored in `sessionStorage`. This works for small objects, 
  * but gets awkward when storing large array buffers, etc...
  */
-export const DRAG_ENTRIES_STATE = true;
+const DRAG_ENTRIES_STATE = true;
 
 /**
  * Monkey-patches History API to call new Navigation API methods instead.
@@ -61,10 +63,10 @@ const PATCH_HISTORY = true;
 
 /**
  * __EXPERIMENTAL__: Attempts to intercept clicks an `<a/>` tags and `<form/>` submissions.
- * Only works for the most basic cases. No download support. No form support. 
- * Doesn't fire the correct navigation events. Basically does nothing except prevent default.
+ * Only works for the most basic cases. ~No download support. No form support.~
+ * ~Doesn't fire the correct navigation events. Basically does nothing except prevent default.~
  */
-const SPY_ON_DOM = false;
+const SPY_ON_DOM = true;
 
 export const __nav__ = "__nav__";
 
@@ -178,13 +180,25 @@ export function getNavigation(): Navigation {
 
   if (SPY_ON_DOM) {
     function clickCallback(ev: MouseEvent, aEl: HTMLAnchorElement) {
-      ev.preventDefault(); // HACK: Instead of calling this immediately, should pass it along and call when intercept is called
-      aEl.download // FIXME: Needs to fire the correct event with downloadRequest set to true
-      navigation.navigate(aEl.href); // FIXME: needs a private method that dispatches the correct event
+      const options = { 
+        history: "auto",
+        [NavigationUserInitiated]: true,
+        [NavigationDownloadRequest]: aEl.download,
+        [NavigationOriginalEvent]: ev,
+      } satisfies InternalNavigationNavigateOptions
+      navigation.navigate(aEl.href, options);
     }
     function submitCallback(ev: SubmitEvent, form: HTMLFormElement) {
-      ev.preventDefault(); // HACK: Instead of calling this immediately, should pass it along and call when intercept is called
-      // navigation.navigate(f.href); // FIXME: needs a private method that dispatches the correct event
+      const action = ev.submitter && 'formAction' in ev.submitter
+        ? ev.submitter.formAction as string
+        : form.action
+      const options = { 
+        history: "auto",
+        [NavigationUserInitiated]: true,
+        [NavigationFormData]: new FormData(form),
+        [NavigationOriginalEvent]: ev,
+      } satisfies InternalNavigationNavigateOptions
+      navigation.navigate(action, options); 
     }
     document.body.addEventListener("click", (ev: MouseEvent) => {
       if (ev.defaultPrevented) return;
