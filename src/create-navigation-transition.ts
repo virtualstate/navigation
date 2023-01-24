@@ -243,8 +243,8 @@ export function createNavigationTransition<S = unknown>(
   }
   event.scroll = noop;
   event.preventDefault = originalEvent
-    ? transition[NavigationTransitionAbort].bind(transition)
-    : () => (originalEvent.preventDefault(), transition[NavigationTransitionAbort].call(transition));
+    ? () => (originalEvent.preventDefault(), transition[NavigationTransitionAbort].call(transition))
+    : transition[NavigationTransitionAbort].bind(transition);
 
 
   const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
