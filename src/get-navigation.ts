@@ -2,8 +2,8 @@ import { globalNavigation } from "./global-navigation";
 import type { Navigation } from "./spec/navigation";
 import { Navigation as NavigationPolyfill, NavigationRestore } from "./navigation";
 import { InvalidStateError } from "./navigation-errors";
-import * as StructuredJSON from "@worker-tools/structured-json"
 import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationUserInitiated } from "./create-navigation-transition";
+import * as StructuredJSON from './util/structured-json';
 
 let navigation: Navigation;
 
@@ -184,9 +184,9 @@ export function getNavigation(): Navigation {
 
   if (INTERCEPT_EVENTS) {
     function clickCallback(ev: MouseEvent, aEl: HTMLAnchorElement) {
-      // Move to back of task queue to let other event listeners run that 
-      // are also registered on `window` (e.g. Solid.js event delegation). 
-      // This gives them a chance to call `preventDefault` themselves, which should be respected by nav api.
+      // Move to back of task queue to let other event listeners run 
+      // that are also registered on `window` (e.g. Solid.js event delegation). 
+      // This gives them a chance to call `preventDefault`, which will be respected by nav api.
       queueMicrotask(() => {
         if (!isAppNavigation(ev)) return;
         const options = { 

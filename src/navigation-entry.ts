@@ -7,7 +7,7 @@ import {
 import { NavigationEventTarget } from "./navigation-event-target";
 import { EventTargetListeners } from "./event-target";
 import { v4 } from "./util/uuid-or-random";
-import * as StructuredJSON from "@worker-tools/structured-json"
+import * as StructuredJSON from './util/structured-json';
 import { getState as getHistoryState, __nav__ } from "./get-navigation";
 
 export const NavigationHistoryEntryNavigationType = Symbol.for(
