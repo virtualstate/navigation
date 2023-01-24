@@ -87,6 +87,8 @@ export function getNavigation(): Navigation {
 
   if (!history) return navigation;
 
+  // const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
+
   if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) {
     const navMeta = getState()?.[__nav__];
     if (navMeta?.currentIndex > -1) {
@@ -98,8 +100,6 @@ export function getNavigation(): Navigation {
   if (HISTORY_INTEGRATION) {
     const ignorePopState = new Set<string>();
     const ignoreCurrentEntryChange = new Set<string>();
-
-    // const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
 
     const copyEntries = () => navigation.entries().map(({ id, key, url }) => ({ id, key, url }));
 
@@ -138,6 +138,8 @@ export function getNavigation(): Navigation {
           const delta = currentEntry.index - from.index;
           ignorePopState.add(key);
           return historyGo(delta);
+        case "reload":
+          // TODO
       }
     });
 
@@ -201,22 +203,37 @@ export function getNavigation(): Navigation {
     function submitCallback(ev: SubmitEvent, form: HTMLFormElement) {
       queueMicrotask(() => {
         if (ev.defaultPrevented) return;
-        const action = ev.submitter && 'formAction' in ev.submitter
+        const method = ev.submitter && 'formMethod' in ev.submitter && ev.submitter.formMethod
+          ? ev.submitter.formMethod as string
+          : form.method;
+        // XXX: safe to ignore dialog method?
+        if (method === 'dialog') return;
+        const action = ev.submitter && 'formAction' in ev.submitter && ev.submitter.formAction
           ? ev.submitter.formAction as string
-          : form.action
+          : form.action;
+        const formData = new FormData(form);
+        const params = method === 'get' 
+          ? new URLSearchParams([...formData].map(([k, v]) => v instanceof File ? [k, v.name] : [k, v]))
+          : undefined;
+        const navFormData = method === 'post'
+          ? formData
+          : undefined;
+        const url = new URL(action); // action is always a fully qualified url
+        if (params)
+          url.search = params.toString();
         const options = { 
           history: "auto",
           [NavigationUserInitiated]: true,
-          [NavigationFormData]: new FormData(form),
+          [NavigationFormData]: navFormData,
           [NavigationOriginalEvent]: ev,
         } satisfies InternalNavigationNavigateOptions
-        navigation.navigate(action, options); 
+        navigation.navigate(url.href, options); 
       });
     }
     window.addEventListener("click", (ev: MouseEvent) => {
       if (ev.defaultPrevented) return;
       if (ev.target instanceof Element && ev.target.ownerDocument === document) {
-        const aEl = matchAncestors(ev.target, "a[href]");
+        const aEl = matchAncestors(ev.target, "a[href]"); // not sure what a tags without href do
         if (aEl)
           clickCallback(ev, aEl as HTMLAnchorElement);
       }

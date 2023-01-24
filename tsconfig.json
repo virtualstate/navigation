@@ -5,6 +5,7 @@
             "es2018",
             "esnext",
             "dom",
+            "dom.iterable"
         ],
         "types": [
             "node"
