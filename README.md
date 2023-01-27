@@ -1,187 +1,53 @@
-# `@virtualstate/navigation`
+# Navigation API Polyfill
 
-Native JavaScript [navigation](https://github.com/WICG/navigation-api) implementation 
+Native JavaScript [Navigation API](https://github.com/WICG/navigation-api) implementation.
 
-[//]: # (badges)
+A fork of [`@virtualstate/navigation`](https://github.com/virtualstate/navigation) that adds missing browser history integration. 
 
-### Support
+It mostly works, but is probably not spec compliant, specifically when interacting with iframes, to which no consideration was given.
 
- ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-blue) ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-blue) ![Bun supported](https://img.shields.io/badge/bun-%3E%3D0.1.11-blue) ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-blue) ![Webkit supported](https://img.shields.io/badge/webkit-%3E%3D15.4-blue) ![Firefox supported](https://img.shields.io/badge/firefox-%3E%3D94.0.1-blue)
+## Usage
+Probably best to add it as a sub module and import as `./vendor/navigation/src/polyfill`.
 
- ### Test Coverage
+## Settings
+This polyfill comes in 5 "levels", each getting closer to full Navigation API , at the cost of increasing intrusiveness and performance/memory overhead. Settings can be changed in [`get-navigation.ts`](./src/get-navigation.ts).
 
- ![Web Platform Tests 129/237](https://img.shields.io/badge/Web%20Platform%20Tests-129%2F237-brightgreen) ![93.23%25 lines covered](https://img.shields.io/badge/lines-93.23%25-brightgreen) ![93.23%25 statements covered](https://img.shields.io/badge/statements-93.23%25-brightgreen) ![82.3%25 functions covered](https://img.shields.io/badge/functions-82.3%25-brightgreen) ![82.84%25 branches covered](https://img.shields.io/badge/branches-82.84%25-brightgreen)
+### History Integration
+Integrate polyfilled Navigation API with legacy History API. 
+Specifically, `popstate` will trigger navigation traversal and 
+navigates will push state on History API.
+This enables forward/backward to work in most cases, but not after page refresh, etc. 
+See [Persist Entries](#persist-entries) on how to recover from hard resets.
+ 
+__WIP__: No consideration given to iframes and other edge cases. 
+`hashchange` not implemented (but might work anyway for most cases with [Intercept Events](#intercept-events)?). `scroll` not implemented.
 
-[//]: # (badges)
+### Persist Entries
+Persists all navigation entries in history state. 
+This enables forward/backward to work after hard refresh, closing/reopening tab, etc.
+but comes at the cost of storing all navigation history entries _on every history frame_.
+This isn't quite as crazy as it seems, as each entry only consists of `url`, `key` and `id`, but you might want to disable it regardless.
+  
+__WIP__: Maybe store entries in session storage instead and only keep an id in history state?
+What's worse, sync access + stringification or duplication on history state? 🤔 
 
-## Install 
+### Persist Entries+State
+Like [Persist Entries](#persist-entries), except also stores the state for each navigation entry.
+Note that you might not need this if you only need the state of the current navigation entry, 
+which works with [History Integration](#history-integration) alone.
+Enabling this allows retrieving the state of *any navigation entry even after a hard refresh*.
 
-### Skypack
+__WIP__: State is stringified and stored in `sessionStorage`. This works for small objects, but gets awkward when storing large array buffers, etc. A more advanced implementation could combine session storage with a [Storage Area](https://workers.tools/kv-storage-polyfill) (Indexed DB) for better perf...
 
-- [Package Registry Link - Skypack](https://www.skypack.dev/view/@virtualstate/navigation)
+### Patch History
+Monkey patches History API methods to call new Navigation API methods instead.
+Could solve issues when combining Navigation API with frameworks that use the legacy History API, or it might cause additional issues instead 🤷‍♂️.
 
-```typescript
-const { Navigation } = await import("https://cdn.skypack.dev/@virtualstate/navigation");
-```
+__NOTE__: This performs some [prototype acrobatics][1] to hide the "real" history state from the application. If this sounds scary you might want to disable this.
 
-_Or_
+[1]: https://github.com/virtualstate/navigation/blob/85da3f677be5c9e26d0b261decde3ee989915e5a/src/get-navigation.ts#L183-L184
 
-```typescript
-import { Navigation } from "https://cdn.skypack.dev/@virtualstate/navigation";
-```
-
-
-### npm / yarn / GitHub
-
-
-- [Package Registry Link - GitHub](https://github.com/virtualstate/navigation/packages)
-- [Package Registry Link - npm](https://www.npmjs.com/package/@virtualstate/navigation)
-
-```
-npm i --save @virtualstate/navigation
-```
-
-_Or_
-
-```
-yarn add @virtualstate/navigation
-```
-
-Then
-
-```typescript
-import { Navigation } from "@virtualstate/navigation";
-```
-
-## Navigation
-
-```typescript
-import { Navigation } from "@virtualstate/navigation";
-
-const navigation = new Navigation();
-
-// Set initial url
-navigation.navigate("/");
-
-navigation.navigate("/skipped");
-
-// Use .finished to wait for the transition to complete
-await navigation.navigate("/awaited").finished;
-
-```
-
-## Waiting for events
-
-```typescript
-import { Navigation } from "@virtualstate/navigation";
-
-const navigation = new Navigation();
-
-navigation.addEventListener("navigate", async ({ destination, preventDefault }) => {
-    if (new URL(destination.url).pathname === "/disallow") {
-        preventDefault();
-    }
-});
-
-await navigation.navigate("/allowed").finished; // Resolves
-await navigation.navigate("/disallow").finished; // Rejects
-
-```
-
-## Transitions
-
-```typescript
-import { Navigation } from "@virtualstate/navigation";
-import { loadPhotoIntoCache } from "./cache";
-
-const navigation = new Navigation();
-
-navigation.addEventListener("navigate", async ({ destination, intercept }) => {
-    intercept(loadPhotoIntoCache(destination.url));
-});
-```
-
-## URLPattern
-
-You can match `destination.url` using [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API)
-
-```typescript
-import {Navigation} from "@virtualstate/navigation";
-import {URLPattern} from "urlpattern-polyfill";
-
-const navigation = new Navigation();
-
-navigation.addEventListener("navigate", async ({destination, intercept}) => {
-    const pattern = new URLPattern({ pathname: "/books/:id" });
-    const match = pattern.exec(destination.url);
-    if (match) {
-        intercept(transition());
-    }
-
-    async function transition() {
-        console.log("load book", match.pathname.groups.id)
-    }
-});
-
-navigation.navigate("/book/1");
-```
-
-## State
-
-```typescript
-
-import { Navigation } from "@virtualstate/navigation";
-
-const navigation = new Navigation();
-
-navigation.addEventListener("currententrychange", () => {
-    console.log({ updatedState: navigation.currentEntry?.getState() });
-});
-
-await navigation.updateCurrentEntry({
-    state: {
-        items: [
-            "first",
-            "second"
-        ],
-        index: 0
-    }
-}).finished;
-
-await navigation.updateCurrentEntry({
-    state: {
-        ...navigation.currentEntry.getState(),
-        index: 1
-    }
-}).finished;
-```
-
-
-## Updating browser url
-
-> This is a pending development task.
-> The below code will help visually update the window
-
-This can be achieved various ways, but if your application completely utilises
-the app history interface, then you can directly use `pushState` to immediately
-update the window's url.
-
-This does not take into account the browser's native back/forward functionality,
-which would need to be investigated further.
-
-```typescript
-import { Navigation } from "@virtualstate/navigation";
-
-const navigation = new Navigation();
-const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
-
-navigation.addEventListener("currententrychange", () => {
-    const { currentEntry } = navigation;
-    if (!currentEntry || !currentEntry.sameDocument) return;
-    const state = currentEntry.getState() ?? {};
-    const { pathname } = new URL(currentEntry.url, origin);
-    if (typeof window !== "undefined" && window.history) {
-        window.history.pushState(state, state.title, origin)
-    }
-})
-```
+### Intercept Events
+Intercepts clicks on `a` tags and `form` submissions and conditionally calls `preventDefault` based on application code response ot the `navigate` event.
+This is the final piece of the Navigation API puzzle, as it allows using vanilla HTML elements instead of framework specific components like `<Link/>` or `<A/>`. 
+In practice you might want to use those anyway, in which case you wouldn't need to enable this setting.
