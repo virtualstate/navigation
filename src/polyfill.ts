@@ -1,13 +1,6 @@
 import { globalNavigation } from "./global-navigation";
 import { getNavigation } from "./get-navigation";
 
-// console.warn(
-//   "THIS POLYFILL IS NOT COMPLETE, FOR EXAMPLE IT DOES NOT TAKE INTO ACCOUNT IFRAMES, OR URL UPDATES"
-// );
-// console.warn(
-//   "PLEASE RAISE INTEREST AT https://github.com/virtualstate/navigation/issues"
-// );
-
 const navigation = getNavigation();
 
 if (
@@ -43,5 +36,3 @@ if (
     });
   } catch (e) {}
 }
-
-export default navigation;

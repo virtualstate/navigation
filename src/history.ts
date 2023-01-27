@@ -6,7 +6,6 @@ import {
   AppLocationTransitionURL,
 } from "./location";
 import { InvalidStateError } from "./navigation-errors";
-import {type} from "os";
 
 const State = Symbol.for("@virtualstate/navigation/history/state");
 

@@ -166,9 +166,9 @@ export function getNavigation(): Navigation {
       }
     })
 
-    window.addEventListener("hashchange", (ev) => {
-      // TODO
-    })
+    // window.addEventListener("hashchange", (ev) => {
+    //   // TODO
+    // })
   }
 
   if (PATCH_HISTORY) {

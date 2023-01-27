@@ -8,7 +8,7 @@
             "dom.iterable"
         ],
         "types": [
-            "uuid"
+            "node"
         ],
         "target": "esnext",
         "noImplicitAny": true,
@@ -25,10 +25,7 @@
         "paths": {}
     },
     "include": [
-        "src/types",
-        "src/*"
+        "src/types/**/*"
     ],
-    "exclude": [
-        "src/tests/**/*"
-    ]
+    "exclude": []
 }

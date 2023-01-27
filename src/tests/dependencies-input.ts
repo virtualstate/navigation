@@ -21,7 +21,6 @@ export const DefaultDependencies = [
   "dom-lite",
   "iterable",
   "uuid",
-  "whatwg-url",
   "abort-controller",
   "urlpattern-polyfill",
 ] as const;

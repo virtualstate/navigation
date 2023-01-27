@@ -72,8 +72,7 @@
     "@ungap/structured-clone": "^1.0.1",
     "@virtualstate/composite-key": "^1.0.0",
     "abort-controller": "^3.0.0",
-    "uuid": "^8.3.2",
-    "whatwg-url": "^9.1.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.15.4",
@@ -85,10 +84,9 @@
     "@types/chance": "^1.1.3",
     "@types/jest": "^27.0.1",
     "@types/mkdirp": "^1.0.2",
-    "@types/node": "^17.0.1",
+    "@types/node": "^18.11.18",
     "@types/rimraf": "^3.0.2",
     "@types/uuid": "^8.3.3",
-    "@types/whatwg-url": "^8.2.1",
     "@virtualstate/focus": "^1.4.9",
     "@virtualstate/kdl": "^1.0.1-alpha.32",
     "@virtualstate/navigation-imported": "./scripts/imported",
