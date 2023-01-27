@@ -111,8 +111,7 @@ export function getNavigation(): Navigation {
       const state = currentEntry.getState<any>();
 
       if (PERSIST_ENTRIES_STATE && id && state != null) {
-        const item = sessionStorage.getItem(id)
-        if (item == null) {
+        if (sessionStorage.getItem(id) == null) {
           const raw = StructuredJSON.stringify(state)
           sessionStorage.setItem(id, raw);
           // Cleaning up some session storage early... no biggie if we miss some
@@ -197,7 +196,7 @@ export function getNavigation(): Navigation {
           [NavigationUserInitiated]: true,
           [NavigationDownloadRequest]: aEl.download,
           [NavigationOriginalEvent]: ev,
-        } satisfies InternalNavigationNavigateOptions
+        } satisfies InternalNavigationNavigateOptions;
         navigation.navigate(aEl.href, options);
       });
     }
@@ -227,7 +226,7 @@ export function getNavigation(): Navigation {
           [NavigationUserInitiated]: true,
           [NavigationFormData]: navFormData,
           [NavigationOriginalEvent]: ev,
-        } satisfies InternalNavigationNavigateOptions
+        } satisfies InternalNavigationNavigateOptions;
         navigation.navigate(url.href, options); 
       });
     }
