@@ -7,19 +7,18 @@ import * as StructuredJSON from './util/structured-json';
 
 let navigation: Navigation;
 
-const history = typeof window !== "undefined" && window.history
+const history = typeof window !== "undefined" ? window.history : undefined;
 
-export const pushState = history?.pushState.bind(history);
-export const replaceState = history?.replaceState.bind(history);
-export const historyGo = history?.go.bind(history);
-export const back = history?.back.bind(history);
-export const forward = history?.forward.bind(history);
+const pushState = history?.pushState.bind(history);
+const replaceState = history?.replaceState.bind(history);
+const historyGo = history?.go.bind(history);
+// const back = history?.back.bind(history);
+// const forward = history?.forward.bind(history);
 const { get: stateGetter, ...stateDesc } = history
-  ? Object.getOwnPropertyDescriptor(Object.getPrototypeOf(history), "state")
-  : { get: undefined };
+  && Object.getOwnPropertyDescriptor(Object.getPrototypeOf(history), "state") || {};
 const { get: eventStateGetter, ...eventDesc } = history && window.PopStateEvent
-  ? Object.getOwnPropertyDescriptor(PopStateEvent.prototype, "state")
-  : { get: undefined };
+  && Object.getOwnPropertyDescriptor(PopStateEvent.prototype, "state") || {};
+
 export const getState = stateGetter?.bind(history);
 
 /**
@@ -90,28 +89,28 @@ export function getNavigation(): Navigation {
   // const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
 
   if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) {
-    const navMeta = getState()?.[__nav__];
+    const navMeta = getState?.()?.[__nav__];
     if (navMeta?.currentIndex > -1) {
       const polyfilled = navigation as NavigationPolyfill;
       polyfilled[NavigationRestore](navMeta.currentIndex, navMeta.entries);
     }
   }
 
-  if (HISTORY_INTEGRATION) {
-    const ignorePopState = new Set<string>();
-    const ignoreCurrentEntryChange = new Set<string>();
+  if (HISTORY_INTEGRATION && pushState && replaceState && historyGo) {
+    const ignorePopState = new Set<string|undefined>();
+    const ignoreCurrentEntryChange = new Set<string|undefined>();
 
     const copyEntries = () => navigation.entries().map(({ id, key, url }) => ({ id, key, url }));
 
     navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
       const { currentEntry } = navigation;
-      const { id, key, url } = currentEntry;
+      const { id, key, url } = currentEntry || {};
       if (ignoreCurrentEntryChange.delete(key) || !currentEntry?.sameDocument) return;
 
       // const { pathname } = new URL(url, origin);
       const state = currentEntry.getState<any>();
 
-      if (PERSIST_ENTRIES_STATE && state != null) {
+      if (PERSIST_ENTRIES_STATE && id && state != null) {
         const item = sessionStorage.getItem(id)
         if (item == null) {
           const raw = StructuredJSON.stringify(state)
@@ -144,7 +143,7 @@ export function getNavigation(): Navigation {
     });
 
     window.addEventListener("popstate", (ev) => {
-      const { state, [__nav__]: { key = "" } = {} } = eventStateGetter.call(ev) ?? {};
+      const { state, [__nav__]: { key = "" } = {} } = eventStateGetter?.call(ev) ?? {};
       if (ignorePopState.delete(key)) return;
 
       if (key) {
@@ -175,13 +174,15 @@ export function getNavigation(): Navigation {
 
   if (PATCH_HISTORY) {
     // FIXME: use defineproperty on prototype instead?
-    history.pushState = (state, _t, url) => { navigation.navigate(url!, { history: "push", state }) };
-    history.replaceState = (state, _t, url) => { navigation.navigate(url!, { history: "replace", state }) };
-    history.go = delta => { navigation.traverseTo(navigation.entries()[navigation.currentEntry.index + delta]?.key) };
+    history.pushState = (state, _t, url) => { url && navigation.navigate(url, { history: "push", state }) };
+    history.replaceState = (state, _t, url) => { url && navigation.navigate(url, { history: "replace", state }) };
+    history.go = (delta = 0) => { navigation.currentEntry && navigation.traverseTo(navigation.entries()[navigation.currentEntry.index + delta]?.key) };
     history.back = () => { navigation.back() };
     history.forward = () => { navigation.forward() };
-    Object.defineProperty(history, "state", { get() { return getState()?.state }, ...stateDesc });
-    Object.defineProperty(PopStateEvent.prototype, "state", { get() { return eventStateGetter.call(this)?.state }, ...eventDesc });
+    if (getState)
+      Object.defineProperty(history, "state", { get() { return getState()?.state }, ...stateDesc });
+    if (eventStateGetter)
+      Object.defineProperty(PopStateEvent.prototype, "state", { get() { return eventStateGetter.call(this)?.state }, ...eventDesc });
   }
 
   if (INTERCEPT_EVENTS) {

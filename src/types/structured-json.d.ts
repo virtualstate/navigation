@@ -1,4 +1,4 @@
 declare module "@ungap/structured-clone/json" {
-  export const stringify: typeof JSON["stringify"]
-  export const parse: typeof JSON["parse"]
+  export const stringify: (x: any) => string
+  export const parse: (x: string) => any
 }

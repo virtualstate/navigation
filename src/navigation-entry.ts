@@ -77,7 +77,7 @@ export class NavigationHistoryEntry<S = unknown>
   getState(): unknown {
     let state = this.#state;
     
-    if (state == null && typeof window !== "undefined" && window.history) {
+    if (state == null && getHistoryState) {
       const hState = getHistoryState();
       if (hState?.[__nav__].key === this.key) {
         state = this.#state = hState.state;
