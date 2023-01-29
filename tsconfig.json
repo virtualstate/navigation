@@ -7,9 +7,7 @@
             "dom",
             "dom.iterable"
         ],
-        "types": [
-            "uuid"
-        ],
+        "types": [],
         "target": "esnext",
         "noImplicitAny": true,
         "downlevelIteration": true,
