@@ -8,7 +8,7 @@ if (
   !globalNavigation &&
   typeof window !== "undefined"
 ) {
-  console.log("Polyfill checking loading");
+  // console.log("Polyfill checking loading");
   if (navigation.entries().length === 0) {
     navigation.addEventListener(
       "navigate",
@@ -19,7 +19,7 @@ if (
     await navigation.navigate(window.location.href, window.history?.state)
       .finished;
   }
-  console.log("Polyfill checking loaded");
+  // console.log("Polyfill checking loaded");
   try {
     Object.defineProperty(window, "navigation", {
       value: navigation,
