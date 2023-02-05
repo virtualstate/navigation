@@ -235,14 +235,14 @@ export function getNavigation(): Navigation {
       });
     }
     window.addEventListener("click", (ev: MouseEvent) => {
-      if (ev.target instanceof HTMLElement && ev.target.ownerDocument === document) {
-        const aEl = matchesAncestor(ev.target, "a[href]"); // not sure what a tags without href do
+      if (ev.target instanceof Node && ev.target.ownerDocument === document) {
+        const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
         if (aEl)
           clickCallback(ev, aEl as HTMLAnchorElement);
       }
     });
     window.addEventListener("submit", (ev: SubmitEvent) => {
-      if (ev.target instanceof HTMLElement && ev.target.ownerDocument === document) {
+      if (ev.target instanceof Node && ev.target.ownerDocument === document) {
         const form = matchesAncestor(ev.target, "form");
         if (form) 
           submitCallback(ev, form as HTMLFormElement);
@@ -263,8 +263,8 @@ function isAppNavigation(evt: MouseEvent) {
 }
 
 /** Checks if this element or any of its parents matches a given `selector` */
-export function matchesAncestor(el: HTMLElement | null, selector: string): HTMLElement | null {
-  let curr = el;
+export function matchesAncestor(el: Node | null, selector: string): HTMLElement | null {
+  let curr = el instanceof HTMLElement ? el : el.parentElement;
   while (curr != null) {
     if (curr.matches(selector)) 
       return curr;
