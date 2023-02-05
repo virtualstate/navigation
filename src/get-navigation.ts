@@ -37,12 +37,7 @@ const HISTORY_INTEGRATION = true;
 /** 
  * Persists all navigation entries in history state. 
  * This enables forward/backward to work after hard refresh, closing/reopening tab, etc.
- * but comes at the cost of storing all navigation history entries _on every history frame_.
- * This isn't quite as crazy as it seems, as each entry only consists of `url`, `key` and `id`, 
- * but you might want to disable it regardless.
- *   
- * __WIP__: Maybe store entries in session storage instead and only keep an id in history state?
- * What's worse, sync access + stringification or duplication on history state? 🤔 
+ * This stores history entries (id, key, url) in session storage.
  */
 const PERSIST_ENTRIES = true;
 
@@ -93,7 +88,8 @@ export function getNavigation(): Navigation {
   // const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
 
   if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) {
-    const navMeta = getState?.()?.[__nav__];
+    let navMeta;
+    try { navMeta = JSON.parse(sessionStorage.getItem(__nav__) || "{}") } catch { navMeta = {} }
     if (navMeta?.currentIndex > -1) {
       const polyfilled = navigation as NavigationPolyfill;
       polyfilled[NavigationRestore](navMeta.currentIndex, navMeta.entries);
@@ -146,7 +142,7 @@ export function getNavigation(): Navigation {
     });
 
     window.addEventListener("popstate", (ev) => {
-      const { state, [__nav__]: { key = "" } = {} } = eventStateGetter?.call(ev) ?? {};
+      const { [__nav__]: { key = "" } = {} } = eventStateGetter?.call(ev) ?? {};
       if (ignorePopState.delete(key)) return;
 
       if (key) {
@@ -155,16 +151,13 @@ export function getNavigation(): Navigation {
           const committed = navigation.traverseTo(key).committed;
           if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) 
             committed.then(entry => {
-              const navMeta = {
-                key,
+              sessionStorage.setItem(__nav__, JSON.stringify({
                 currentIndex: entry.index,
                 entries: copyEntries(),
-              };
-              const hState = { state, [__nav__]: navMeta };
-              replaceState(hState, "", entry.url);
+              }));
             }, () => {});
         } catch (err) {
-          if (err instanceof InvalidStateError && !PERSIST_ENTRIES) { /* ok */ }
+          if (err instanceof InvalidStateError && !(PERSIST_ENTRIES || PERSIST_ENTRIES_STATE)) { /* ok */ }
           else { throw err }
         }
       }

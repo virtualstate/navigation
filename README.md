@@ -22,11 +22,7 @@ __WIP__: No consideration given to iframes and other edge cases.
 ### Persist Entries
 Persists all navigation entries in history state. 
 This enables forward/backward to work after hard refresh, closing/reopening tab, etc.
-but comes at the cost of storing all navigation history entries _on every history frame_.
-This isn't quite as crazy as it seems, as each entry only consists of `url`, `key` and `id`, but you might want to disable it regardless.
-  
-__WIP__: Maybe store entries in session storage instead and only keep an id in history state?
-What's worse, sync access + stringification or duplication on history state? 🤔 
+This stores history entries (id, key, url) in session storage.
 
 ### Persist Entries+State
 Like [Persist Entries](#persist-entries), except also stores the state for each navigation entry.
