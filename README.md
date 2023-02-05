@@ -1,16 +1,13 @@
 # Navigation API Polyfill
 
-Native JavaScript [Navigation API](https://github.com/WICG/navigation-api) implementation.
+Native JavaScript [Navigation API](https://github.com/WICG/navigation-api) implementation and polyfill.
 
 A fork of [`@virtualstate/navigation`](https://github.com/virtualstate/navigation) that adds missing browser history integration. 
 
-It mostly works, but is probably not spec compliant, specifically when interacting with iframes, to which no consideration was given.
-
-## Usage
-Probably best to add it as a sub module and import as `./vendor/navigation/src/polyfill`.
+It mostly works but is probably not spec compliant, specifically when interacting with iframes, to which no consideration was given.
 
 ## Settings
-This polyfill comes in 5 "levels", each getting closer to full Navigation API , at the cost of increasing intrusiveness and performance/memory overhead. Settings can be changed in [`get-navigation.ts`](./src/get-navigation.ts).
+This polyfill comes in 5 levels, each getting closer to full Navigation API , at the cost of increasing intrusiveness and performance/memory overhead. Settings are hardcoded but can be changed in [`get-navigation.ts`](./src/get-navigation.ts).
 
 ### History Integration
 Integrate polyfilled Navigation API with legacy History API. 
@@ -48,6 +45,6 @@ __NOTE__: This performs some [prototype acrobatics][1] to hide the "real" histor
 [1]: https://github.com/virtualstate/navigation/blob/85da3f677be5c9e26d0b261decde3ee989915e5a/src/get-navigation.ts#L183-L184
 
 ### Intercept Events
-Intercepts clicks on `a` tags and `form` submissions and conditionally calls `preventDefault` based on application code response ot the `navigate` event.
+Intercepts clicks on `a` tags and `form` submissions and conditionally calls `preventDefault` based on application code response to the `navigate` event.
 This is the final piece of the Navigation API puzzle, as it allows using vanilla HTML elements instead of framework specific components like `<Link/>` or `<A/>`. 
 In practice you might want to use those anyway, in which case you wouldn't need to enable this setting.
