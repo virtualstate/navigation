@@ -46,6 +46,9 @@ const HISTORY_INTEGRATION = true;
  */
 const PERSIST_ENTRIES = true;
 
+/** Limits max # of entries stored in history storage */
+const PERSIST_ENTRIES_LIMIT = 50;
+
 /**
  * Like {@link PERSIST_ENTRIES}, except also stores the state for each navigation entry.
  * Note that you might not need this if you only need the state of the current navigation entry, 
@@ -56,6 +59,8 @@ const PERSIST_ENTRIES = true;
  * but gets awkward when storing large array buffers, etc. 
  * A more advanced implementation could combine session storage with a 
  * [Storage Area](https://workers.tools/kv-storage-polyfill) (Indexed DB) for better perf...
+ * __NOTE__: Turns out session storage is easier lost than history state (in webkit at least)
+ * It will survive hard refresh (but not always?) but not closing tab and restoring it.
  */
 const PERSIST_ENTRIES_STATE = true;
 
@@ -104,7 +109,7 @@ export function getNavigation(): Navigation {
     const ignorePopState = new Set<string|undefined>();
     const ignoreCurrentEntryChange = new Set<string|undefined>();
 
-    const copyEntries = () => navigation.entries().map(({ id, key, url }) => ({ id, key, url }));
+    const copyEntries = () => navigation.entries().slice(-PERSIST_ENTRIES_LIMIT).map(({ id, key, url }) => ({ id, key, url }));
 
     navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
       const { currentEntry } = navigation;
