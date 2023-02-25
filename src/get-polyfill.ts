@@ -90,7 +90,7 @@ export interface NavigationPolyfillOptions {
   navigation?: Navigation
 }
 
-export const NavigationKey = Symbol.for("@virtualstate/navigation/key");
+export const NavigationKey = "__@virtualstate/navigation/key";
 
 interface ElementPrototype {
   new(): ElementPrototype;
