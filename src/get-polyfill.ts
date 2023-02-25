@@ -8,6 +8,9 @@ import {like, ok} from "./is";
 
 export interface WindowLike {
   history?: NavigationHistory<object>
+  location?: {
+    href?: string
+  }
   PopStateEvent?: {
     prototype: {
       state: object
@@ -133,6 +136,7 @@ declare var FormData: {
   new(element: HTMLFormElementPrototype): FormData
 }
 
+const globalSelf = typeof self === "undefined" ? undefined : self;
 const globalWindow = typeof window === "undefined" ? undefined : window;
 
 function getWindowHistory(givenWindow: WindowLike | undefined = globalWindow) {
@@ -156,7 +160,13 @@ export const DEFAULT_POLYFILL_OPTIONS: NavigationPolyfillOptions = Object.freeze
   interceptEvents: true
 })
 
+
 export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS): Navigation {
+  const { navigation } = getCompletePolyfill(options);
+  return navigation;
+}
+
+export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS): { navigation: Navigation, history: NavigationHistory<object>, apply(): Promise<void> } {
   const {
     persist: PERSIST_ENTRIES,
     persistState: PERSIST_ENTRIES_STATE,
@@ -164,9 +174,12 @@ export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFIL
     limit: PERSIST_ENTRIES_LIMIT,
     patch: PATCH_HISTORY,
     interceptEvents: INTERCEPT_EVENTS,
-    window: givenWindow,
+    window: givenWindow = globalWindow,
     navigation: givenNavigation
-  } = options
+  } = {
+    ...DEFAULT_POLYFILL_OPTIONS,
+    ...options
+  }
   const navigation: Navigation = givenNavigation ?? new NavigationPolyfill()
 
   const baseHistory = options.history && typeof options.history !== "boolean" ? options.history : getWindowHistory(givenWindow);
@@ -177,7 +190,8 @@ export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFIL
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
 
   const window = givenWindow;
-  const document = givenWindow.document;
+  ok(window, "window required");
+  const document = window.document;
 
   const pushState = history?.pushState.bind(history);
   const replaceState = history?.replaceState.bind(history);
@@ -286,20 +300,6 @@ export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFIL
     // })
   }
 
-  if (PATCH_HISTORY && history) {
-    // FIXME: use defineproperty on prototype instead?
-    history.pushState = (state, _t, url) => { url && navigation.navigate(url, { history: "push", state }) };
-    history.replaceState = (state, _t, url) => { url && navigation.navigate(url, { history: "replace", state }) };
-    history.go = (delta = 0) => { navigation.currentEntry && navigation.traverseTo(navigation.entries()[navigation.currentEntry.index + delta]?.key) };
-    history.back = () => { navigation.back() };
-    history.forward = () => { navigation.forward() };
-    if (getState)
-      Object.defineProperty(history, "state", { get() { return getState()?.state }, ...stateDesc });
-    if (eventStateGetter && window.PopStateEvent) {
-      Object.defineProperty(window.PopStateEvent.prototype, "state", { get() { return eventStateGetter.call(this)?.state }, ...eventDesc });
-    }
-  }
-
   if (INTERCEPT_EVENTS) {
     function clickCallback(ev: MouseEventPrototype, aEl: HTMLAnchorElementPrototype) {
       // Move to back of task queue to let other event listeners run 
@@ -367,7 +367,72 @@ export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFIL
     });
   }
 
-  return navigation;
+  return {
+    navigation,
+    history,
+    async apply() {
+      if (PATCH_HISTORY) {
+
+        if (navigation.entries().length === 0) {
+          navigation.addEventListener(
+              "navigate",
+              // Add usage of intercept for initial navigation to prevent network navigation
+              (event) => event.intercept(Promise.resolve()),
+              { once: true }
+          );
+          const historyState = window.history?.state;
+          await navigation.navigate(window.location?.href ?? "/", {
+            state: (historyState && typeof historyState === "object") ? historyState : undefined
+          })
+              .finished;
+        }
+
+        // console.log("Polyfill checking loaded");
+        if (globalWindow) {
+          try {
+            Object.defineProperty(globalWindow, "navigation", {
+              value: navigation,
+            });
+          } catch (e) {}
+          if (!globalWindow.history) {
+            try {
+              Object.defineProperty(globalWindow, "history", {
+                value: history,
+              });
+            } catch (e) {}
+          }
+        }
+        if (globalSelf) {
+          try {
+            Object.defineProperty(globalSelf, "navigation", {
+              value: navigation,
+            });
+          } catch (e) {}
+        }
+        if (typeof globalThis !== "undefined") {
+          try {
+            Object.defineProperty(globalThis, "navigation", {
+              value: navigation,
+            });
+          } catch (e) {}
+        }
+      }
+
+      if (PATCH_HISTORY && history) {
+        // FIXME: use defineproperty on prototype instead?
+        history.pushState = (state, _t, url) => { url && navigation.navigate(url, { history: "push", state }) };
+        history.replaceState = (state, _t, url) => { url && navigation.navigate(url, { history: "replace", state }) };
+        history.go = (delta = 0) => { navigation.currentEntry && navigation.traverseTo(navigation.entries()[navigation.currentEntry.index + delta]?.key) };
+        history.back = () => { navigation.back() };
+        history.forward = () => { navigation.forward() };
+        if (getState)
+          Object.defineProperty(history, "state", { get() { return getState()?.state }, ...stateDesc });
+        if (eventStateGetter && window.PopStateEvent) {
+          Object.defineProperty(window.PopStateEvent.prototype, "state", { get() { return eventStateGetter.call(this)?.state }, ...eventDesc });
+        }
+      }
+    }
+  };
 }
 
 function isAppNavigation(evt: MouseEventPrototype) {

@@ -16,4 +16,4 @@ export {
   NavigationCurrentEntryChangeEvent
 } from "./events";
 export { applyPolyfill } from "./apply-polyfill"
-export { getPolyfill } from "./get-polyfill";
+export { getPolyfill, getCompletePolyfill } from "./get-polyfill";
