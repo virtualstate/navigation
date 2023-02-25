@@ -23,6 +23,8 @@ export const DefaultDependencies = [
   "uuid",
   "abort-controller",
   "urlpattern-polyfill",
+  "@ungap/structured-clone",
+  "@ungap/structured-clone/json"
 ] as const;
 export const DefaultImportMap = Object.fromEntries(
   DefaultDependencies.filter(
