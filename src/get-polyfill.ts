@@ -169,7 +169,10 @@ export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFIL
   } = options
   const navigation: Navigation = givenNavigation ?? new NavigationPolyfill()
 
-  const history = options.history && typeof options.history !== "boolean" ? options.history : getWindowHistory(givenWindow);
+  const baseHistory = options.history && typeof options.history !== "boolean" ? options.history : getWindowHistory(givenWindow);
+  const history = baseHistory ?? new NavigationHistory<object>({
+    navigation
+  });
 
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
 
