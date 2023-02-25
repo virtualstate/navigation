@@ -65,7 +65,7 @@ export interface NavigationOptions {
   baseURL?: URL | string;
 }
 
-export const NavigationRestore = Symbol.for("@qwtel/navigation/restore");
+export const NavigationRestore = Symbol.for("@virtualstate/navigation/restore");
 
 export class Navigation<S = unknown, R = unknown | void>
   extends NavigationEventTarget<NavigationEventMap<S, R>>

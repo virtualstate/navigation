@@ -8,7 +8,8 @@ import { NavigationEventTarget } from "./navigation-event-target";
 import { EventTargetListeners } from "./event-target";
 import { v4 } from "./util/uuid-or-random";
 import * as StructuredJSON from './util/structured-json';
-import { getState as getHistoryState, __nav__ } from "./get-navigation";
+import {getStateFromWindowHistory, NavigationKey} from "./get-polyfill";
+import {like} from "./is";
 
 export const NavigationHistoryEntryNavigationType = Symbol.for(
   "@virtualstate/navigation/entry/navigationType"
@@ -77,10 +78,11 @@ export class NavigationHistoryEntry<S = unknown>
   getState(): unknown {
     let state = this.#state;
     
-    if (!state && getHistoryState) {
-      const hState = getHistoryState();
-      if (hState?.[__nav__]?.key === this.key) {
-        state = this.#state = hState.state;
+    if (!state) {
+      const historyState = getStateFromWindowHistory();
+      const meta = historyState?.[NavigationKey];
+      if (like<Record<symbol, unknown> & S>(meta) && meta[NavigationKey] === this.key) {
+        state = this.#state = meta;
       }
       if (!state && typeof sessionStorage !== "undefined") {
         const raw = sessionStorage.getItem(this.id);
