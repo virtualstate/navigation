@@ -1476,9 +1476,6 @@
     uuid "^8.3.2"
     whatwg-url "^9.1.0"
 
-"@virtualstate/navigation-imported@./scripts/imported":
-  version "0.0.0"
-
 "@virtualstate/promise@^1.0.1-alpha.11", "@virtualstate/promise@^1.1.2":
   version "1.1.4"
   resolved "https://registry.npmjs.org/@virtualstate/promise/-/promise-1.1.4.tgz#9513ab3dfe8a9e5d3ad674daaac9556893de6673"
