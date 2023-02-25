@@ -20,6 +20,7 @@ jobs:
           deno-version: 'v1.x'
       - uses: antongolub/action-setup-bun@v1
       - run: |
+          yarn remove wpt
           yarn install
           npx playwright install-deps
       - run: yarn build

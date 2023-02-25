@@ -20,6 +20,7 @@ jobs:
         with:
           deno-version: 'v1.x'
       - run: |
+          yarn remove wpt
           yarn install
           npx playwright install-deps
       - run: yarn build
