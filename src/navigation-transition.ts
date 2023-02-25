@@ -449,7 +449,7 @@ export class NavigationTransition<S = unknown, R = unknown | void>
 
   };
 
-  [NavigationTransitionWait] = async (): Promise<NavigationHistoryEntry> => {
+  [NavigationTransitionWait] = async (): Promise<NavigationHistoryEntry<S>> => {
     if (!this.#promises.size) return this[NavigationTransitionEntry];
     try {
       const captured = [...this.#promises];

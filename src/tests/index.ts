@@ -50,6 +50,8 @@ async function runTests() {
     await import("./state");
     console.log("Starting entrieschange tests");
     await import("./entrieschange");
+    console.log("Starting custom state tests");
+    await import("./custom-state");
   }
 }
 

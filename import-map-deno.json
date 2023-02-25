@@ -101,6 +101,8 @@
     "./src/events": "./src/events/index.ts",
     "./src/get-navigation": "./src/get-navigation.ts",
     "./src/global-navigation": "./src/global-navigation.ts",
+    "./src/global-self": "./src/global-self.ts",
+    "./src/global-window": "./src/global-window.ts",
     "./src/events/navigation-current-entry-change-event": "./src/events/navigation-current-entry-change-event.ts",
     "./src/events/navigate-event": "./src/events/navigate-event.ts",
     "cheerio": "./scripts/nop/index.js"

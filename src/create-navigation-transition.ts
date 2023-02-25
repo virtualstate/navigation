@@ -101,9 +101,9 @@ function noop(): void {
   return undefined;
 }
 
-function getEntryIndex(
-  entries: NavigationHistoryEntry[],
-  entry: NavigationHistoryEntry
+function getEntryIndex<S = unknown>(
+  entries: NavigationHistoryEntry<S>[],
+  entry: NavigationHistoryEntry<S>
 ) {
   const knownIndex = entry.index;
   if (knownIndex !== -1) {
