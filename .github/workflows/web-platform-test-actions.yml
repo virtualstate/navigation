@@ -1,0 +1,24 @@
+name: web-platform-test-actions
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      NO_COVERAGE_BADGE_UPDATE: 1
+      FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST,WEB_PLATFORM_TESTS,CONTINUE_ON_ERROR
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: |
+          yarn install
+          yarn add --dev https://github.com/web-platform-tests/wpt.git
+          npx playwright install-deps
+      - run: yarn build
+      - run: yarn test:node
+        continue-on-error: true
