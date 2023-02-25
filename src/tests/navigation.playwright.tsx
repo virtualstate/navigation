@@ -63,7 +63,7 @@ const browsers = [
   [
     "webkit",
     Playwright.webkit,
-    { eventTarget: "sync", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "sync", esm: false, args: [], FLAG: "" },
   ] as const,
   [
     "firefox",

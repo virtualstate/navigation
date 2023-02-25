@@ -2,6 +2,9 @@ import {getPolyfill, NavigationPolyfillOptions} from "./get-polyfill";
 import {getNavigation} from "./get-navigation";
 import {globalNavigation} from "./global-navigation";
 
+const globalSelf = self;
+const globalWindow = typeof window === "undefined" ? undefined : window;
+
 export async function applyPolyfill(options: NavigationPolyfillOptions = {}) {
   const navigation = getPolyfill(options);
   if (navigation.entries().length === 0) {
@@ -15,21 +18,27 @@ export async function applyPolyfill(options: NavigationPolyfillOptions = {}) {
         .finished;
   }
   // console.log("Polyfill checking loaded");
-  try {
-    Object.defineProperty(window, "navigation", {
-      value: navigation,
-    });
-  } catch (e) {}
-  try {
-    Object.defineProperty(self, "navigation", {
-      value: navigation,
-    });
-  } catch (e) {}
-  try {
-    Object.defineProperty(globalThis, "navigation", {
-      value: navigation,
-    });
-  } catch (e) {}
+  if (globalWindow) {
+    try {
+      Object.defineProperty(globalWindow, "navigation", {
+        value: navigation,
+      });
+    } catch (e) {}
+  }
+  if (globalSelf) {
+    try {
+      Object.defineProperty(globalSelf, "navigation", {
+        value: navigation,
+      });
+    } catch (e) {}
+  }
+  if (typeof globalThis !== "undefined") {
+    try {
+      Object.defineProperty(globalThis, "navigation", {
+        value: navigation,
+      });
+    } catch (e) {}
+  }
 }
 
 export function shouldApplyPolyfill(navigation = getNavigation()) {
