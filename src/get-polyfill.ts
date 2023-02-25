@@ -16,7 +16,7 @@ export interface WindowLike {
   addEventListener(type: "submit", fn: (event: SubmitEventPrototype) => void): void;
   addEventListener(type: "click", fn: (event: MouseEventPrototype) => void): void;
   addEventListener(type: "popstate", fn: (event: EventPrototype) => void): void;
-
+  document?: unknown
 }
 
 declare var document: unknown;
@@ -163,6 +163,9 @@ export function getPolyfill(options: NavigationPolyfillOptions = {}): Navigation
   const history = options.history && typeof options.history !== "boolean" ? options.history : getWindowHistory(givenWindow);
 
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
+
+  const window = givenWindow;
+  const document = givenWindow.document;
 
   const pushState = history?.pushState.bind(history);
   const replaceState = history?.replaceState.bind(history);
