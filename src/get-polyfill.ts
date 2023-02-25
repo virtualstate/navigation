@@ -147,7 +147,16 @@ export function getStateFromWindowHistory<T extends object = Record<string | sym
   return like<T>(value) ? value : undefined;
 }
 
-export function getPolyfill(options: NavigationPolyfillOptions = {}): Navigation {
+export const DEFAULT_POLYFILL_OPTIONS: NavigationPolyfillOptions = Object.freeze({
+  persist: true,
+  persistState: true,
+  history: true,
+  limit: 50,
+  patch: true,
+  interceptEvents: true
+})
+
+export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS): Navigation {
   const {
     persist: PERSIST_ENTRIES,
     persistState: PERSIST_ENTRIES_STATE,

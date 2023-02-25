@@ -1,11 +1,11 @@
-import {getPolyfill, NavigationPolyfillOptions} from "./get-polyfill";
+import {DEFAULT_POLYFILL_OPTIONS, getPolyfill, NavigationPolyfillOptions} from "./get-polyfill";
 import {getNavigation} from "./get-navigation";
 import {globalNavigation} from "./global-navigation";
 
 const globalSelf = self;
 const globalWindow = typeof window === "undefined" ? undefined : window;
 
-export async function applyPolyfill(options: NavigationPolyfillOptions = {}) {
+export async function applyPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS) {
   const navigation = getPolyfill(options);
   if (navigation.entries().length === 0) {
     navigation.addEventListener(
