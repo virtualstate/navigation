@@ -1,14 +1,9 @@
-import { globalNavigation } from "./global-navigation";
 import { getNavigation } from "./get-navigation";
-import {applyPolyfill} from "./apply-polyfill";
+import { applyPolyfill, shouldApplyPolyfill } from "./apply-polyfill";
 
 const navigation = getNavigation();
 
-if (
-  navigation !== globalNavigation &&
-  !globalNavigation &&
-  typeof window !== "undefined"
-) {
+if (shouldApplyPolyfill(navigation)) {
   await applyPolyfill({
     navigation
   })
