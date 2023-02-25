@@ -6,8 +6,7 @@ import * as StructuredJSON from './util/structured-json';
 import {NavigationHistory} from "./history";
 import {like, ok} from "./is";
 
-declare var document: unknown;
-declare var window: {
+export interface WindowLike {
   history?: NavigationHistory<object>
   PopStateEvent?: {
     prototype: {
@@ -19,6 +18,9 @@ declare var window: {
   addEventListener(type: "popstate", fn: (event: EventPrototype) => void): void;
 
 }
+
+declare var document: unknown;
+declare var window: WindowLike;
 
 const windowHistory: NavigationHistory<object> | undefined = typeof window !== "undefined" ? window.history : undefined;
 
@@ -34,7 +36,7 @@ export interface NavigationPolyfillOptions {
    * `hashchange` not implemented (but might work anyway for most cases with {@link INTERCEPT_EVENTS}?).
    * `scroll` not implemented.
    */
-  history?: boolean | History;
+  history?: boolean | NavigationHistory<object>;
 
 
   /**
@@ -85,7 +87,7 @@ export interface NavigationPolyfillOptions {
    */
   interceptEvents?: boolean;
 
-  window?: Window
+  window?: WindowLike;
 
   navigation?: Navigation
 }
@@ -133,22 +135,23 @@ declare var FormData: {
 
 const globalWindow = typeof window === "undefined" ? undefined : window;
 
-function getWindowHistory(givenWindow: { history?: History | NavigationHistory<object> } = globalWindow) {
+function getWindowHistory(givenWindow: WindowLike | undefined = globalWindow) {
   if (typeof givenWindow === "undefined") return undefined;
   return givenWindow.history;
 }
 
-export function getStateFromWindowHistory<T extends object = Record<string | symbol, unknown>>(givenWindow: { history?: History | NavigationHistory<object> } = globalWindow): T | undefined {
+export function getStateFromWindowHistory<T extends object = Record<string | symbol, unknown>>(givenWindow: WindowLike | undefined = globalWindow): T | undefined {
   const history = getWindowHistory(givenWindow);
   if (!history) return undefined;
-  return history.state;
+  const value = history.state;
+  return like<T>(value) ? value : undefined;
 }
 
-export function getPolyfill(options: NavigationPolyfillOptions): Navigation {
+export function getPolyfill(options: NavigationPolyfillOptions = {}): Navigation {
   const {
     persist: PERSIST_ENTRIES,
     persistState: PERSIST_ENTRIES_STATE,
-    history: HISTORY_INTEGRATION,
+    history: givenHistory,
     limit: PERSIST_ENTRIES_LIMIT,
     patch: PATCH_HISTORY,
     interceptEvents: INTERCEPT_EVENTS,
@@ -158,6 +161,8 @@ export function getPolyfill(options: NavigationPolyfillOptions): Navigation {
   const navigation: Navigation = givenNavigation ?? new NavigationPolyfill()
 
   const history = options.history && typeof options.history !== "boolean" ? options.history : getWindowHistory(givenWindow);
+
+  const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
 
   const pushState = history?.pushState.bind(history);
   const replaceState = history?.replaceState.bind(history);
@@ -193,7 +198,9 @@ export function getPolyfill(options: NavigationPolyfillOptions): Navigation {
     const ignorePopState = new Set<string|undefined>();
     const ignoreCurrentEntryChange = new Set<string|undefined>();
 
-    const copyEntries = () => navigation.entries().slice(-PERSIST_ENTRIES_LIMIT).map(({ id, key, url }) => ({ id, key, url }));
+    const limit = PERSIST_ENTRIES_LIMIT ?? 50;
+
+    const copyEntries = () => navigation.entries().slice(-limit).map(({ id, key, url }) => ({ id, key, url }));
 
     navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
       const { currentEntry } = navigation;
@@ -264,7 +271,7 @@ export function getPolyfill(options: NavigationPolyfillOptions): Navigation {
     // })
   }
 
-  if (PATCH_HISTORY) {
+  if (PATCH_HISTORY && history) {
     // FIXME: use defineproperty on prototype instead?
     history.pushState = (state, _t, url) => { url && navigation.navigate(url, { history: "push", state }) };
     history.replaceState = (state, _t, url) => { url && navigation.navigate(url, { history: "replace", state }) };

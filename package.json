@@ -54,8 +54,12 @@
     "./event-target/async": "./esnext/event-target/async-event-target.js",
     "./event-target/sync": "./esnext/event-target/sync-event-target.js",
     "./esnext/polyfill": "./esnext/polyfill.js",
+    "./esnext/get-polyfill": "./esnext/get-polyfill.js",
+    "./esnext/apply-polyfill": "./esnext/apply-polyfill.js",
     "./esnext/util/structured-json": "./esnext/util/structured-json.js",
     "./polyfill": "./esnext/polyfill.js",
+    "./get-polyfill": "./esnext/get-polyfill.js",
+    "./apply-polyfill": "./esnext/apply-polyfill.js",
     "./routes": "./esnext/routes/index.js",
     "./state": "./esnext/state/index.js"
   },

@@ -81,7 +81,7 @@ export class NavigationHistoryEntry<S = unknown>
     if (!state) {
       const historyState = getStateFromWindowHistory();
       const meta = historyState?.[NavigationKey];
-      if (like<Record<symbol, unknown> & S>(meta) && meta[NavigationKey] === this.key) {
+      if (like<{ [NavigationKey]: unknown } & S>(meta) && meta[NavigationKey] === this.key) {
         state = this.#state = meta;
       }
       if (!state && typeof sessionStorage !== "undefined") {

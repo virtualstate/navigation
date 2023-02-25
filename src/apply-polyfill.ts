@@ -1,6 +1,6 @@
 import {getPolyfill, NavigationPolyfillOptions} from "./get-polyfill";
 
-export async function applyPolyfill(options: NavigationPolyfillOptions) {
+export async function applyPolyfill(options: NavigationPolyfillOptions = {}) {
   const navigation = getPolyfill(options);
   if (navigation.entries().length === 0) {
     navigation.addEventListener(

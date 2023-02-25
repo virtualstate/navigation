@@ -83,6 +83,8 @@
     "./src/event-target/intercept-event": "./src/event-target/intercept-event.ts",
     "./src/util/import-types": "./src/util/import-types.ts",
     "./src/polyfill": "./src/polyfill.ts",
+    "./src/get-polyfill": "./src/get-polyfill.ts",
+    "./src/apply-polyfill": "./src/apply-polyfill.ts",
     "./src/location": "./src/location.ts",
     "./src/history": "./src/history.ts",
     "./src/import-abort-controller": "./src/import-abort-controller.ts",
