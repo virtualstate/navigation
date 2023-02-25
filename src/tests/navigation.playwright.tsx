@@ -33,17 +33,17 @@ const browsers = [
   [
     "chromium",
     Playwright.chromium,
-    { eventTarget: "async", esm: true, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "async", esm: true, args: [], FLAG: "" },
   ] as const,
   [
     "webkit",
     Playwright.webkit,
-    { eventTarget: "async", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "async", esm: false, args: [], FLAG: "" },
   ] as const,
   [
     "firefox",
     Playwright.firefox,
-    { eventTarget: "async", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "async", esm: false, args: [], FLAG: "" },
   ] as const,
   // [
   //   "chromium",
@@ -58,7 +58,7 @@ const browsers = [
   [
     "chromium",
     Playwright.chromium,
-    { eventTarget: "sync", esm: true, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "sync", esm: true, args: [], FLAG: "" },
   ] as const,
   [
     "webkit",
@@ -68,7 +68,7 @@ const browsers = [
   [
     "firefox",
     Playwright.firefox,
-    { eventTarget: "sync", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "sync", esm: false, args: [], FLAG: "" },
   ] as const,
 ] as const;
 
