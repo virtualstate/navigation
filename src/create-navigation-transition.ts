@@ -6,6 +6,7 @@ import {
   NavigateEvent as NavigateEventPrototype,
   NavigationNavigateOptions as NavigationNavigateOptionsPrototype,
   NavigationNavigationType, NavigationEntriesChangeEventInit,
+  NavigationIntercept as NavigationInterceptPrototype
 } from "./spec/navigation";
 import { NavigationHistoryEntry } from "./navigation-entry";
 import {
@@ -231,12 +232,19 @@ export function createNavigationTransition<S = unknown>(
     destination,
   })
 
-  const originalEvent: Event = options?.[NavigationOriginalEvent];
+  const originalEvent = options?.[NavigationOriginalEvent];
 
-  event.intercept = originalEvent 
-    ? x => (originalEvent.preventDefault(), intercept(x)) 
-    : intercept;
-  event.transitionWhile = intercept;
+  if (originalEvent) {
+    const definedEvent: Event = originalEvent;
+    event.intercept = function originalEventIntercept(options: NavigationInterceptPrototype<unknown>) {
+      definedEvent.preventDefault();
+      return intercept(options);
+    }
+  } else {
+    event.intercept = intercept;
+  }
+  // Enforce that they match
+  event.transitionWhile = event.intercept;
   event.commit = commit;
   if (reportError) {
     event.reportError = reportError;

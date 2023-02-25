@@ -7,7 +7,11 @@
             "dom",
             "dom.iterable"
         ],
-        "types": [],
+        "types": [
+          "jest",
+          "node"
+        ],
+        "esModuleInterop": true,
         "target": "esnext",
         "noImplicitAny": true,
         "downlevelIteration": true,
@@ -20,13 +24,16 @@
         "jsxFactory": "h",
         "jsxFragmentFactory": "createFragment",
         "allowJs": true,
-        "paths": {}
+        "paths": {
+        }
     },
     "include": [
-        "src/types",
-        "src/*"
+        "src/**/*"
+    ],
+    "typeRoots": [
+        "src/types"
     ],
     "exclude": [
-        "src/tests/**/*"
+
     ]
 }

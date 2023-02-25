@@ -27,7 +27,7 @@ for (const buildPath of buildPaths) {
               "utf-8"
           );
 
-          const statements = initialContents.match(/(?:(?:import|export)(?: .+ from)? ".+";|(?:import\(".+"\)))/g);
+          const statements = initialContents.match(/(?:(?:import|export)(?: .+ from)? ["'].+["'];|(?:import\(["'].+["']\)))/g);
 
           if (!statements) {
               return;
@@ -37,7 +37,7 @@ for (const buildPath of buildPaths) {
           const contents = await statements.reduce(
               async (contentsPromise, statement) => {
                   const contents = await contentsPromise;
-                  const url = statement.match(/"(.+)"/)[1];
+                  const url = statement.match(/["'](.+)["']/)[1];
                   if (importMap?.imports?.[url]) {
                       const replacement = importMap.imports[url];
                       if (!replacement.includes("./src")) {

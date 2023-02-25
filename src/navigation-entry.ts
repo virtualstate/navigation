@@ -77,12 +77,12 @@ export class NavigationHistoryEntry<S = unknown>
   getState(): unknown {
     let state = this.#state;
     
-    if (state == null && getHistoryState) {
+    if (!state && getHistoryState) {
       const hState = getHistoryState();
-      if (hState?.[__nav__].key === this.key) {
+      if (hState?.[__nav__]?.key === this.key) {
         state = this.#state = hState.state;
       }
-      if (state == null) {
+      if (!state && typeof sessionStorage !== "undefined") {
         const raw = sessionStorage.getItem(this.id);
         if (raw != null) {
           state = this.#state = StructuredJSON.parse(raw);

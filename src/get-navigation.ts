@@ -4,10 +4,27 @@ import { Navigation as NavigationPolyfill, NavigationRestore } from "./navigatio
 import { InvalidStateError } from "./navigation-errors";
 import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationUserInitiated } from "./create-navigation-transition";
 import * as StructuredJSON from './util/structured-json';
+import {NavigationHistory} from "./history";
+import {assertEvent} from "./event-target";
+import {like, ok} from "./is";
 
 let navigation: Navigation;
 
-const history = typeof window !== "undefined" ? window.history : undefined;
+declare var document: unknown;
+declare var window: {
+  history?: NavigationHistory<object>
+  PopStateEvent?: {
+    prototype: {
+      state: object
+    }
+  }
+  addEventListener(type: "submit", fn: (event: SubmitEventPrototype) => void): void;
+  addEventListener(type: "click", fn: (event: MouseEventPrototype) => void): void;
+  addEventListener(type: "popstate", fn: (event: EventPrototype) => void): void;
+
+}
+
+const history: NavigationHistory<object> | undefined = typeof window !== "undefined" ? window.history : undefined;
 
 const pushState = history?.pushState.bind(history);
 const replaceState = history?.replaceState.bind(history);
@@ -16,10 +33,18 @@ const historyGo = history?.go.bind(history);
 // const forward = history?.forward.bind(history);
 const { get: stateGetter, ...stateDesc } = history
   && Object.getOwnPropertyDescriptor(Object.getPrototypeOf(history), "state") || {};
-const { get: eventStateGetter, ...eventDesc } = history && window.PopStateEvent
-  && Object.getOwnPropertyDescriptor(PopStateEvent.prototype, "state") || {};
+const defaultStateGetter = {
+  get() {
+    return {}
+  }
+}
+const { get: eventStateGetter, ...eventDesc } = (history && window.PopStateEvent) ? (
+    Object.getOwnPropertyDescriptor(window.PopStateEvent?.prototype ?? {}, "state")
+) ?? defaultStateGetter : defaultStateGetter;
 
-export const getState = stateGetter?.bind(history);
+export function getState() {
+  return stateGetter?.call(history) ?? {};
+}
 
 /**
  * Integrate polyfilled Navigation API with legacy History API. 
@@ -83,6 +108,45 @@ const PATCH_HISTORY = true;
 const INTERCEPT_EVENTS = true;
 
 export const __nav__ = "__nav__";
+
+interface ElementPrototype {
+  new(): ElementPrototype;
+  ownerDocument: unknown;
+  parentElement?: ElementPrototype;
+  matches(string: string): boolean;
+}
+
+interface HTMLAnchorElementPrototype extends ElementPrototype {
+  download: string;
+  href: string;
+}
+
+
+interface HTMLFormElementPrototype extends ElementPrototype {
+  method: string;
+  action: string;
+}
+
+interface EventPrototype {
+  target: ElementPrototype
+  defaultPrevented: unknown;
+  submitter: Record<string, unknown>;
+}
+
+interface MouseEventPrototype extends EventPrototype {
+  button: number;
+  metaKey: unknown;
+  altKey: unknown;
+  ctrlKey: unknown;
+  shiftKey: unknown;
+}
+
+interface SubmitEventPrototype extends EventPrototype {
+}
+
+declare var FormData: {
+  new(element: HTMLFormElementPrototype): FormData
+}
 
 export function getNavigation(): Navigation {
   if (globalNavigation) {
@@ -189,27 +253,29 @@ export function getNavigation(): Navigation {
     history.forward = () => { navigation.forward() };
     if (getState)
       Object.defineProperty(history, "state", { get() { return getState()?.state }, ...stateDesc });
-    if (eventStateGetter)
-      Object.defineProperty(PopStateEvent.prototype, "state", { get() { return eventStateGetter.call(this)?.state }, ...eventDesc });
+    if (eventStateGetter && window.PopStateEvent) {
+      Object.defineProperty(window.PopStateEvent.prototype, "state", { get() { return eventStateGetter.call(this)?.state }, ...eventDesc });
+    }
   }
 
   if (INTERCEPT_EVENTS) {
-    function clickCallback(ev: MouseEvent, aEl: HTMLAnchorElement) {
+    function clickCallback(ev: MouseEventPrototype, aEl: HTMLAnchorElementPrototype) {
       // Move to back of task queue to let other event listeners run 
       // that are also registered on `window` (e.g. Solid.js event delegation). 
       // This gives them a chance to call `preventDefault`, which will be respected by nav api.
       queueMicrotask(() => {
         if (!isAppNavigation(ev)) return;
-        const options = { 
+        ok<Event>(ev);
+        const options: InternalNavigationNavigateOptions = {
           history: "auto",
           [NavigationUserInitiated]: true,
           [NavigationDownloadRequest]: aEl.download,
           [NavigationOriginalEvent]: ev,
-        } satisfies InternalNavigationNavigateOptions;
+        };
         navigation.navigate(aEl.href, options);
       });
     }
-    function submitCallback(ev: SubmitEvent, form: HTMLFormElement) {
+    function submitCallback(ev: SubmitEventPrototype, form: HTMLFormElementPrototype) {
       queueMicrotask(() => {
         if (ev.defaultPrevented) return;
         const method = ev.submitter && 'formMethod' in ev.submitter && ev.submitter.formMethod
@@ -230,27 +296,31 @@ export function getNavigation(): Navigation {
         const url = new URL(action); // action is always a fully qualified url
         if (params)
           url.search = params.toString();
-        const options = { 
+        const unknownEvent = ev;
+        ok<Event>(unknownEvent);
+        const options: InternalNavigationNavigateOptions = {
           history: "auto",
           [NavigationUserInitiated]: true,
           [NavigationFormData]: navFormData,
-          [NavigationOriginalEvent]: ev,
-        } satisfies InternalNavigationNavigateOptions;
+          [NavigationOriginalEvent]: unknownEvent,
+        };
         navigation.navigate(url.href, options); 
       });
     }
-    window.addEventListener("click", (ev: MouseEvent) => {
+    window.addEventListener("click", (ev: MouseEventPrototype) => {
       if (ev.target instanceof Node && ev.target.ownerDocument === document) {
         const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
-        if (aEl)
-          clickCallback(ev, aEl as HTMLAnchorElement);
+        if (like<HTMLAnchorElementPrototype>(aEl)) {
+          clickCallback(ev, aEl);
+        }
       }
     });
-    window.addEventListener("submit", (ev: SubmitEvent) => {
+    window.addEventListener("submit", (ev: SubmitEventPrototype) => {
       if (ev.target instanceof Node && ev.target.ownerDocument === document) {
-        const form = matchesAncestor(ev.target, "form");
-        if (form) 
-          submitCallback(ev, form as HTMLFormElement);
+        const form: unknown = matchesAncestor(ev.target, "form");
+        if (like<HTMLFormElementPrototype>(form)) {
+          submitCallback(ev, form);
+        }
       }
     });
   }
@@ -258,7 +328,7 @@ export function getNavigation(): Navigation {
   return navigation;
 }
 
-function isAppNavigation(evt: MouseEvent) {
+function isAppNavigation(evt: MouseEventPrototype) {
   return evt.button === 0 &&
     !evt.defaultPrevented &&
     !evt.metaKey &&
@@ -267,13 +337,23 @@ function isAppNavigation(evt: MouseEvent) {
     !evt.shiftKey
 }
 
+declare var HTMLElement: ElementPrototype;
+declare var Node: ElementPrototype;
+
 /** Checks if this element or any of its parents matches a given `selector` */
-export function matchesAncestor(el: Node | null, selector: string): HTMLElement | null {
-  let curr = el instanceof HTMLElement ? el : el.parentElement;
-  while (curr != null) {
-    if (curr.matches(selector)) 
+function matchesAncestor(el: unknown, selector: string): ElementPrototype | undefined {
+  let curr: ElementPrototype | undefined = undefined;
+  if (el instanceof HTMLElement) {
+    curr = el;
+  } else if (like<ElementPrototype>(el)) {
+    curr = el.parentElement;
+  }
+  while (curr) {
+    if (curr.matches(selector)) {
+      ok<ElementPrototype>(curr);
       return curr;
+    }
     curr = curr.parentElement;
   }
-  return null;
+  return undefined;
 }

@@ -1,5 +1,8 @@
 /* c8 ignore start */
 import { NavigationAssertFn, assertNavigation } from "./navigation";
+import { Navigation } from "../spec/navigation";
+
+declare var navigation: Navigation;
 
 if (typeof navigation !== "undefined") {
   try {

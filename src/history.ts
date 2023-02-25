@@ -9,6 +9,10 @@ import { InvalidStateError } from "./navigation-errors";
 
 const State = Symbol.for("@virtualstate/navigation/history/state");
 
+export type ScrollRestoration = "auto" | "manual";
+
+export interface History {}
+
 export interface NavigationHistoryOptions extends NavigationLocationOptions {
   navigation: Navigation;
   [State]?: unknown
@@ -54,8 +58,9 @@ export class NavigationHistory<S extends object>
     const entries = this.#navigation.entries();
     const index = this.#navigation.currentEntry?.index ?? -1;
     const back = entries[index - 1];
-    if (!back) throw new InvalidStateError("Cannot go back");
-    return this[AppLocationTransitionURL](back.url, () =>
+    const url = back?.url;
+    if (!url) throw new InvalidStateError("Cannot go back");
+    return this[AppLocationTransitionURL](url, () =>
       this.#navigation.back()
     );
   }
@@ -66,8 +71,9 @@ export class NavigationHistory<S extends object>
     const entries = this.#navigation.entries();
     const index = this.#navigation.currentEntry?.index ?? -1;
     const forward = entries[index + 1];
-    if (!forward) throw new InvalidStateError("Cannot go forward");
-    return this[AppLocationTransitionURL](forward.url, () =>
+    const url = forward?.url;
+    if (!url) throw new InvalidStateError("Cannot go forward");
+    return this[AppLocationTransitionURL](url, () =>
       this.#navigation.forward()
     );
   }
@@ -80,9 +86,12 @@ export class NavigationHistory<S extends object>
     }
     const entries = this.#navigation.entries();
     const {
-      currentEntry: { index },
+      currentEntry
     } = this.#navigation;
-    const nextIndex = index + delta;
+    if (!currentEntry) {
+      throw new Error(`Could not go ${delta}`);
+    }
+    const nextIndex = currentEntry.index + delta;
     const nextEntry = entries[nextIndex];
     if (!nextEntry) {
       throw new Error(`Could not go ${delta}`);
