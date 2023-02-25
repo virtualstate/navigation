@@ -1,12 +1,13 @@
-import { state, setState, getState } from "../../state";
+import { state, setState } from "../../state";
 import {Router} from "../../routes";
-import {getNavigation} from "../../get-navigation";
 import {ok} from "../../is";
 import {descendants, h} from "@virtualstate/focus";
 import {Navigation} from "../../navigation";
 import {transition} from "../../transition";
+import {getNavigation} from "../../get-navigation";
+import {isWindowNavigation} from "../util";
 
-{
+if (!isWindowNavigation(getNavigation())) {
     const navigation = getNavigation()
 
     await navigation.navigate("/").finished;
@@ -53,8 +54,8 @@ import {transition} from "../../transition";
     // Should be setting the next entry
     setState("Test 4");
 
-    ok(nextEntry.id !== initialEntry.id);
-    ok(nextEntry.getState() !== initialEntry.getState());
+    ok(nextEntry.id !== initialEntry.id, "Expected entry id not to match");
+    ok(nextEntry.getState() !== initialEntry.getState(), "Expected state to be different");
 
     router.detach();
 

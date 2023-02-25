@@ -84,7 +84,7 @@ export class NavigationHistoryEntry<S = unknown>
       }
       if (!state && typeof sessionStorage !== "undefined") {
         const raw = sessionStorage.getItem(this.id);
-        if (raw != null) {
+        if (raw) {
           state = this.#state = StructuredJSON.parse(raw);
         }
       }

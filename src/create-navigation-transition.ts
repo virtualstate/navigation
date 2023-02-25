@@ -233,6 +233,7 @@ export function createNavigationTransition<S = unknown>(
   })
 
   const originalEvent = options?.[NavigationOriginalEvent];
+  const preventDefault = transition[NavigationTransitionAbort].bind(transition);
 
   if (originalEvent) {
     const definedEvent: Event = originalEvent;
@@ -240,20 +241,21 @@ export function createNavigationTransition<S = unknown>(
       definedEvent.preventDefault();
       return intercept(options);
     }
+    event.preventDefault = function originalEventPreventDefault() {
+      definedEvent.preventDefault();
+      return preventDefault();
+    };
   } else {
     event.intercept = intercept;
+    event.preventDefault = preventDefault;
   }
-  // Enforce that they match
+  // Enforce that transitionWhile and intercept match
   event.transitionWhile = event.intercept;
   event.commit = commit;
   if (reportError) {
     event.reportError = reportError;
   }
   event.scroll = noop;
-  event.preventDefault = originalEvent
-    ? () => (originalEvent.preventDefault(), transition[NavigationTransitionAbort].call(transition))
-    : transition[NavigationTransitionAbort].bind(transition);
-
 
   const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
     from: currentEntry,

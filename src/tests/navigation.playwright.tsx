@@ -14,6 +14,11 @@ declare global {
 
 const DEBUG = false;
 
+const config = getConfig();
+const { FLAGS } = config;
+const IS_ONLY_CHROMIUM = FLAGS?.includes("ONLY_CHROMIUM")
+const IS_ONLY_ASYNC = FLAGS?.includes("ONLY_ASYNC")
+
 const browsers = [
   // [
   //   "chromium",
@@ -73,7 +78,13 @@ for (const [
   browserLauncher,
   { eventTarget, esm, args, FLAG },
 ] of browsers.filter(([, browser]) => browser)) {
-  if (FLAG && !getConfig().FLAGS?.includes(FLAG)) {
+  if (IS_ONLY_ASYNC && eventTarget !== "async") {
+    continue;
+  }
+  if (IS_ONLY_CHROMIUM && browserName !== "chromium") {
+    continue;
+  }
+  if (FLAG && !FLAGS?.includes(FLAG)) {
     continue;
   }
 
@@ -81,6 +92,7 @@ for (const [
     headless: !DEBUG,
     devtools: DEBUG,
     args: [...args],
+
   });
   console.log(
     `Running playwright tests for ${browserName} ${browser.version()}`

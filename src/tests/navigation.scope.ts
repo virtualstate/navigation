@@ -6,9 +6,11 @@ declare var navigation: Navigation;
 
 if (typeof navigation !== "undefined") {
   try {
-    const input = () => navigation;
-    const fn: NavigationAssertFn = await assertNavigation(input);
-    fn(input);
+    function getNavigationByScope() {
+      return navigation;
+    }
+    const fn: NavigationAssertFn = await assertNavigation(getNavigationByScope);
+    fn(getNavigationByScope);
     console.log("PASS assertNavigation:scope:new Navigation");
   } catch (error) {
     console.log("FAIL assertNavigation:scope:new Navigation");

@@ -155,6 +155,16 @@ export function getNavigation(): Navigation {
   if (navigation) {
     return navigation;
   }
+  return (navigation = new NavigationPolyfill());
+}
+
+export function getNavigationOrPolyfill(): Navigation {
+  if (globalNavigation) {
+    return globalNavigation;
+  }
+  if (navigation) {
+    return navigation;
+  }
   navigation = new NavigationPolyfill()
 
   if (!history) return navigation;

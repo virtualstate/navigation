@@ -2,8 +2,8 @@
 import { getConfig } from "./config";
 import { Navigation } from "../spec/navigation";
 
-export function ok(value: unknown) {
-  assert<unknown>(value);
+export function ok(value: unknown, message?: string) {
+  assert<unknown>(value, message);
 }
 
 export function assert<T>(

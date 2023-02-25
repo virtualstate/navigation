@@ -4,6 +4,7 @@ import * as Examples from "./examples";
 import { getConfig } from "./config";
 import { isWindowNavigation } from "./util";
 import { NavigationNavigation } from "../navigation-navigation";
+import {like} from "../is";
 
 export interface NavigationAssertFn {
   (given: unknown): asserts given is () => Navigation;
@@ -36,8 +37,22 @@ export async function assertNavigation(
 
   try {
     for (const test of tests) {
-      await runTests(test, createNavigation());
-      await runWrapperTests(test, createNavigation());
+      const defaultNavigation = createNavigation();
+      // console.log("Starting initial run tests", createNavigation);
+      await runTests(test, defaultNavigation);
+      const wrappedNavigation = createNavigation();
+      // if (like<Navigation>(defaultNavigation) && like<Navigation>(wrappedNavigation)) {
+      //
+      //   console.log(
+      //       "Starting wrapper tests",
+      //       createNavigation,
+      //       defaultNavigation.currentEntry?.url,
+      //       wrappedNavigation.currentEntry?.url,
+      //       wrappedNavigation === defaultNavigation,
+      //       defaultNavigation.currentEntry?.url === wrappedNavigation.currentEntry?.url
+      //   );
+      // }
+      await runWrapperTests(test, wrappedNavigation);
     }
   } catch (error) {
     caught = error;
@@ -54,7 +69,7 @@ export async function assertNavigation(
     localNavigation: unknown
   ) {
     assertNavigationLike(localNavigation);
-    if (!localNavigation) throw new Error("Expected app history");
+    if (!localNavigation) throw new Error("Expected navigation");
     const target = new NavigationNavigation(localNavigation);
     const proxied = new Proxy(localNavigation, {
       get(unknown: Navigation, p): any {

@@ -38,11 +38,17 @@ async function runTests() {
     // await import("./navigation.scope");
   }
   if (!(WPT || playright)) {
+    console.log("Starting routes tests");
     await import("./routes");
+    console.log("Starting transition tests");
     await import("./transition");
+    console.log("Starting wpt base tests");
     await import("./wpt");
+    console.log("Starting commit tests");
     await import("./commit");
+    console.log("Starting state tests");
     await import("./state");
+    console.log("Starting entrieschange tests");
     await import("./entrieschange");
   }
 }

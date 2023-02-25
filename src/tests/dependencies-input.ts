@@ -18,6 +18,7 @@ export const DefaultDependencies = [
   "@virtualstate/navigation",
   "@virtualstate/navigation/event-target/sync",
   "@virtualstate/navigation/event-target/async",
+  "@virtualstate/composite-key",
   "dom-lite",
   "iterable",
   "uuid",

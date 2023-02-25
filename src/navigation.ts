@@ -74,7 +74,7 @@ export class Navigation<S = unknown, R = unknown | void>
   // Should be always 0 or 1
   #transitionInProgressCount = 0;
 
-  #entries: NavigationHistoryEntry<S>[] = [];
+  #entries: NavigationHistoryEntry<S>[];
   #known = new Set<NavigationHistoryEntry<S>>();
   #currentIndex = -1;
   #activeTransition?: NavigationTransition<S>;
@@ -133,6 +133,7 @@ export class Navigation<S = unknown, R = unknown | void>
   constructor(options?: NavigationOptions) {
     super();
     this.#baseURL = getBaseURL(options?.baseURL);
+    this.#entries = [];
   }
 
   back(options?: NavigationNavigationOptions): NavigationResult<S> {
