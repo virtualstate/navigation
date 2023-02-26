@@ -580,10 +580,6 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
       }
 
       if (PATCH_HISTORY) {
-
-      }
-
-      if (PATCH_HISTORY) {
         patchGlobalScope(window, history, navigation);
       }
     }
