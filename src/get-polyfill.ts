@@ -15,7 +15,7 @@ import {
 } from "./global-window";
 import {globalSelf} from "./global-self";
 import {v4} from "./util/uuid-or-random";
-import {NavigationHistoryEntrySerialised} from "./navigation-entry";
+import {NavigationHistoryEntrySerialized} from "./navigation-entry";
 
 export interface NavigationPolyfillOptions {
   /**
@@ -109,7 +109,7 @@ function getStateFromWindowHistory<T extends object = Record<string | symbol, un
 interface StateHistoryMeta {
   key: string;
   currentIndex: number;
-  entries: NavigationHistoryEntrySerialised[];
+  entries: NavigationHistoryEntrySerialized[];
 }
 
 interface StateHistoryWithMeta {
@@ -118,6 +118,61 @@ interface StateHistoryWithMeta {
 
 function isStateHistoryWithMeta<T>(state: T): state is T & StateHistoryWithMeta {
   return like<StateHistoryWithMeta>(state) && !!state[NavigationKey];
+}
+
+function disposeHistoryState<T extends object>(
+    entry: NavigationHistoryEntry<T>,
+    persist: boolean
+) {
+  if (!persist) return;
+  if (typeof sessionStorage === "undefined") return;
+  sessionStorage.removeItem(entry.key)
+}
+
+function setHistoryState<T extends object>(
+    navigation: Navigation<T>,
+    history: NavigationHistory<T>,
+    entry: NavigationHistoryEntry<T>,
+    persist: boolean,
+    limit: number | undefined
+) {
+  setStateInSession()
+
+  function getSerializableState(): StateHistoryWithMeta {
+    return {
+      ...entry.getState(),
+      [NavigationKey]: getMeta()
+    }
+  }
+
+  function getEntries(): NavigationHistoryEntrySerialized[] {
+    if (!persist) return [];
+    let entries =navigation.entries();
+    if (typeof limit === "number") {
+      entries = entries.slice(-limit);
+    }
+    return entries.map(({ id, key, url }) => ({
+      id,
+      key,
+      url
+    }));
+  }
+
+  function getMeta(): StateHistoryMeta {
+    return {
+      currentIndex: entry.index,
+      key: entry.key,
+      entries: getEntries()
+    }
+  }
+
+  function setStateInSession() {
+    if (typeof sessionStorage === "undefined") return;
+    const raw = stringify(
+        getSerializableState()
+    );
+    sessionStorage.setItem(entry.key, raw);
+  }
 }
 
 function getHistoryState<T extends object>(
@@ -381,7 +436,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     persist: PERSIST_ENTRIES,
     persistState: PERSIST_ENTRIES_STATE,
     history: givenHistory,
-    limit: PERSIST_ENTRIES_LIMIT,
+    limit: patchLimit,
     patch: PATCH_HISTORY,
     interceptEvents: INTERCEPT_EVENTS,
     window: givenWindow = globalWindow,
@@ -391,6 +446,8 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     ...DEFAULT_POLYFILL_OPTIONS,
     ...options
   }
+
+  const IS_PERSIST = PERSIST_ENTRIES || PERSIST_ENTRIES_STATE;
 
   const window = givenWindow ?? globalWindow;
 
@@ -414,7 +471,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     entries: [],
     key: ""
   };
-  let initialEntries: NavigationHistoryEntrySerialised[] = initialMeta.entries;
+  let initialEntries: NavigationHistoryEntrySerialized[] = initialMeta.entries;
 
   if (!initialEntries.length && historyInitialState) {
     initialEntries = [
@@ -442,12 +499,32 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     return getHistoryState(history, entry)
   }
 
+  function setState(entry: NavigationHistoryEntry) {
+    if (!entry.sameDocument) return;
+    setHistoryState(
+        navigation,
+        history,
+        entry,
+        IS_PERSIST,
+        patchLimit
+    );
+  }
+
+  function disposeState(entry: NavigationHistoryEntry) {
+    disposeHistoryState(
+        entry,
+        IS_PERSIST
+    );
+  }
+
   const navigation: Navigation = givenNavigation ?? new NavigationPolyfill({
     entries: initialEntries,
     currentIndex: initialMeta?.currentIndex,
     currentKey: initialMeta?.key,
-    getState
-  })
+    getState,
+    setState,
+    disposeState
+  });
 
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
 
@@ -467,7 +544,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
       if (
           isNavigationPolyfill(givenNavigation) &&
-          (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) &&
+          IS_PERSIST &&
           historyInitialState &&
           initialMeta
       ) {
@@ -486,40 +563,19 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
         const ignorePopState = new Set<string>();
         const ignoreCurrentEntryChange = new Set<string>();
 
-        const limit = PERSIST_ENTRIES_LIMIT ?? 50;
-
-        const copyEntries = () => navigation.entries().slice(-limit).map(({ id, key, url }) => ({ id, key, url }));
-
         navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
           const { currentEntry } = navigation;
-          const { id, key, url } = currentEntry || {};
+          if (!currentEntry) return;
+          const { key, url } = currentEntry;
           if (ignoreCurrentEntryChange.delete(key) || !currentEntry?.sameDocument) return;
 
-          // const { pathname } = new URL(url, origin);
-          const state = currentEntry.getState<any>();
-
-          if (PERSIST_ENTRIES_STATE && id && state != null) {
-            if (sessionStorage.getItem(id) == null) {
-              const raw = stringify(state)
-              sessionStorage.setItem(id, raw);
-              // Cleaning up some session storage early... no biggie if we miss some
-              currentEntry.addEventListener("dispose", e => { sessionStorage.removeItem((e.detail as any)?.entry.id) });
-            }
-          }
-
-          const navMeta = {
-            key,
-            ...PERSIST_ENTRIES || PERSIST_ENTRIES_STATE
-                ? { currentIndex: currentEntry.index, entries: copyEntries() }
-                : {},
-          };
-          const hState = { state, [NavigationKey]: navMeta }
+          const historyState = getState(currentEntry);
 
           switch (navigationType) {
             case "push":
-              return pushState(hState, "", url)
+              return pushState(historyState, "", url)
             case "replace":
-              return replaceState(hState, "", url)
+              return replaceState(historyState, "", url)
             case "traverse":
               const delta = currentEntry.index - from.index;
               ignorePopState.add(key);
@@ -554,15 +610,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
           if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) {
             committed
                 .then(entry => {
-                  const meta = {
-                    key,
-                    currentIndex: entry.index,
-                    entries: copyEntries(),
-                  };
-                  const historyState = {
-                    ...state,
-                    [NavigationKey]: meta
-                  };
+                  const historyState = getState(entry)
                   replaceState(historyState, "", entry.url);
                 })
                 // Noop catch

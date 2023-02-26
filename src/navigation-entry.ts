@@ -31,7 +31,7 @@ export interface NavigationHistoryEntryFn<S> {
   (entry: NavigationHistoryEntry<S>): void
 }
 
-export interface NavigationHistoryEntrySerialised<S = unknown> {
+export interface NavigationHistoryEntrySerialized<S = unknown> {
   key: string;
   navigationType?: string;
   url?: string;

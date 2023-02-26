@@ -2,7 +2,7 @@ import {
   NavigationHistoryEntry, NavigationHistoryEntryFn, NavigationHistoryEntryGetStateFn,
   NavigationHistoryEntryInit,
   NavigationHistoryEntryKnownAs,
-  NavigationHistoryEntryNavigationType, NavigationHistoryEntrySerialised,
+  NavigationHistoryEntryNavigationType, NavigationHistoryEntrySerialized,
   NavigationHistoryEntrySetState,
 } from "./navigation-entry";
 import {
@@ -66,7 +66,7 @@ export interface NavigationOptions<S = unknown> {
   getState?: NavigationHistoryEntryGetStateFn<S>
   setState?: NavigationHistoryEntryFn<S>
   disposeState?: NavigationHistoryEntryFn<S>
-  entries?: NavigationHistoryEntrySerialised[];
+  entries?: NavigationHistoryEntrySerialized[];
   currentIndex?: number;
   currentKey?: string;
 }
@@ -104,7 +104,7 @@ export class Navigation<S = unknown, R = unknown | void>
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
-  #options: NavigationOptions<S> = undefined;
+  #options: NavigationOptions<S> | undefined = undefined;
 
   get canGoBack() {
     return !!this.#entries[this.#currentIndex - 1];
@@ -181,7 +181,7 @@ export class Navigation<S = unknown, R = unknown | void>
    * Set the entries available without any lifecycle eventing
    * @param entries
    */
-  [NavigationSetEntries](entries: NavigationHistoryEntrySerialised[]) {
+  [NavigationSetEntries](entries: NavigationHistoryEntrySerialized[]) {
     this.#entries = entries.map(
         ({ key, url, navigationType }, index) => new NavigationHistoryEntry<S>({
           getState: this[NavigationGetState],
