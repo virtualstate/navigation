@@ -473,6 +473,8 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   };
   let initialEntries: NavigationHistoryEntrySerialized[] = initialMeta.entries;
 
+  const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
+
   if (!initialEntries.length && historyInitialState) {
     initialEntries = [
       {
@@ -528,8 +530,6 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     setState,
     disposeState
   });
-
-  const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
 
   const pushState = history?.pushState.bind(history);
   const replaceState = history?.replaceState.bind(history);
