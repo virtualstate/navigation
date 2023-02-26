@@ -4,7 +4,7 @@ import { applyPolyfill, shouldApplyPolyfill } from "./apply-polyfill";
 const navigation = getNavigation();
 
 if (shouldApplyPolyfill(navigation)) {
-  await applyPolyfill({
+  applyPolyfill({
     navigation
   })
 }

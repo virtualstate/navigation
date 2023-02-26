@@ -2,9 +2,9 @@ import {DEFAULT_POLYFILL_OPTIONS, getCompletePolyfill, getPolyfill, NavigationPo
 import {getNavigation} from "./get-navigation";
 import {globalNavigation} from "./global-navigation";
 
-export async function applyPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS) {
-  const { apply } = getCompletePolyfill(options);
-  await apply();
+export function applyPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS) {
+  const { apply } = getCompletePolyfill({ ...DEFAULT_POLYFILL_OPTIONS, ...options });
+  apply();
 }
 
 export function shouldApplyPolyfill(navigation = getNavigation()) {
