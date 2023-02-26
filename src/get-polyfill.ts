@@ -1,5 +1,5 @@
 import type {Navigation, NavigationHistoryEntry} from "./spec/navigation";
-import { Navigation as NavigationPolyfill, NavigationSetEntries } from "./navigation";
+import {Navigation as NavigationPolyfill, NavigationSetCurrentKey, NavigationSetEntries} from "./navigation";
 import { InvalidStateError } from "./navigation-errors";
 import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationUserInitiated } from "./create-navigation-transition";
 import { stringify, parse } from './util/structured-json';
@@ -14,6 +14,8 @@ import {
   WindowLike
 } from "./global-window";
 import {globalSelf} from "./global-self";
+import {v4} from "./util/uuid-or-random";
+import {NavigationHistoryEntrySerialised} from "./navigation-entry";
 
 export interface NavigationPolyfillOptions {
   /**
@@ -107,7 +109,7 @@ function getStateFromWindowHistory<T extends object = Record<string | symbol, un
 interface StateHistoryMeta {
   key: string;
   currentIndex: number;
-  entries: { key: string, url: string }[];
+  entries: NavigationHistoryEntrySerialised[];
 }
 
 interface StateHistoryWithMeta {
@@ -165,15 +167,212 @@ function isNavigationPolyfill(navigation?: Navigation): navigation is Navigation
   return !!navigation;
 }
 
-function getNavigationOnlyPolyfill() {
-  const navigation = new NavigationPolyfill();
+function getNavigationOnlyPolyfill(givenNavigation?: Navigation) {
+  // When using as a polyfill, we will auto initiate a single
+  // entry, but not cause an event for it
+  const entries = [
+    {
+      key: v4()
+    }
+  ];
+  const navigation = givenNavigation ?? new NavigationPolyfill({
+    entries
+  });
   const history = new NavigationHistory<object>({
     navigation
   })
   return {
     navigation,
     history,
-    async apply() {}
+    async apply() {
+      if (isNavigationPolyfill(givenNavigation) && !navigation.entries().length) {
+        givenNavigation[NavigationSetEntries](entries)
+      }
+    }
+  }
+}
+
+function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
+  function clickCallback(ev: MouseEventPrototype, aEl: HTMLAnchorElementPrototype) {
+    // Move to back of task queue to let other event listeners run
+    // that are also registered on `window` (e.g. Solid.js event delegation).
+    // This gives them a chance to call `preventDefault`, which will be respected by nav api.
+    queueMicrotask(() => {
+      if (!isAppNavigation(ev)) return;
+      ok<Event>(ev);
+      const options: InternalNavigationNavigateOptions = {
+        history: "auto",
+        [NavigationUserInitiated]: true,
+        [NavigationDownloadRequest]: aEl.download,
+        [NavigationOriginalEvent]: ev,
+      };
+      navigation.navigate(aEl.href, options);
+    });
+  }
+  function submitCallback(ev: SubmitEventPrototype, form: HTMLFormElementPrototype) {
+    queueMicrotask(() => {
+      if (ev.defaultPrevented) return;
+      const method = ev.submitter && 'formMethod' in ev.submitter && ev.submitter.formMethod
+          ? ev.submitter.formMethod as string
+          : form.method;
+      // XXX: safe to ignore dialog method?
+      if (method === 'dialog') return;
+      const action = ev.submitter && 'formAction' in ev.submitter && ev.submitter.formAction
+          ? ev.submitter.formAction as string
+          : form.action;
+      const formData = new FormData(form);
+      const params = method === 'get'
+          ? new URLSearchParams([...formData].map(([k, v]) => v instanceof File ? [k, v.name] : [k, v]))
+          : undefined;
+      const navFormData = method === 'post'
+          ? formData
+          : undefined;
+      const url = new URL(action); // action is always a fully qualified url
+      if (params)
+        url.search = params.toString();
+      const unknownEvent = ev;
+      ok<Event>(unknownEvent);
+      const options: InternalNavigationNavigateOptions = {
+        history: "auto",
+        [NavigationUserInitiated]: true,
+        [NavigationFormData]: navFormData,
+        [NavigationOriginalEvent]: unknownEvent,
+      };
+      navigation.navigate(url.href, options);
+    });
+  }
+  window.addEventListener("click", (ev: MouseEventPrototype) => {
+    if (ev.target?.ownerDocument === window.document) {
+      const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
+      if (like<HTMLAnchorElementPrototype>(aEl)) {
+        clickCallback(ev, aEl);
+      }
+    }
+  });
+  window.addEventListener("submit", (ev: SubmitEventPrototype) => {
+    if (ev.target?.ownerDocument === window.document) {
+      const form: unknown = matchesAncestor(ev.target, "form");
+      if (like<HTMLFormElementPrototype>(form)) {
+        submitCallback(ev, form);
+      }
+    }
+  });
+}
+
+function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>, navigation: Navigation) {
+
+
+
+  patchGlobals();
+  patchPopState();
+  patchHistory();
+
+  function getCurrentState() {
+    return getHistoryState(history, navigation.currentEntry);
+  }
+
+  function patchGlobals() {
+    if (window) {
+      try {
+        Object.defineProperty(globalWindow, "navigation", {
+          value: navigation,
+        });
+      } catch (e) {}
+      if (!globalWindow.history) {
+        try {
+          Object.defineProperty(globalWindow, "history", {
+            value: history,
+          });
+        } catch (e) {}
+      }
+    }
+    if (globalSelf) {
+      try {
+        Object.defineProperty(globalSelf, "navigation", {
+          value: navigation,
+        });
+      } catch (e) {}
+    }
+    if (typeof globalThis !== "undefined") {
+      try {
+        Object.defineProperty(globalThis, "navigation", {
+          value: navigation,
+        });
+      } catch (e) {}
+    }
+  }
+
+  function patchHistory() {
+    if (history instanceof NavigationHistory) {
+      // It's our polyfill, but probably externally passed to getPolyfill
+      return;
+    }
+    const polyfillHistory = new NavigationHistory({
+      navigation
+    });
+    const pushState = polyfillHistory.pushState.bind(polyfillHistory);
+    const replaceState = polyfillHistory.replaceState.bind(polyfillHistory);
+    const go = polyfillHistory.go.bind(polyfillHistory);
+    const back = polyfillHistory.back.bind(history);
+    const forward = polyfillHistory.forward.bind(polyfillHistory);
+    const prototype = Object.getPrototypeOf(history);
+    const descriptor: PropertyDescriptorMap = {
+      pushState: {
+        ...Object.getOwnPropertyDescriptor(prototype, "pushState"),
+        value: pushState
+      },
+      replaceState: {
+        ...Object.getOwnPropertyDescriptor(prototype, "replaceState"),
+        value: replaceState
+      },
+      go: {
+        ...Object.getOwnPropertyDescriptor(prototype, "go"),
+        value: go
+      },
+      back: {
+        ...Object.getOwnPropertyDescriptor(prototype, "back"),
+        value: back
+      },
+      forward: {
+        ...Object.getOwnPropertyDescriptor(prototype, "forward"),
+        value: forward
+      }
+    }
+    Object.defineProperties(
+        prototype,
+        descriptor
+    );
+    Object.defineProperty(history, "state", {
+      ...Object.getOwnPropertyDescriptor(
+          Object.getPrototypeOf(history),
+          "state"
+      ),
+      get: getCurrentState
+    })
+  }
+
+  function patchPopState() {
+    if (!window.PopStateEvent) return;
+
+    const popStateEventPrototype = window.PopStateEvent.prototype
+    if (popStateEventPrototype) {
+      const descriptor = Object.getOwnPropertyDescriptor(popStateEventPrototype, "state");
+      Object.defineProperty(
+          popStateEventPrototype,
+          "state", {
+            ...descriptor,
+            get() {
+              return descriptor.get.call(this)
+            }
+          }
+      );
+      Object.defineProperty(
+          popStateEventPrototype,
+          "originalState", {
+            ...descriptor
+          }
+      );
+    }
   }
 }
 
@@ -193,20 +392,51 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     ...options
   }
 
-  const history = options.history && typeof options.history !== "boolean" ? options.history : getWindowHistory(givenWindow);
+  const window = givenWindow ?? globalWindow;
+
+  const history = options.history && typeof options.history !== "boolean" ?
+      options.history :
+      getWindowHistory(window);
 
   if (!history) {
     return getNavigationOnlyPolyfill();
   }
 
+  console.log("POLYFILL LOADING");
+
+  ok(window, "window required when using polyfill with history, this shouldn't be seen");
+
   // Use baseHistory so that we don't initialise entries we didn't intend to
   // if we used a polyfill history
   const historyInitialState = history?.state;
-  const initialEntries = (
-      isStateHistoryWithMeta(historyInitialState) ? (
-          historyInitialState[NavigationKey].entries
-      ) : undefined
-  )
+  const initialMeta: StateHistoryMeta = isStateHistoryWithMeta(historyInitialState) ? historyInitialState[NavigationKey] : {
+    currentIndex: -1,
+    entries: [],
+    key: ""
+  };
+  let initialEntries: NavigationHistoryEntrySerialised[] = initialMeta.entries;
+
+  if (!initialEntries.length && historyInitialState) {
+    initialEntries = [
+      {
+        key: v4(),
+        state: historyInitialState
+      }
+    ];
+    // The above in favour of doing:
+    //
+    // if (navigation.entries().length === 0 && isStateHistoryWithMeta(historyInitialState)) {
+    //   navigation.addEventListener(
+    //       "navigate",
+    //       // Add usage of intercept for initial navigation to prevent network navigation
+    //       (event) => event.intercept(Promise.resolve()),
+    //       { once: true }
+    //   );
+    //   await navigation.navigate(window.location?.href ?? "/", {
+    //     state: historyInitialState
+    //   }).finished
+    // }
+  }
 
   function getState(entry: NavigationHistoryEntry) {
     return getHistoryState(history, entry)
@@ -214,18 +444,12 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
   const navigation: Navigation = givenNavigation ?? new NavigationPolyfill({
     entries: initialEntries,
+    currentIndex: initialMeta?.currentIndex,
+    currentKey: initialMeta?.key,
     getState
   })
 
-  function getCurrentState() {
-    return getState(navigation.currentEntry);
-  }
-
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
-
-  const window = givenWindow;
-  ok(window, "window required");
-  const document = window.document;
 
   const pushState = history?.pushState.bind(history);
   const replaceState = history?.replaceState.bind(history);
@@ -239,17 +463,28 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     navigation,
     history,
     async apply() {
+      console.log("APPLYING POLYFILL TO NAVIGATION");
+
       if (
           isNavigationPolyfill(givenNavigation) &&
           (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) &&
-          initialEntries
+          historyInitialState &&
+          initialMeta
       ) {
         givenNavigation[NavigationSetEntries](initialEntries);
+        givenNavigation[NavigationSetCurrentKey](initialMeta.key);
+      } else if (!navigation.length && isNavigationPolyfill(navigation)) {
+        // Initialise empty navigation
+        navigation[NavigationSetEntries]([
+          {
+            key: v4()
+          }
+        ]);
       }
 
       if (HISTORY_INTEGRATION) {
-        const ignorePopState = new Set<string|undefined>();
-        const ignoreCurrentEntryChange = new Set<string|undefined>();
+        const ignorePopState = new Set<string>();
+        const ignoreCurrentEntryChange = new Set<string>();
 
         const limit = PERSIST_ENTRIES_LIMIT ?? 50;
 
@@ -341,184 +576,15 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
       }
 
       if (INTERCEPT_EVENTS) {
-        function clickCallback(ev: MouseEventPrototype, aEl: HTMLAnchorElementPrototype) {
-          // Move to back of task queue to let other event listeners run
-          // that are also registered on `window` (e.g. Solid.js event delegation).
-          // This gives them a chance to call `preventDefault`, which will be respected by nav api.
-          queueMicrotask(() => {
-            if (!isAppNavigation(ev)) return;
-            ok<Event>(ev);
-            const options: InternalNavigationNavigateOptions = {
-              history: "auto",
-              [NavigationUserInitiated]: true,
-              [NavigationDownloadRequest]: aEl.download,
-              [NavigationOriginalEvent]: ev,
-            };
-            navigation.navigate(aEl.href, options);
-          });
-        }
-        function submitCallback(ev: SubmitEventPrototype, form: HTMLFormElementPrototype) {
-          queueMicrotask(() => {
-            if (ev.defaultPrevented) return;
-            const method = ev.submitter && 'formMethod' in ev.submitter && ev.submitter.formMethod
-                ? ev.submitter.formMethod as string
-                : form.method;
-            // XXX: safe to ignore dialog method?
-            if (method === 'dialog') return;
-            const action = ev.submitter && 'formAction' in ev.submitter && ev.submitter.formAction
-                ? ev.submitter.formAction as string
-                : form.action;
-            const formData = new FormData(form);
-            const params = method === 'get'
-                ? new URLSearchParams([...formData].map(([k, v]) => v instanceof File ? [k, v.name] : [k, v]))
-                : undefined;
-            const navFormData = method === 'post'
-                ? formData
-                : undefined;
-            const url = new URL(action); // action is always a fully qualified url
-            if (params)
-              url.search = params.toString();
-            const unknownEvent = ev;
-            ok<Event>(unknownEvent);
-            const options: InternalNavigationNavigateOptions = {
-              history: "auto",
-              [NavigationUserInitiated]: true,
-              [NavigationFormData]: navFormData,
-              [NavigationOriginalEvent]: unknownEvent,
-            };
-            navigation.navigate(url.href, options);
-          });
-        }
-        window.addEventListener("click", (ev: MouseEventPrototype) => {
-          if (ev.target?.ownerDocument === document) {
-            const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
-            if (like<HTMLAnchorElementPrototype>(aEl)) {
-              clickCallback(ev, aEl);
-            }
-          }
-        });
-        window.addEventListener("submit", (ev: SubmitEventPrototype) => {
-          if (ev.target?.ownerDocument === document) {
-            const form: unknown = matchesAncestor(ev.target, "form");
-            if (like<HTMLFormElementPrototype>(form)) {
-              submitCallback(ev, form);
-            }
-          }
-        });
+        interceptWindowClicks(navigation, window);
       }
 
       if (PATCH_HISTORY) {
 
-        if (navigation.entries().length === 0) {
-          navigation.addEventListener(
-              "navigate",
-              // Add usage of intercept for initial navigation to prevent network navigation
-              (event) => event.intercept(Promise.resolve()),
-              { once: true }
-          );
-          const historyState = window.history?.state;
-          await navigation.navigate(window.location?.href ?? "/", {
-            state: (historyState && typeof historyState === "object") ? historyState : undefined
-          })
-              .finished;
-        }
-
-        // console.log("Polyfill checking loaded");
-        if (globalWindow) {
-          try {
-            Object.defineProperty(globalWindow, "navigation", {
-              value: navigation,
-            });
-          } catch (e) {}
-          if (!globalWindow.history) {
-            try {
-              Object.defineProperty(globalWindow, "history", {
-                value: history,
-              });
-            } catch (e) {}
-          }
-        }
-        if (globalSelf) {
-          try {
-            Object.defineProperty(globalSelf, "navigation", {
-              value: navigation,
-            });
-          } catch (e) {}
-        }
-        if (typeof globalThis !== "undefined") {
-          try {
-            Object.defineProperty(globalThis, "navigation", {
-              value: navigation,
-            });
-          } catch (e) {}
-        }
       }
 
-      if (PATCH_HISTORY && history) {
-        const history = new NavigationHistory({
-          navigation
-        });
-        const pushState = history.pushState.bind(history);
-        const replaceState = history.replaceState.bind(history);
-        const go = history.go.bind(history);
-        const back = history.back.bind(history);
-        const forward = history.forward.bind(history);
-        const prototype = Object.getPrototypeOf(history);
-        const descriptor: PropertyDescriptorMap = {
-          pushState: {
-            ...Object.getOwnPropertyDescriptor(prototype, "pushState"),
-            value: pushState
-          },
-          replaceState: {
-            ...Object.getOwnPropertyDescriptor(prototype, "replaceState"),
-            value: replaceState
-          },
-          go: {
-            ...Object.getOwnPropertyDescriptor(prototype, "go"),
-            value: go
-          },
-          back: {
-            ...Object.getOwnPropertyDescriptor(prototype, "back"),
-            value: back
-          },
-          forward: {
-            ...Object.getOwnPropertyDescriptor(prototype, "forward"),
-            value: forward
-          }
-        }
-        Object.defineProperties(
-            prototype,
-            descriptor
-        );
-        Object.defineProperty(history, "state", {
-          ...Object.getOwnPropertyDescriptor(
-              Object.getPrototypeOf(history),
-              "state"
-          ),
-          get: getCurrentState
-        })
-        if (history && window.PopStateEvent) {
-          const popStateEventPrototype = window.PopStateEvent.prototype
-          if (popStateEventPrototype) {
-            const descriptor = Object.getOwnPropertyDescriptor(popStateEventPrototype, "state");
-            Object.defineProperty(
-                popStateEventPrototype,
-                "state", {
-                  ...descriptor,
-                  get() {
-                    return descriptor.get.call(this)
-                  }
-                }
-            );
-            Object.defineProperty(
-                popStateEventPrototype,
-                "originalState", {
-                  ...descriptor
-                }
-            );
-          }
-
-        }
+      if (PATCH_HISTORY) {
+        patchGlobalScope(window, history, navigation);
       }
     }
   };

@@ -8,7 +8,6 @@ import {
 import { NavigationEventTarget } from "./navigation-event-target";
 import { EventTargetListeners } from "./event-target";
 import { v4 } from "./util/uuid-or-random";
-import {like} from "./is";
 
 // To prevent cyclic imports, where a circular is used, instead use the prototype interface
 // and then copy over the "private" symbol
@@ -32,10 +31,11 @@ export interface NavigationHistoryEntryFn<S> {
   (entry: NavigationHistoryEntry<S>): void
 }
 
-export interface NavigationHistoryEntrySerialised {
+export interface NavigationHistoryEntrySerialised<S = unknown> {
   key: string;
   navigationType?: string;
   url?: string;
+  state?: S;
 }
 
 export interface NavigationHistoryEntryInit<S>

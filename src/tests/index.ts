@@ -25,17 +25,22 @@ async function runTests() {
   const WPT = flags?.includes("WEB_PLATFORM_TESTS"),
       playright = flags?.includes("PLAYWRIGHT")
 
-  await import("./navigation.class");
+  if (!playright) {
+    await import("./navigation.class");
+  }
   if (typeof window === "undefined" && typeof process !== "undefined") {
-    await import("./navigation.imported");
+    if (!playright) {
+      await import("./navigation.imported");
+    }
     if (WPT) {
       await import("./navigation.playwright.wpt");
     }
     if (playright) {
       await import("./navigation.playwright");
+      await import("./navigation.class");
     }
-  } else {
-    // await import("./navigation.scope");
+  } else if (window.navigation) {
+    await import("./navigation.scope");
   }
   if (!(WPT || playright)) {
     console.log("Starting routes tests");

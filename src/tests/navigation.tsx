@@ -106,28 +106,28 @@ export async function assertNavigation(
       }
     });
 
-    // Add as very first currententrychange listener, to allow location change to happen
-    localNavigation.addEventListener("currententrychange", (event) => {
-      const { currentEntry } = localNavigation;
-      if (!currentEntry) return;
-      const state = currentEntry.getState<{ title?: string }>() ?? {};
-      const { pathname } = new URL(
-        currentEntry.url ?? "/",
-        "https://example.com"
-      );
-      try {
-        if (
-          typeof window !== "undefined" &&
-          typeof window.history !== "undefined" &&
-          !isWindowNavigation(localNavigation)
-        ) {
-          window.history.pushState(state, state.title ?? "", pathname);
-        }
-      } catch (e) {
-        console.warn("Failed to push state", e);
-      }
-      console.log(`Updated window pathname to ${pathname}`);
-    });
+    // // Add as very first currententrychange listener, to allow location change to happen
+    // localNavigation.addEventListener("currententrychange", (event) => {
+    //   const { currentEntry } = localNavigation;
+    //   if (!currentEntry) return;
+    //   const state = currentEntry.getState<{ title?: string }>() ?? {};
+    //   const { pathname } = new URL(
+    //     currentEntry.url ?? "/",
+    //     "https://example.com"
+    //   );
+    //   try {
+    //     if (
+    //       typeof window !== "undefined" &&
+    //       typeof window.history !== "undefined" &&
+    //       !isWindowNavigation(localNavigation)
+    //     ) {
+    //       window.history.pushState(state, state.title ?? "", pathname);
+    //     }
+    //   } catch (e) {
+    //     console.warn("Failed to push state", e);
+    //   }
+    //   console.log(`Updated window pathname to ${pathname}`);
+    // });
 
     try {
       console.log("START ", test.name);

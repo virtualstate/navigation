@@ -66,10 +66,14 @@ export interface NavigationOptions<S = unknown> {
   getState?: NavigationHistoryEntryGetStateFn<S>
   setState?: NavigationHistoryEntryFn<S>
   disposeState?: NavigationHistoryEntryFn<S>
-  entries?: NavigationHistoryEntrySerialised[]
+  entries?: NavigationHistoryEntrySerialised[];
+  currentIndex?: number;
+  currentKey?: string;
 }
 
 export const NavigationSetEntries = Symbol.for("@virtualstate/navigation/setEntries");
+export const NavigationSetCurrentIndex = Symbol.for("@virtualstate/navigation/setCurrentIndex");
+export const NavigationSetCurrentKey = Symbol.for("@virtualstate/navigation/setCurrentKey");
 export const NavigationGetState = Symbol.for("@virtualstate/navigation/getState");
 export const NavigationSetState = Symbol.for("@virtualstate/navigation/setState");
 export const NavigationDisposeState = Symbol.for("@virtualstate/navigation/disposeState");
@@ -100,7 +104,7 @@ export class Navigation<S = unknown, R = unknown | void>
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
-  #options: NavigationOptions<S> | undefined = undefined;
+  #options: NavigationOptions<S> = undefined;
 
   get canGoBack() {
     return !!this.#entries[this.#currentIndex - 1];
@@ -133,16 +137,50 @@ export class Navigation<S = unknown, R = unknown | void>
     return transition?.signal.aborted ? undefined : transition;
   }
 
-  constructor(options?: NavigationOptions<S>) {
+  constructor(options: NavigationOptions<S> = {}) {
     super();
     this.#options = options;
     this.#baseURL = getBaseURL(options?.baseURL);
     this.#entries = [];
-    if (options?.entries) {
-      this[NavigationSetEntries](options?.entries);
+    if (options.entries) {
+      this[NavigationSetEntries](options.entries);
+    }
+    if (options.currentKey) {
+      this[NavigationSetCurrentKey](options.currentKey);
+    } else if (typeof options.currentIndex === "number") {
+      this[NavigationSetCurrentIndex](options.currentIndex)
     }
   }
 
+  /**
+   * Set the current entry key without any lifecycle eventing
+   *
+   * This would be more exact than providing an index
+   * @param key
+   */
+  [NavigationSetCurrentKey](key: string) {
+    const index = this.#entries.findIndex(
+        entry => entry.key === key
+    );
+    // If the key can't be found, becomes a no-op
+    if (index === -1) return;
+    this.#currentIndex = index;
+  }
+
+  /**
+   * Set the current entry index without any lifecycle eventing
+   * @param index
+   */
+  [NavigationSetCurrentIndex](index: number) {
+    if (index <= -1) return;
+    if (index >= this.#entries.length) return;
+    this.#currentIndex = index;
+  }
+
+  /**
+   * Set the entries available without any lifecycle eventing
+   * @param entries
+   */
   [NavigationSetEntries](entries: NavigationHistoryEntrySerialised[]) {
     this.#entries = entries.map(
         ({ key, url, navigationType }, index) => new NavigationHistoryEntry<S>({
@@ -154,6 +192,10 @@ export class Navigation<S = unknown, R = unknown | void>
           key
         })
     );
+    if (this.#currentIndex === -1 && this.#entries.length) {
+      // Initialise, even if its not the one that was expected
+      this.#currentIndex = 0;
+    }
   }
 
   [NavigationGetState] = (entry: NavigationHistoryEntry<S>): S | undefined => {
