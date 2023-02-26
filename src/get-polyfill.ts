@@ -368,7 +368,7 @@ function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>
     const pushState = polyfillHistory.pushState.bind(polyfillHistory);
     const replaceState = polyfillHistory.replaceState.bind(polyfillHistory);
     const go = polyfillHistory.go.bind(polyfillHistory);
-    const back = polyfillHistory.back.bind(history);
+    const back = polyfillHistory.back.bind(polyfillHistory);
     const forward = polyfillHistory.forward.bind(polyfillHistory);
     const prototype = Object.getPrototypeOf(history);
     const descriptor: PropertyDescriptorMap = {
