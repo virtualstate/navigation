@@ -431,7 +431,7 @@ function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>
   }
 }
 
-export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS): { navigation: Navigation, history: NavigationHistory<object>, apply(): Promise<void> } {
+export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS): { navigation: Navigation, history: NavigationHistory<object>, apply(): void } {
   const {
     persist: PERSIST_ENTRIES,
     persistState: PERSIST_ENTRIES_STATE,
@@ -542,7 +542,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   return {
     navigation,
     history,
-    async apply() {
+    apply() {
       console.log("APPLYING POLYFILL TO NAVIGATION");
 
       if (
