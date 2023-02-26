@@ -52,37 +52,32 @@ export class NavigationHistory<S extends object>
     return this.#options[State] ?? undefined;
   }
 
-  back(): unknown;
-  back(): void;
-  back(): unknown {
+  back(): void {
     const entries = this.#navigation.entries();
     const index = this.#navigation.currentEntry?.index ?? -1;
     const back = entries[index - 1];
     const url = back?.url;
     if (!url) throw new InvalidStateError("Cannot go back");
-    return this[AppLocationTransitionURL](url, () =>
+    this[AppLocationTransitionURL](url, () =>
       this.#navigation.back()
     );
   }
 
-  forward(): unknown;
-  forward(): void;
-  forward(): unknown {
+  forward(): void {
     const entries = this.#navigation.entries();
     const index = this.#navigation.currentEntry?.index ?? -1;
     const forward = entries[index + 1];
     const url = forward?.url;
     if (!url) throw new InvalidStateError("Cannot go forward");
-    return this[AppLocationTransitionURL](url, () =>
+    this[AppLocationTransitionURL](url, () =>
       this.#navigation.forward()
     );
   }
 
-  go(delta?: number): unknown;
-  go(delta?: number): void;
-  go(delta?: number): unknown {
+  go(delta?: number): void {
     if (typeof delta !== "number" || delta === 0 || isNaN(delta)) {
-      return this[AppLocationAwaitFinished](this.#navigation.reload());
+      this[AppLocationAwaitFinished](this.#navigation.reload());
+      return;
     }
     const entries = this.#navigation.entries();
     const {
@@ -97,55 +92,49 @@ export class NavigationHistory<S extends object>
       throw new Error(`Could not go ${delta}`);
     }
     const nextEntryKey = nextEntry.key;
-    return this[AppLocationAwaitFinished](this.#navigation.traverseTo(nextEntryKey));
+    this[AppLocationAwaitFinished](this.#navigation.traverseTo(nextEntryKey));
   }
 
   replaceState(
     data: any,
     unused: string,
     url?: string | URL | null
-  ): unknown;
+  ): void;
   replaceState(data: any, unused: string, url?: string | URL | null): void;
   replaceState(
     data: any,
     unused: string,
     url?: string | URL | null
-  ): unknown {
+  ): void {
     if (url) {
-      return this[AppLocationTransitionURL](url, (url) =>
+      this[AppLocationTransitionURL](url, (url) =>
         this.#navigation.navigate(url.toString(), {
           state: data,
           history: "replace",
         })
       );
+      return;
     } else {
-      return this.#navigation.updateCurrentEntry({
+      this.#navigation.updateCurrentEntry({
         state: data
       });
+      return;
     }
   }
 
   pushState(
-    data: object,
+    data: unknown,
     unused: string,
     url?: string | URL | null
-  ): unknown;
-  pushState(data: unknown, unused: string, url?: string | URL): unknown;
-  pushState(data: object, unused: string, url?: string | URL | null): void;
-  pushState(data: unknown, unused: string, url?: string | URL): void;
-  pushState(
-    data: object,
-    unused: string,
-    url?: string | URL | null
-  ): unknown {
+  ): void {
     if (url) {
-      return this[AppLocationTransitionURL](url, (url) =>
+      this[AppLocationTransitionURL](url, (url) =>
         this.#navigation.navigate(url.toString(), {
           state: data,
         })
       );
     } else {
-      return this.#navigation.updateCurrentEntry({
+      this.#navigation.updateCurrentEntry({
         state: data,
       });
     }
