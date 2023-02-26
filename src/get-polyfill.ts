@@ -496,10 +496,12 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   }
 
   function getState(entry: NavigationHistoryEntry) {
+    if (!HISTORY_INTEGRATION) return;
     return getHistoryState(history, entry)
   }
 
   function setState(entry: NavigationHistoryEntry) {
+    if (!HISTORY_INTEGRATION) return;
     if (!entry.sameDocument) return;
     setHistoryState(
         navigation,
@@ -511,6 +513,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   }
 
   function disposeState(entry: NavigationHistoryEntry) {
+    if (!HISTORY_INTEGRATION) return;
     disposeHistoryState(
         entry,
         IS_PERSIST
