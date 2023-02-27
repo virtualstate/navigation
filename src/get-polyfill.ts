@@ -168,15 +168,17 @@ function setHistoryState<T extends object>(
 
   function setStateInSession() {
     if (typeof sessionStorage === "undefined") return;
-    const raw = stringify(
-        getSerializableState()
-    );
-    sessionStorage.setItem(entry.key, raw);
+    try {
+      const raw = stringify(
+          getSerializableState()
+      );
+      sessionStorage.setItem(entry.key, raw);
+    } catch {}
   }
 }
 
 function getHistoryState<T extends object>(
-    history: NavigationHistory<T>,
+    history: NavigationHistory<T> & { originalState?: T },
     entry: NavigationHistoryEntry<T>
 ): T {
   return (
@@ -184,8 +186,19 @@ function getHistoryState<T extends object>(
       getStateFromSession()
   );
 
+  function getStateFromHistoryDirectly() {
+    try {
+      return history.state;
+    } catch {
+      return undefined;
+    }
+  }
+
   function getBaseState() {
-    const value = history.state;
+    const value = (
+        history.originalState ??
+        getStateFromHistoryDirectly()
+    );
     return like<T>(value) ? value : undefined;
   }
 
@@ -198,9 +211,13 @@ function getHistoryState<T extends object>(
 
   function getStateFromSession(): T | undefined {
     if (typeof sessionStorage === "undefined") return undefined;
-    const raw = sessionStorage.getItem(entry.key);
-    if (!raw) return undefined;
-    return parse(raw);
+    try {
+      const raw = sessionStorage.getItem(entry.key);
+      if (!raw) return undefined;
+      return parse(raw);
+    } catch {
+      return undefined;
+    }
   }
 }
 
@@ -219,7 +236,11 @@ export function getPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFIL
 }
 
 function isNavigationPolyfill(navigation?: Navigation): navigation is NavigationPolyfill {
-  return !!navigation;
+  return (
+      like<NavigationPolyfill>(navigation) &&
+      typeof navigation[NavigationSetEntries] === "function" &&
+      typeof navigation[NavigationSetCurrentKey] === "function"
+  )
 }
 
 function getNavigationOnlyPolyfill(givenNavigation?: Navigation) {
@@ -239,7 +260,7 @@ function getNavigationOnlyPolyfill(givenNavigation?: Navigation) {
   return {
     navigation,
     history,
-    async apply() {
+    apply() {
       if (isNavigationPolyfill(givenNavigation) && !navigation.entries().length) {
         givenNavigation[NavigationSetEntries](entries)
       }
@@ -368,7 +389,7 @@ function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>
     const pushState = polyfillHistory.pushState.bind(polyfillHistory);
     const replaceState = polyfillHistory.replaceState.bind(polyfillHistory);
     const go = polyfillHistory.go.bind(polyfillHistory);
-    const back = polyfillHistory.back.bind(history);
+    const back = polyfillHistory.back.bind(polyfillHistory);
     const forward = polyfillHistory.forward.bind(polyfillHistory);
     const prototype = Object.getPrototypeOf(history);
     const descriptor: PropertyDescriptorMap = {
@@ -397,41 +418,76 @@ function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>
         prototype,
         descriptor
     );
+    const stateDescriptor = Object.getOwnPropertyDescriptor(
+        Object.getPrototypeOf(history),
+        "state"
+    );
     Object.defineProperty(history, "state", {
-      ...Object.getOwnPropertyDescriptor(
-          Object.getPrototypeOf(history),
-          "state"
-      ),
-      get: getCurrentState
-    })
+      ...stateDescriptor,
+      get() {
+        // Derive history state only ever directly from navigation state
+        //
+        // Decouple from classic history.state
+        //
+        // If the original state is wanted, use history.originalState,
+        // which is done on a best effort basis and may be out of alignment from
+        // navigation.currentEntry.getState()
+        //
+        // This state will always be tied to the navigation, not the background
+        // browser's history stack, which could be offset from the applications
+        // expected state between moments of transition.
+        //
+        // The change of using navigation.currentEntry.getState()
+        // in place of history.state is significant, it's shifting to a model where
+        // there can be an entry only for one single operation and then replaced
+        //
+        // e.g.
+        //
+        // navigation.navigate("/1", { state: { key: 1 }});
+        // navigation.navigate("/2", { state: { key: 2 }});
+        // await navigation.transition?.finished;
+        //
+        // The above code, if ran, history.state might not keep up...
+        //
+        // ... In safari if we run replaceState too many times in 30 seconds
+        // then we will get an exception. So, inherently we know we
+        // cannot just freely make use of history.state as a deterministic like
+        // reference.
+        return polyfillHistory.state;
+      }
+    });
+    Object.defineProperty(history, "originalState", {
+      ...stateDescriptor
+    });
   }
 
   function patchPopState() {
     if (!window.PopStateEvent) return;
-
     const popStateEventPrototype = window.PopStateEvent.prototype
-    if (popStateEventPrototype) {
-      const descriptor = Object.getOwnPropertyDescriptor(popStateEventPrototype, "state");
-      Object.defineProperty(
-          popStateEventPrototype,
-          "state", {
-            ...descriptor,
-            get() {
-              return descriptor.get.call(this)
-            }
-          }
-      );
-      Object.defineProperty(
-          popStateEventPrototype,
-          "originalState", {
-            ...descriptor
-          }
-      );
-    }
+    if (!popStateEventPrototype) return;
+    const descriptor = Object.getOwnPropertyDescriptor(popStateEventPrototype, "state");
+    // This makes no change... it just gets itself, I need to go back and
+    // find the original intention of also patching PopStateEvent
+    // Object.defineProperty(
+    //     popStateEventPrototype,
+    //     "state", {
+    //       ...descriptor,
+    //       get() {
+    //         return descriptor.get.call(this)
+    //       }
+    //     }
+    // );
+    // For now we will keep originalState to show we intend to patch both
+    Object.defineProperty(
+        popStateEventPrototype,
+        "originalState", {
+          ...descriptor
+        }
+    );
   }
 }
 
-export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS): { navigation: Navigation, history: NavigationHistory<object>, apply(): Promise<void> } {
+export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS): { navigation: Navigation, history: NavigationHistory<object>, apply(): void } {
   const {
     persist: PERSIST_ENTRIES,
     persistState: PERSIST_ENTRIES_STATE,
@@ -542,7 +598,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   return {
     navigation,
     history,
-    async apply() {
+    apply() {
       console.log("APPLYING POLYFILL TO NAVIGATION");
 
       if (

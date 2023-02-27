@@ -66,7 +66,7 @@ export interface NavigationOptions<S = unknown> {
   getState?: NavigationHistoryEntryGetStateFn<S>
   setState?: NavigationHistoryEntryFn<S>
   disposeState?: NavigationHistoryEntryFn<S>
-  entries?: NavigationHistoryEntrySerialized[];
+  entries?: NavigationHistoryEntrySerialized<S>[];
   currentIndex?: number;
   currentKey?: string;
 }
@@ -181,15 +181,16 @@ export class Navigation<S = unknown, R = unknown | void>
    * Set the entries available without any lifecycle eventing
    * @param entries
    */
-  [NavigationSetEntries](entries: NavigationHistoryEntrySerialized[]) {
+  [NavigationSetEntries](entries: NavigationHistoryEntrySerialized<S>[]) {
     this.#entries = entries.map(
-        ({ key, url, navigationType }, index) => new NavigationHistoryEntry<S>({
+        ({ key, url, navigationType, state }, index) => new NavigationHistoryEntry<S>({
           getState: this[NavigationGetState],
           navigationType: isNavigationNavigationType(navigationType) ? navigationType : "push",
           sameDocument: true,
           index,
           url,
-          key
+          key,
+          state
         })
     );
     if (this.#currentIndex === -1 && this.#entries.length) {

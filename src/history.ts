@@ -11,7 +11,7 @@ const State = Symbol.for("@virtualstate/navigation/history/state");
 
 export type ScrollRestoration = "auto" | "manual";
 
-export interface History {}
+// export interface History {}
 
 export interface NavigationHistoryOptions extends NavigationLocationOptions {
   navigation: Navigation;

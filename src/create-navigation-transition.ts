@@ -38,7 +38,7 @@ export const NavigationUserInitiated = Symbol.for(
   "@virtualstate/navigation/userInitiated"
 );
 export const NavigationOriginalEvent = Symbol.for(
-  "@qwtel/navigation/originalEvent"
+  "@virtualstate/navigation/originalEvent"
 );
 
 export interface NavigationNavigateOptions<S = unknown>
@@ -256,6 +256,10 @@ export function createNavigationTransition<S = unknown>(
     event.reportError = reportError;
   }
   event.scroll = noop;
+
+  if (originalEvent) {
+    event.originalEvent = originalEvent;
+  }
 
   const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
     from: currentEntry,
