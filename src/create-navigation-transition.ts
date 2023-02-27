@@ -25,6 +25,10 @@ import {defer, Deferred} from "./defer";
 import {ok} from "./is";
 import {NavigateEvent, NavigationCurrentEntryChangeEvent} from "./events";
 
+export interface PreventDefaultLike {
+  preventDefault(): void;
+}
+
 export const NavigationFormData = Symbol.for(
     "@virtualstate/navigation/formData"
 );
@@ -47,7 +51,7 @@ export interface NavigationNavigateOptions<S = unknown>
   [NavigationDownloadRequest]?: string;
   [NavigationCanIntercept]?: boolean;
   [NavigationUserInitiated]?: boolean;
-  [NavigationOriginalEvent]?: Event;
+  [NavigationOriginalEvent]?: PreventDefaultLike;
 }
 
 export const EventAbortController = Symbol.for(
@@ -236,7 +240,7 @@ export function createNavigationTransition<S = unknown>(
   const preventDefault = transition[NavigationTransitionAbort].bind(transition);
 
   if (originalEvent) {
-    const definedEvent: Event = originalEvent;
+    const definedEvent: PreventDefaultLike = originalEvent;
     event.intercept = function originalEventIntercept(options: NavigationInterceptPrototype<unknown>) {
       definedEvent.preventDefault();
       return intercept(options);

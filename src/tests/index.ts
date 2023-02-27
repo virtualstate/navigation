@@ -57,6 +57,8 @@ async function runTests() {
     await import("./entrieschange");
     console.log("Starting custom state tests");
     await import("./custom-state");
+    console.log("Starting original event tests");
+    await import("./original-event");
   }
 }
 
