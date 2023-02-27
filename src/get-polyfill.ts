@@ -336,32 +336,31 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
 }
 
 function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>, navigation: Navigation) {
-
-
-
   patchGlobals();
   patchPopState();
   patchHistory();
 
-  function getCurrentState() {
-    return getHistoryState(history, navigation.currentEntry);
+  function patchWindow(window: WindowLike) {
+    try {
+      Object.defineProperty(window, "navigation", {
+        value: navigation,
+      });
+    } catch (e) {}
+    if (!window.history) {
+      try {
+        Object.defineProperty(window, "history", {
+          value: history,
+        });
+      } catch (e) {}
+    }
   }
 
   function patchGlobals() {
     if (window) {
-      try {
-        Object.defineProperty(globalWindow, "navigation", {
-          value: navigation,
-        });
-      } catch (e) {}
-      if (!globalWindow.history) {
-        try {
-          Object.defineProperty(globalWindow, "history", {
-            value: history,
-          });
-        } catch (e) {}
-      }
+      patchWindow(window);
     }
+    // If we don't have the global window, don't also patch global scope
+    if (window !== globalWindow) return;
     if (globalSelf) {
       try {
         Object.defineProperty(globalSelf, "navigation", {
