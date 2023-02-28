@@ -24,8 +24,6 @@ export class NavigateEvent<S = unknown> implements Spec<S> {
     readonly userInitiated: boolean;
     readonly navigationType: NavigationNavigationType;
 
-    originalEvent?: unknown = undefined;
-
     constructor(public type: "navigate", init: NavigateEventInit<S>) {
         if (!init) {
             throw new TypeError("init required");

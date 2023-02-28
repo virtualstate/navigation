@@ -271,6 +271,7 @@ function getNavigationOnlyPolyfill(givenNavigation?: Navigation) {
 
 function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
   function clickCallback(ev: MouseEventPrototype, aEl: HTMLAnchorElementPrototype) {
+    // console.log("<-- clickCallback -->");
     // Move to back of task queue to let other event listeners run
     // that are also registered on `window` (e.g. Solid.js event delegation).
     // This gives them a chance to call `preventDefault`, which will be respected by nav api.
@@ -287,7 +288,12 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
     });
   }
   function submitCallback(ev: SubmitEventPrototype, form: HTMLFormElementPrototype) {
-    queueMicrotask(() => {
+    console.log("<-- submitCallback -->");
+    // Immediate process for submit, frameworks will need to step back here if its
+    // an issue
+    process();
+
+    function process() {
       if (ev.defaultPrevented) return;
       const method = ev.submitter && 'formMethod' in ev.submitter && ev.submitter.formMethod
           ? ev.submitter.formMethod as string
@@ -316,7 +322,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
         [NavigationOriginalEvent]: unknownEvent,
       };
       navigation.navigate(url.href, options);
-    });
+    }
   }
   window.addEventListener("click", (ev: MouseEventPrototype) => {
     if (ev.target?.ownerDocument === window.document) {
@@ -327,6 +333,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
     }
   });
   window.addEventListener("submit", (ev: SubmitEventPrototype) => {
+    console.log("submit event")
     if (ev.target?.ownerDocument === window.document) {
       const form: unknown = matchesAncestor(ev.target, "form");
       if (like<HTMLFormElementPrototype>(form)) {
@@ -529,7 +536,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
 
-  if (!initialEntries.length && historyInitialState) {
+  if (!initialEntries.length) {
     initialEntries = [
       {
         key: v4(),
@@ -613,6 +620,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
         const ignoreCurrentEntryChange = new Set<string>();
 
         navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
+          console.log("<-- currententrychange event listener -->");
           const { currentEntry } = navigation;
           if (!currentEntry) return;
           const { key, url } = currentEntry;
@@ -635,6 +643,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
         });
 
         window.addEventListener("popstate", (event) => {
+          console.log("<-- popstate event listener -->");
           const { state, originalState } = event;
           const foundState = originalState ?? state;
           if (!isStateHistoryWithMeta(foundState)) return;
