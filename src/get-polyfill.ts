@@ -271,7 +271,7 @@ function getNavigationOnlyPolyfill(givenNavigation?: Navigation) {
 
 function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
   function clickCallback(ev: MouseEventPrototype, aEl: HTMLAnchorElementPrototype) {
-    // console.log("<-- clickCallback -->");
+    console.log("<-- clickCallback -->");
     // Move to back of task queue to let other event listeners run
     // that are also registered on `window` (e.g. Solid.js event delegation).
     // This gives them a chance to call `preventDefault`, which will be respected by nav api.
@@ -288,7 +288,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
     });
   }
   function submitCallback(ev: SubmitEventPrototype, form: HTMLFormElementPrototype) {
-    // console.log("<-- submitCallback -->");
+    console.log("<-- submitCallback -->");
     process();
 
     function process() {
@@ -301,14 +301,27 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
       const action = ev.submitter && 'formAction' in ev.submitter && ev.submitter.formAction
           ? ev.submitter.formAction as string
           : form.action;
-      const formData = new FormData(form);
+      let formData;
+      /* c8 ignore start */
+      try {
+        formData = new FormData(form)
+      } catch {
+        // For runtimes where we polyfilled the window & then evented it
+        // ... for some reason
+        formData = new FormData(undefined)
+      }
+      /* c8 ignore end */
       const params = method === 'get'
           ? new URLSearchParams([...formData].map(([k, v]) => v instanceof File ? [k, v.name] : [k, v]))
           : undefined;
       const navFormData = method === 'post'
           ? formData
           : undefined;
-      const url = new URL(action); // action is always a fully qualified url
+      // action is always a fully qualified url in browsers
+      const url = new URL(
+          action,
+          navigation.currentEntry.url
+      );
       if (params)
         url.search = params.toString();
       const unknownEvent = ev;
@@ -322,7 +335,9 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
       navigation.navigate(url.href, options);
     }
   }
+  console.log("click event added")
   window.addEventListener("click", (ev: MouseEventPrototype) => {
+    console.log("click event", ev)
     if (ev.target?.ownerDocument === window.document) {
       const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
       if (like<HTMLAnchorElementPrototype>(aEl)) {
@@ -331,7 +346,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
     }
   });
   window.addEventListener("submit", (ev: SubmitEventPrototype) => {
-    // console.log("submit event")
+    console.log("submit event")
     if (ev.target?.ownerDocument === window.document) {
       const form: unknown = matchesAncestor(ev.target, "form");
       if (like<HTMLFormElementPrototype>(form)) {
@@ -505,6 +520,11 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     ...options
   }
 
+  console.log({
+    ...DEFAULT_POLYFILL_OPTIONS,
+    ...options
+  })
+
   const IS_PERSIST = PERSIST_ENTRIES || PERSIST_ENTRIES_STATE;
 
   const window = givenWindow ?? globalWindow;
@@ -597,7 +617,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     navigation,
     history,
     apply() {
-      // console.log("APPLYING POLYFILL TO NAVIGATION");
+      console.log("APPLYING POLYFILL TO NAVIGATION");
 
       if (
           isNavigationPolyfill(givenNavigation) &&
@@ -702,6 +722,7 @@ function isAppNavigation(evt: MouseEventPrototype) {
 /** Checks if this element or any of its parents matches a given `selector` */
 function matchesAncestor(givenElement: ElementPrototype | undefined, selector: string): ElementPrototype | undefined {
   let element = getDefaultElement();
+  console.log({ element })
   while (element) {
     if (element.matches(selector)) {
       ok<ElementPrototype>(element);

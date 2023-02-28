@@ -3,8 +3,9 @@ import {getNavigation} from "./get-navigation";
 import {globalNavigation} from "./global-navigation";
 
 export function applyPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYFILL_OPTIONS) {
-  const { apply } = getCompletePolyfill(options);
+  const { apply, navigation } = getCompletePolyfill(options);
   apply();
+  return navigation;
 }
 
 export function shouldApplyPolyfill(navigation = getNavigation()) {

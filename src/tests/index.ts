@@ -31,6 +31,7 @@ async function runTests() {
   if (typeof window === "undefined" && typeof process !== "undefined") {
     if (!playright) {
       await import("./navigation.imported");
+      await import("./navigation.scope.faker");
     }
     if (WPT) {
       await import("./navigation.playwright.wpt");
