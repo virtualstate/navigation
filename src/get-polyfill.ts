@@ -357,9 +357,7 @@ function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>
   }
 
   function patchGlobals() {
-    if (window) {
-      patchWindow(window);
-    }
+    patchWindow(window);
     // If we don't have the global window, don't also patch global scope
     if (window !== globalWindow) return;
     if (globalSelf) {
@@ -472,7 +470,7 @@ function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>
           ...descriptor,
           get() {
             const original: unknown = descriptor.get.call(this);
-            if (!isStateHistoryWithMeta(original)) return undefined;
+            if (!isStateHistoryWithMeta(original)) return original;
             return original[NavigationKey].state;
           }
         }
@@ -606,11 +604,8 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
         givenNavigation[NavigationSetCurrentKey](initialMeta.key);
       } else if (!navigation.length && isNavigationPolyfill(navigation)) {
         // Initialise empty navigation
-        navigation[NavigationSetEntries]([
-          {
-            key: v4()
-          }
-        ]);
+        navigation[NavigationSetEntries](initialEntries);
+        navigation[NavigationSetCurrentKey](initialMeta.key);
       }
 
       if (HISTORY_INTEGRATION) {
