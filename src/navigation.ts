@@ -71,6 +71,7 @@ export interface NavigationOptions<S = unknown> {
   currentKey?: string;
 }
 
+export const NavigationSetOptions = Symbol.for("@virtualstate/navigation/setOptions");
 export const NavigationSetEntries = Symbol.for("@virtualstate/navigation/setEntries");
 export const NavigationSetCurrentIndex = Symbol.for("@virtualstate/navigation/setCurrentIndex");
 export const NavigationSetCurrentKey = Symbol.for("@virtualstate/navigation/setCurrentKey");
@@ -101,7 +102,7 @@ export class Navigation<S = unknown, R = unknown | void>
   #activeTransition?: NavigationTransition<S>;
 
   #knownTransitions = new WeakSet();
-  readonly #baseURL: string | URL;
+  #baseURL: string | URL;
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
@@ -140,6 +141,10 @@ export class Navigation<S = unknown, R = unknown | void>
 
   constructor(options: NavigationOptions<S> = {}) {
     super();
+    this[NavigationSetOptions](options);
+  }
+
+  [NavigationSetOptions](options: NavigationOptions<S>) {
     this.#options = options;
     this.#baseURL = getBaseURL(options?.baseURL);
     this.#entries = [];

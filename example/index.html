@@ -28,6 +28,7 @@
                     console.log("Submitted Name:", event.formData?.get("name"));
                     console.log("Previous State:", window.navigation.currentEntry.getState());
                     console.log("State:", event.destination.getState());
+                    console.log("Same Document:", event.destination.sameDocument);
                     urlSpan.innerText = url.pathname;
                     app.innerHTML = "";
 

@@ -1135,6 +1135,7 @@ function createEvent(event) {
     return event;
 }
 
+const NavigationSetOptions = Symbol.for("@virtualstate/navigation/setOptions");
 const NavigationSetEntries = Symbol.for("@virtualstate/navigation/setEntries");
 const NavigationSetCurrentIndex = Symbol.for("@virtualstate/navigation/setCurrentIndex");
 const NavigationSetCurrentKey = Symbol.for("@virtualstate/navigation/setCurrentKey");
@@ -1187,6 +1188,9 @@ class Navigation extends NavigationEventTarget {
     }
     constructor(options = {}) {
         super();
+        this[NavigationSetOptions](options);
+    }
+    [NavigationSetOptions](options) {
         this.#options = options;
         this.#baseURL = getBaseURL(options?.baseURL);
         this.#entries = [];
@@ -2097,12 +2101,15 @@ function getNavigationEntryMeta(navigation, entry, limit = DEFAULT_POLYFILL_OPTI
         state: entry.getState()
     };
 }
+function getNavigationEntryWithMeta(navigation, entry, limit = DEFAULT_POLYFILL_OPTIONS.limit) {
+    return {
+        [NavigationKey]: getNavigationEntryMeta(navigation, entry, limit)
+    };
+}
 function setHistoryState(navigation, history, entry, persist, limit) {
     setStateInSession();
     function getSerializableState() {
-        return {
-            [NavigationKey]: getNavigationEntryMeta(navigation, entry, limit)
-        };
+        return getNavigationEntryWithMeta(navigation, entry, limit);
     }
     function setStateInSession() {
         if (typeof sessionStorage === "undefined")
@@ -2459,32 +2466,22 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
         }
         let state = undefined;
         if (!isStateHistoryWithMeta(historyInitialState) && !isStateHistoryMeta(historyInitialState)) {
-            console.log("Using state history direct", historyInitialState, history.state);
+            // console.log("Using state history direct", historyInitialState, history.state);
             state = historyInitialState;
         }
+        const key = v4$1();
         initialEntries = [
             {
-                key: v4$1(),
+                key,
                 state,
                 url
             }
         ];
-        // The above in favour of doing:
-        //
-        // if (navigation.entries().length === 0 && isStateHistoryWithMeta(historyInitialState)) {
-        //   navigation.addEventListener(
-        //       "navigate",
-        //       // Add usage of intercept for initial navigation to prevent network navigation
-        //       (event) => event.intercept(Promise.resolve()),
-        //       { once: true }
-        //   );
-        //   await navigation.navigate(window.location?.href ?? "/", {
-        //     state: historyInitialState
-        //   }).finished
-        // }
+        initialMeta.key = key;
+        initialMeta.currentIndex = 0;
     }
-    console.log("Initial Entries", initialEntries);
-    const navigation = givenNavigation ?? new Navigation({
+    // console.log("Initial Entries", initialEntries)
+    const navigationOptions = {
         entries: initialEntries,
         currentIndex: initialMeta?.currentIndex,
         currentKey: initialMeta?.key,
@@ -2494,6 +2491,10 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
             return getHistoryState(history, entry);
         },
         setState(entry) {
+            console.log({
+                setState: entry.getState(),
+                entry
+            });
             if (!HISTORY_INTEGRATION)
                 return;
             if (!entry.sameDocument)
@@ -2505,7 +2506,8 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                 return;
             disposeHistoryState(entry, IS_PERSIST);
         }
-    });
+    };
+    const navigation = givenNavigation ?? new Navigation(navigationOptions);
     const pushState = history?.pushState.bind(history);
     const replaceState = history?.replaceState.bind(history);
     const historyGo = history?.go.bind(history);
@@ -2517,17 +2519,9 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
         history,
         apply() {
             // console.log("APPLYING POLYFILL TO NAVIGATION");
-            if (isNavigationPolyfill(givenNavigation) &&
-                IS_PERSIST &&
-                historyInitialState &&
-                initialMeta) {
-                givenNavigation[NavigationSetEntries](initialEntries);
-                givenNavigation[NavigationSetCurrentKey](initialMeta.key);
-            }
-            else if (!navigation.length && isNavigationPolyfill(navigation)) {
-                // Initialise empty navigation
-                navigation[NavigationSetEntries](initialEntries);
-                navigation[NavigationSetCurrentKey](initialMeta.key);
+            if (isNavigationPolyfill(navigation)) {
+                // Initialise navigation options
+                navigation[NavigationSetOptions](navigationOptions);
             }
             if (HISTORY_INTEGRATION) {
                 const ignorePopState = new Set();
@@ -2540,7 +2534,8 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                     const { key, url } = currentEntry;
                     if (ignoreCurrentEntryChange.delete(key) || !currentEntry?.sameDocument)
                         return;
-                    const historyState = getNavigationEntryMeta(navigation, currentEntry, patchLimit);
+                    const historyState = getNavigationEntryWithMeta(navigation, currentEntry, patchLimit);
+                    console.log("currentEntry change", historyState);
                     switch (navigationType) {
                         case "push":
                             return pushState(historyState, "", url);
@@ -2577,7 +2572,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                     if (PERSIST_ENTRIES || PERSIST_ENTRIES_STATE) {
                         committed
                             .then(entry => {
-                            const historyState = getNavigationEntryMeta(navigation, entry, patchLimit);
+                            const historyState = getNavigationEntryWithMeta(navigation, entry, patchLimit);
                             replaceState(historyState, "", entry.url);
                         })
                             // Noop catch
