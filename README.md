@@ -10,7 +10,7 @@ Native JavaScript [navigation](https://github.com/WICG/navigation-api) implement
 
  ### Test Coverage
 
- ![Web Platform Tests 129/237](https://img.shields.io/badge/Web%20Platform%20Tests-129%2F237-brightgreen) ![92.77%25 lines covered](https://img.shields.io/badge/lines-92.77%25-brightgreen) ![92.77%25 statements covered](https://img.shields.io/badge/statements-92.77%25-brightgreen) ![82.75%25 functions covered](https://img.shields.io/badge/functions-82.75%25-brightgreen) ![82.94%25 branches covered](https://img.shields.io/badge/branches-82.94%25-brightgreen)
+ ![Web Platform Tests 129/237](https://img.shields.io/badge/Web%20Platform%20Tests-129%2F237-brightgreen) ![91.84%25 lines covered](https://img.shields.io/badge/lines-91.84%25-brightgreen) ![91.84%25 statements covered](https://img.shields.io/badge/statements-91.84%25-brightgreen) ![80.41%25 functions covered](https://img.shields.io/badge/functions-80.41%25-brightgreen) ![82.7%25 branches covered](https://img.shields.io/badge/branches-82.7%25-brightgreen)
 
 [//]: # (badges)
 
