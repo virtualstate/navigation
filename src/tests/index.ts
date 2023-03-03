@@ -60,6 +60,8 @@ async function runTests() {
     await import("./custom-state");
     console.log("Starting original event tests");
     await import("./original-event");
+    console.log("Starting same document tests");
+    await import("./same-document");
   }
 }
 

@@ -1152,12 +1152,12 @@ class Navigation extends NavigationEventTarget {
     // Should be always 0 or 1
     #transitionInProgressCount = 0;
     // #activePromise?: Promise<void> = undefined;
-    #entries;
+    #entries = [];
     #known = new Set();
     #currentIndex = -1;
     #activeTransition;
     #knownTransitions = new WeakSet();
-    #baseURL;
+    #baseURL = "";
     #initialEntry = undefined;
     #options = undefined;
     get canGoBack() {
@@ -1233,10 +1233,10 @@ class Navigation extends NavigationEventTarget {
      * @param entries
      */
     [NavigationSetEntries](entries) {
-        this.#entries = entries.map(({ key, url, navigationType, state }, index) => new NavigationHistoryEntry({
+        this.#entries = entries.map(({ key, url, navigationType, state, sameDocument }, index) => new NavigationHistoryEntry({
             getState: this[NavigationGetState],
             navigationType: isNavigationNavigationType(navigationType) ? navigationType : "push",
-            sameDocument: true,
+            sameDocument: sameDocument ?? true,
             index,
             url,
             key,
@@ -1294,6 +1294,15 @@ class Navigation extends NavigationEventTarget {
         }
         throw new InvalidStateError();
     }
+    #isSameDocument = (url) => {
+        function isSameOrigins(a, b) {
+            return a.origin === b.origin;
+        }
+        const currentEntryUrl = this.currentEntry?.url;
+        if (!currentEntryUrl)
+            return true;
+        return isSameOrigins(new URL(currentEntryUrl), new URL(url));
+    };
     navigate(url, options) {
         let baseURL = this.#baseURL;
         if (this.currentEntry?.url) {
@@ -1309,6 +1318,7 @@ class Navigation extends NavigationEventTarget {
             getState: this[NavigationGetState],
             url: nextUrl,
             ...options,
+            sameDocument: this.#isSameDocument(nextUrl),
             navigationType,
         });
         return this.#pushEntry(navigationType, entry, undefined, options);
@@ -2086,10 +2096,11 @@ function getEntries(navigation, limit = DEFAULT_POLYFILL_OPTIONS.limit) {
     if (typeof limit === "number") {
         entries = entries.slice(-limit);
     }
-    return entries.map(({ id, key, url }) => ({
+    return entries.map(({ id, key, url, sameDocument }) => ({
         id,
         key,
-        url
+        url,
+        sameDocument
     }));
 }
 function getNavigationEntryMeta(navigation, entry, limit = DEFAULT_POLYFILL_OPTIONS.limit) {
@@ -2491,10 +2502,10 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
             return getHistoryState(history, entry);
         },
         setState(entry) {
-            console.log({
-                setState: entry.getState(),
-                entry
-            });
+            // console.log({
+            //   setState: entry.getState(),
+            //   entry
+            // })
             if (!HISTORY_INTEGRATION)
                 return;
             if (!entry.sameDocument)
@@ -2535,7 +2546,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                     if (ignoreCurrentEntryChange.delete(key) || !currentEntry?.sameDocument)
                         return;
                     const historyState = getNavigationEntryWithMeta(navigation, currentEntry, patchLimit);
-                    console.log("currentEntry change", historyState);
+                    // console.log("currentEntry change", historyState);
                     switch (navigationType) {
                         case "push":
                             return pushState(historyState, "", url);

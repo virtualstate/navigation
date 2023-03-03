@@ -142,7 +142,7 @@ function disposeHistoryState<T extends object>(
 }
 
 function getEntries(navigation: Navigation, limit: number = DEFAULT_POLYFILL_OPTIONS.limit): NavigationHistoryEntrySerialized[] {
-  let entries =navigation.entries();
+  let entries = navigation.entries();
   if (typeof limit === "number") {
     entries = entries.slice(-limit);
   }

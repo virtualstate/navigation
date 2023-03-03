@@ -96,13 +96,13 @@ export class Navigation<S = unknown, R = unknown | void>
   #transitionInProgressCount = 0;
   // #activePromise?: Promise<void> = undefined;
 
-  #entries: NavigationHistoryEntry<S>[];
+  #entries: NavigationHistoryEntry<S>[] = [];
   #known = new Set<NavigationHistoryEntry<S>>();
   #currentIndex = -1;
   #activeTransition?: NavigationTransition<S>;
 
   #knownTransitions = new WeakSet();
-  #baseURL: string | URL;
+  #baseURL: string | URL = "";
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
@@ -267,6 +267,18 @@ export class Navigation<S = unknown, R = unknown | void>
     throw new InvalidStateError();
   }
 
+  #isSameDocument = (url: string) => {
+    function isSameOrigins(a: URL, b: URL) {
+      return a.origin === b.origin;
+    }
+    const currentEntryUrl = this.currentEntry?.url;
+    if (!currentEntryUrl) return true;
+    return isSameOrigins(
+        new URL(currentEntryUrl),
+        new URL(url)
+    );
+  }
+
   navigate(
     url: string,
     options?: NavigationNavigateOptions<S>
@@ -285,6 +297,7 @@ export class Navigation<S = unknown, R = unknown | void>
       getState: this[NavigationGetState],
       url: nextUrl,
       ...options,
+      sameDocument: this.#isSameDocument(nextUrl),
       navigationType,
     });
     return this.#pushEntry(navigationType, entry, undefined, options);
