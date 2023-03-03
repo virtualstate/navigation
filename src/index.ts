@@ -15,3 +15,5 @@ export * from "./event-target/intercept-event";
 export {
   NavigationCurrentEntryChangeEvent
 } from "./events";
+export { applyPolyfill } from "./apply-polyfill"
+export { getPolyfill, getCompletePolyfill } from "./get-polyfill";

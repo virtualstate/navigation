@@ -1,6 +1,7 @@
 export const { v4 } = await import("./import-uuid")
   .catch(async () => {
-    const crypto = await import("node:crypto");
+    // @ts-ignore
+    const crypto: Crypto = await import("node:crypto");
     return {
         v4() {
             return crypto.randomUUID()

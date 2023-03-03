@@ -5,9 +5,11 @@ try {
     "@virtualstate/navigation-imported"
   )) ?? { Navigation: undefined };
   if (Navigation) {
-    const input = () => new Navigation();
-    const fn: NavigationAssertFn = await assertNavigation(input);
-    fn(input);
+    function getNavigationByImported() {
+      return new Navigation();
+    }
+    const fn: NavigationAssertFn = await assertNavigation(getNavigationByImported);
+    fn(getNavigationByImported);
     console.log(`PASS assertNavigation:imported:new Navigation`);
   }
 } catch {

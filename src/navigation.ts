@@ -1,8 +1,8 @@
 import {
-  NavigationHistoryEntry,
+  NavigationHistoryEntry, NavigationHistoryEntryFn, NavigationHistoryEntryGetStateFn,
   NavigationHistoryEntryInit,
   NavigationHistoryEntryKnownAs,
-  NavigationHistoryEntryNavigationType,
+  NavigationHistoryEntryNavigationType, NavigationHistoryEntrySerialized,
   NavigationHistoryEntrySetState,
 } from "./navigation-entry";
 import {
@@ -61,8 +61,30 @@ import {NavigationCurrentEntryChangeEvent} from "./events";
 
 export * from "./spec/navigation";
 
-export interface NavigationOptions {
+export interface NavigationOptions<S = unknown> {
   baseURL?: URL | string;
+  getState?: NavigationHistoryEntryGetStateFn<S>
+  setState?: NavigationHistoryEntryFn<S>
+  disposeState?: NavigationHistoryEntryFn<S>
+  entries?: NavigationHistoryEntrySerialized<S>[];
+  currentIndex?: number;
+  currentKey?: string;
+}
+
+export const NavigationSetEntries = Symbol.for("@virtualstate/navigation/setEntries");
+export const NavigationSetCurrentIndex = Symbol.for("@virtualstate/navigation/setCurrentIndex");
+export const NavigationSetCurrentKey = Symbol.for("@virtualstate/navigation/setCurrentKey");
+export const NavigationGetState = Symbol.for("@virtualstate/navigation/getState");
+export const NavigationSetState = Symbol.for("@virtualstate/navigation/setState");
+export const NavigationDisposeState = Symbol.for("@virtualstate/navigation/disposeState");
+
+export function isNavigationNavigationType(value: unknown): value is NavigationNavigationType {
+  return (
+      value === "reload" ||
+      value === "push" ||
+      value === "replace" ||
+      value === "traverse"
+  );
 }
 
 export class Navigation<S = unknown, R = unknown | void>
@@ -72,7 +94,7 @@ export class Navigation<S = unknown, R = unknown | void>
   // Should be always 0 or 1
   #transitionInProgressCount = 0;
 
-  #entries: NavigationHistoryEntry<S>[] = [];
+  #entries: NavigationHistoryEntry<S>[];
   #known = new Set<NavigationHistoryEntry<S>>();
   #currentIndex = -1;
   #activeTransition?: NavigationTransition<S>;
@@ -82,6 +104,8 @@ export class Navigation<S = unknown, R = unknown | void>
 
   #initialEntry: NavigationHistoryEntry<S> | undefined = undefined;
 
+  #options: NavigationOptions<S> | undefined = undefined;
+
   get canGoBack() {
     return !!this.#entries[this.#currentIndex - 1];
   }
@@ -90,10 +114,11 @@ export class Navigation<S = unknown, R = unknown | void>
     return !!this.#entries[this.#currentIndex + 1];
   }
 
-  get currentEntry() {
+  get currentEntry(): NavigationHistoryEntry<S> {
     if (this.#currentIndex === -1) {
       if (!this.#initialEntry) {
         this.#initialEntry = new NavigationHistoryEntry<S>({
+          getState: this[NavigationGetState],
           navigationType: "push",
           index: -1,
           sameDocument: false,
@@ -112,9 +137,78 @@ export class Navigation<S = unknown, R = unknown | void>
     return transition?.signal.aborted ? undefined : transition;
   }
 
-  constructor(options?: NavigationOptions) {
+  constructor(options: NavigationOptions<S> = {}) {
     super();
+    this.#options = options;
     this.#baseURL = getBaseURL(options?.baseURL);
+    this.#entries = [];
+    if (options.entries) {
+      this[NavigationSetEntries](options.entries);
+    }
+    if (options.currentKey) {
+      this[NavigationSetCurrentKey](options.currentKey);
+    } else if (typeof options.currentIndex === "number") {
+      this[NavigationSetCurrentIndex](options.currentIndex)
+    }
+  }
+
+  /**
+   * Set the current entry key without any lifecycle eventing
+   *
+   * This would be more exact than providing an index
+   * @param key
+   */
+  [NavigationSetCurrentKey](key: string) {
+    const index = this.#entries.findIndex(
+        entry => entry.key === key
+    );
+    // If the key can't be found, becomes a no-op
+    if (index === -1) return;
+    this.#currentIndex = index;
+  }
+
+  /**
+   * Set the current entry index without any lifecycle eventing
+   * @param index
+   */
+  [NavigationSetCurrentIndex](index: number) {
+    if (index <= -1) return;
+    if (index >= this.#entries.length) return;
+    this.#currentIndex = index;
+  }
+
+  /**
+   * Set the entries available without any lifecycle eventing
+   * @param entries
+   */
+  [NavigationSetEntries](entries: NavigationHistoryEntrySerialized<S>[]) {
+    this.#entries = entries.map(
+        ({ key, url, navigationType, state }, index) => new NavigationHistoryEntry<S>({
+          getState: this[NavigationGetState],
+          navigationType: isNavigationNavigationType(navigationType) ? navigationType : "push",
+          sameDocument: true,
+          index,
+          url,
+          key,
+          state
+        })
+    );
+    if (this.#currentIndex === -1 && this.#entries.length) {
+      // Initialise, even if its not the one that was expected
+      this.#currentIndex = 0;
+    }
+  }
+
+  [NavigationGetState] = (entry: NavigationHistoryEntry<S>): S | undefined => {
+    return this.#options?.getState?.(entry) ?? undefined;
+  }
+
+  [NavigationSetState] = (entry: NavigationHistoryEntry<S>) => {
+    return this.#options?.setState?.(entry);
+  }
+
+  [NavigationDisposeState] = (entry: NavigationHistoryEntry<S>) => {
+    return this.#options?.disposeState?.(entry);
   }
 
   back(options?: NavigationNavigationOptions): NavigationResult<S> {
@@ -182,6 +276,7 @@ export class Navigation<S = unknown, R = unknown | void>
         navigationType = options?.history;
     }
     const entry = this.#createNavigationHistoryEntry({
+      getState: this[NavigationGetState],
       url: nextUrl,
       ...options,
       navigationType,
@@ -195,6 +290,7 @@ export class Navigation<S = unknown, R = unknown | void>
   ): NavigationHistoryEntry<S> => {
     return this.#createNavigationHistoryEntry({
       ...entry,
+      getState: this[NavigationGetState],
       index: entry?.index ?? undefined,
       state: options?.state ?? entry?.getState<S>(),
       navigationType:
@@ -354,6 +450,7 @@ export class Navigation<S = unknown, R = unknown | void>
     const resolvedEntry =
       entry ??
       this.#createNavigationHistoryEntry({
+        getState: this[NavigationGetState],
         navigationType: "replace",
         index: nextOptions.index,
         sameDocument: true,
@@ -372,7 +469,7 @@ export class Navigation<S = unknown, R = unknown | void>
     entry: NavigationHistoryEntry<S>,
     transition: NavigationTransition<S>,
     options?: InternalNavigationNavigateOptions<S>
-  ): Promise<NavigationHistoryEntry> => {
+  ): Promise<NavigationHistoryEntry<S>> => {
     // console.log({ givenNavigationType, transition });
     let navigationType = givenNavigationType;
 
@@ -413,6 +510,19 @@ export class Navigation<S = unknown, R = unknown | void>
         this.#known = new Set([...this.#known, ...known]);
       }
       this.#currentIndex = index;
+
+      // Let's trigger external state here
+      // because it is the absolute point of
+      // committing to using an entry
+      //
+      // If the entry came from an external source
+      // then internal to getState the external source will be pulled from
+      // only if the entry doesn't hold the state in memory
+      //
+      // TLDR I believe this will be no issue doing here, even if we end up
+      // calling an external setState multiple times, it is better than
+      // loss of the state
+      this[NavigationSetState](this.currentEntry);
     };
 
     const asyncCommit = async (commit: NavigationTransitionCommitContext<S>) => {
@@ -479,7 +589,7 @@ export class Navigation<S = unknown, R = unknown | void>
       return entry;
     };
 
-    const completeTransition = (): Promise<NavigationHistoryEntry> => {
+    const completeTransition = (): Promise<NavigationHistoryEntry<S>> => {
       if (givenNavigationType === Unset) {
         return unsetTransition();
       }
@@ -693,6 +803,7 @@ export class Navigation<S = unknown, R = unknown | void>
         type: "dispose",
         entry: known,
       });
+      this[NavigationDisposeState](known);
       await known.dispatchEvent(event);
       await this.dispatchEvent(event);
     }
@@ -719,6 +830,7 @@ export class Navigation<S = unknown, R = unknown | void>
 
     // Instant change
     currentEntry[NavigationHistoryEntrySetState](options.state);
+    this[NavigationSetState](currentEntry);
 
     const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
       from: currentEntry,

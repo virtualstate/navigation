@@ -54,7 +54,12 @@
     "./event-target/async": "./esnext/event-target/async-event-target.js",
     "./event-target/sync": "./esnext/event-target/sync-event-target.js",
     "./esnext/polyfill": "./esnext/polyfill.js",
+    "./esnext/get-polyfill": "./esnext/get-polyfill.js",
+    "./esnext/apply-polyfill": "./esnext/apply-polyfill.js",
+    "./esnext/util/structured-json": "./esnext/util/structured-json.js",
     "./polyfill": "./esnext/polyfill.js",
+    "./get-polyfill": "./esnext/get-polyfill.js",
+    "./apply-polyfill": "./esnext/apply-polyfill.js",
     "./routes": "./esnext/routes/index.js",
     "./state": "./esnext/state/index.js"
   },
@@ -69,10 +74,10 @@
   "author": "Fabian Cook <hello@fabiancook.dev>",
   "license": "MIT",
   "dependencies": {
+    "@ungap/structured-clone": "^1.0.2",
     "@virtualstate/composite-key": "^1.0.0",
     "abort-controller": "^3.0.0",
-    "uuid": "^8.3.2",
-    "whatwg-url": "^9.1.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.15.4",
@@ -84,13 +89,12 @@
     "@types/chance": "^1.1.3",
     "@types/jest": "^27.0.1",
     "@types/mkdirp": "^1.0.2",
-    "@types/node": "^17.0.1",
+    "@types/node": "^18.14.1",
     "@types/rimraf": "^3.0.2",
     "@types/uuid": "^8.3.3",
     "@types/whatwg-url": "^8.2.1",
     "@virtualstate/focus": "^1.4.9",
     "@virtualstate/kdl": "^1.0.1-alpha.32",
-    "@virtualstate/navigation-imported": "./scripts/imported",
     "@virtualstate/promise": "^1.2.1",
     "@virtualstate/union": "^2.48.1",
     "c8": "^7.11.3",
@@ -109,7 +113,7 @@
     "rollup-plugin-ignore": "^1.0.10",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",
-    "typescript": "^4.8.3",
+    "typescript": "^4.9.5",
     "urlpattern-polyfill": "^1.0.0-rc2",
     "v8-to-istanbul": "^8.1.0",
     "wpt": "https://github.com/web-platform-tests/wpt.git#86d251acc8f2176cda0177e900f551d939de5c8f"

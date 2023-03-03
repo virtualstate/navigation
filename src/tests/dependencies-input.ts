@@ -16,14 +16,17 @@ export const DefaultDependencies = [
   "@virtualstate/union",
   "@virtualstate/x",
   "@virtualstate/navigation",
+  "@virtualstate/navigation/polyfill",
   "@virtualstate/navigation/event-target/sync",
   "@virtualstate/navigation/event-target/async",
+  "@virtualstate/composite-key",
   "dom-lite",
   "iterable",
   "uuid",
-  "whatwg-url",
   "abort-controller",
   "urlpattern-polyfill",
+  "@ungap/structured-clone",
+  "@ungap/structured-clone/json"
 ] as const;
 export const DefaultImportMap = Object.fromEntries(
   DefaultDependencies.filter(

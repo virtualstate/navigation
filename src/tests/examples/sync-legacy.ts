@@ -1,10 +1,11 @@
 import { Navigation } from "../../spec/navigation";
 import { NavigationSync } from "../../history";
 import { ok } from "../util";
+import {like} from "../../is";
 
 export async function syncLocationExample(navigation: Navigation) {
   const sync = new NavigationSync({ navigation }),
-    location: Location = sync;
+    location = sync;
 
   const expectedHash = `#hash${Math.random()}`;
 
@@ -29,7 +30,7 @@ export async function syncLocationExample(navigation: Navigation) {
 
 export async function syncHistoryExample(navigation: Navigation<Record<string, unknown>>) {
   const sync = new NavigationSync({ navigation }),
-    history: History = sync;
+    history = sync;
 
   const expected = `expected${Math.random()}`;
   const expectedUrl = new URL(`https://example.com/${expected}/1`);
@@ -48,7 +49,8 @@ export async function syncHistoryExample(navigation: Navigation<Record<string, u
   ok(navigation.currentEntry.url === expectedUrl.toString());
 
   await navigation.navigate("/1").finished;
-  ok(history.state?.[expected] !== expected);
+  const value: unknown = like<Record<string, unknown>>(history.state) && history.state?.[expected]
+  ok(value !== expected);
   await navigation.navigate("/2").finished;
   await navigation.navigate("/3").finished;
 

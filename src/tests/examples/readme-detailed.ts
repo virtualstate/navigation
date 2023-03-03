@@ -736,6 +736,10 @@ export async function navigationExamples(navigation: Navigation) {
 }
 
 export async function usingInfoExample(navigation: Navigation) {
+  if (new URL(navigation.currentEntry?.url ?? "https://example.com").pathname.startsWith("/photo/")) {
+    await navigation.navigate("/").finished;
+  }
+
   const photoGallery = new EventTarget();
   const document = new EventTarget();
 
@@ -751,6 +755,7 @@ export async function usingInfoExample(navigation: Navigation) {
     const index = photoUrls.indexOf(
       pathname(navigation.currentEntry?.url ?? "/unknown")
     );
+    console.log({ index, url: navigation.currentEntry.url })
     if (index === -1) return [];
     return [photoUrls[index - 1], photoUrls[index + 1]];
   }
@@ -860,14 +865,19 @@ export async function usingInfoExample(navigation: Navigation) {
   const middleIndex = Math.round(photoUrls.length / 2);
   assert(middleIndex === 5);
 
+  console.log({
+    hasPreviousPhoto: hasPreviousPhoto(),
+    hasNextPhoto: hasNextPhoto()
+  })
+
   // console.log({
   //     via: "navigation",
   //     thumbnail: photoTargets.get(photoUrls[middleIndex])
   // });
 
   // We have not yet given a starting point
-  ok(!hasPreviousPhoto());
-  ok(!hasNextPhoto());
+  ok(!hasPreviousPhoto(), "Expected no previous photo");
+  ok(!hasNextPhoto(), "Expected no next photo");
 
   await navigation.navigate(photoUrls[middleIndex], {
     info: {
@@ -877,8 +887,8 @@ export async function usingInfoExample(navigation: Navigation) {
   }).finished;
 
   // We should now have photos
-  ok(hasPreviousPhoto());
-  ok(hasNextPhoto());
+  ok(hasPreviousPhoto(), "Expected previous photo");
+  ok(hasNextPhoto(), "Expected next photo");
 
   ok(!lefts);
   ok(!rights);

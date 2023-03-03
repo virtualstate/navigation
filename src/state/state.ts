@@ -2,12 +2,26 @@ import {NavigateEvent, Navigation, NavigationHistoryEntry} from "../spec/navigat
 import {getNavigation} from "../get-navigation";
 import {Push} from "@virtualstate/promise";
 import {Event} from "../event-target";
-import {ok} from "../is";
+import {isPromise, ok} from "../is";
 
-export function setState<S>(state: S, navigation: Navigation<S> = getNavigation()) {
-    navigation.updateCurrentEntry({
+export function setState<S>(state: S, navigation: Navigation<S> = getNavigation()): unknown {
+    const currentEntryChangePromise = new Promise(
+        resolve => {
+            navigation.addEventListener(
+                "currententrychange",
+                resolve,
+                { once: true }
+            )
+        }
+    );
+    const returned = navigation.updateCurrentEntry({
         state
     });
+    const promises = [currentEntryChangePromise];
+    if (isPromise(returned)) {
+        promises.push(returned);
+    }
+    return Promise.all(promises);
 }
 
 export function getState<S>(navigation: Navigation<S> = getNavigation()) {

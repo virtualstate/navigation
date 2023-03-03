@@ -1366,10 +1366,10 @@
   resolved "https://registry.npmjs.org/@types/node/-/node-16.7.10.tgz#7aa732cc47341c12a16b7d562f519c2383b6d4fc"
   integrity sha512-S63Dlv4zIPb8x6MMTgDq5WWRJQe56iBEY0O3SOFA9JrRienkOVDXSXBjjJw6HTNQYSE2JI6GMCR6LVbIMHJVvA==
 
-"@types/node@^17.0.1":
-  version "17.0.1"
-  resolved "https://registry.npmjs.org/@types/node/-/node-17.0.1.tgz#88d501e84b6185f6489ecee4ba9e8fcec7f29bb2"
-  integrity sha512-NXKvBVUzIbs6ylBwmOwHFkZS2EXCcjnqr8ZCRNaXBkHAf+3mn/rPcJxwrzuc6movh8fxQAsUUfYklJ/EG+hZqQ==
+"@types/node@^18.14.1":
+  version "18.14.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.14.1.tgz#90dad8476f1e42797c49d6f8b69aaf9f876fc69f"
+  integrity sha512-QH+37Qds3E0eDlReeboBxfHbX9omAcBCXEzswCu6jySP642jiM3cYSIkU/REqwhCUqXdonHFuBfJDiAJxMNhaQ==
 
 "@types/prettier@^2.1.5":
   version "2.3.2"
@@ -1440,6 +1440,11 @@
   dependencies:
     "@types/node" "*"
 
+"@ungap/structured-clone@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.0.2.tgz#112bd30f3c27cb4c7b85d59ee3918c13803238ad"
+  integrity sha512-06PHwE0K24Wi8FBmC8MuMi/+nQ3DTpcXYL3y/IaZz2ScY2GOJXOe8fyMykVXyLOKxpL2Y0frAnJZmm65OxzMLQ==
+
 "@virtualstate/composite-key@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@virtualstate/composite-key/-/composite-key-1.0.0.tgz#352b93df5b9199951cc370897bca8bb5b171a375"
@@ -1470,9 +1475,6 @@
     abort-controller "^3.0.0"
     uuid "^8.3.2"
     whatwg-url "^9.1.0"
-
-"@virtualstate/navigation-imported@./scripts/imported":
-  version "0.0.0"
 
 "@virtualstate/promise@^1.0.1-alpha.11", "@virtualstate/promise@^1.1.2":
   version "1.1.4"
@@ -5061,10 +5063,10 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-typescript@^4.8.3:
-  version "4.8.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.8.3.tgz#d59344522c4bc464a65a730ac695007fdb66dd88"
-  integrity sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==
+typescript@^4.9.5:
+  version "4.9.5"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
+  integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
 
 unicode-canonical-property-names-ecmascript@^1.0.4:
   version "1.0.4"

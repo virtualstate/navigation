@@ -1,0 +1,1 @@
+export const globalSelf = typeof self === "undefined" ? undefined : self;

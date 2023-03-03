@@ -6,6 +6,8 @@ export interface Event<Name extends string | symbol = string | symbol> {
   };
   [key: string]: unknown;
   [key: number]: unknown;
+
+  originalEvent?: Event
 }
 
 export function isEvent(value: unknown): value is Event {

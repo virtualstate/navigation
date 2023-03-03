@@ -25,12 +25,12 @@ export const NavigationTransitionPlanWait = Symbol.for(
   "@virtualstate/navigation/transition/plan/wait"
 );
 
-export interface NavigationTransitionPlan {
+export interface NavigationTransitionPlan<S = unknown> {
   [NavigationTransitionPlanNavigationSymbol]: Navigation;
   [NavigationTransitionPlanWhile](promise: Promise<unknown>): void;
-  [NavigationTransitionPlanWait](): Promise<NavigationHistoryEntry>;
+  [NavigationTransitionPlanWait](): Promise<NavigationHistoryEntry<S>>;
   transitions: NavigationTransition[];
-  known: Set<NavigationHistoryEntry>;
+  known: Set<NavigationHistoryEntry<S>>;
   knownTransitions: Set<NavigationTransition>;
   resolve(): Promise<void>;
 }

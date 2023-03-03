@@ -1,17 +1,5 @@
 import { Event, isEvent } from "./event";
 import { isAbortError } from "../navigation-errors";
-import { ExternalSyncEventTargetListeners } from "./event-target-listeners";
-
-export interface AbortSignal extends ExternalSyncEventTargetListeners {
-  aborted: boolean;
-  addEventListener(type: "abort", callback: Function): void;
-  addEventListener(type: string, callback: Function): void;
-}
-
-export interface AbortController {
-  signal: AbortSignal;
-  abort(): void;
-}
 
 export interface SignalEvent<Name extends string | symbol = string>
   extends Event<Name> {

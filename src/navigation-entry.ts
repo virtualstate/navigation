@@ -1,4 +1,5 @@
 import {
+  Navigation as NavigationPrototype,
   NavigationHistoryEntry as NavigationHistoryEntryPrototype,
   NavigationHistoryEntryEventMap,
   NavigationHistoryEntryInit as NavigationHistoryEntryInitPrototype,
@@ -7,6 +8,10 @@ import {
 import { NavigationEventTarget } from "./navigation-event-target";
 import { EventTargetListeners } from "./event-target";
 import { v4 } from "./util/uuid-or-random";
+
+// To prevent cyclic imports, where a circular is used, instead use the prototype interface
+// and then copy over the "private" symbol
+const NavigationGetState = Symbol.for("@virtualstate/navigation/getState");
 
 export const NavigationHistoryEntryNavigationType = Symbol.for(
   "@virtualstate/navigation/entry/navigationType"
@@ -18,13 +23,43 @@ export const NavigationHistoryEntrySetState = Symbol.for(
   "@virtualstate/navigation/entry/setState"
 );
 
-export interface NavigationHistoryEntryInit<S = unknown>
+export interface NavigationHistoryEntryGetStateFn<S> {
+  (entry: NavigationHistoryEntry<S>): S | undefined
+}
+
+export interface NavigationHistoryEntryFn<S> {
+  (entry: NavigationHistoryEntry<S>): void
+}
+
+export interface NavigationHistoryEntrySerialized<S = unknown> {
+  key: string;
+  navigationType?: string;
+  url?: string;
+  state?: S;
+}
+
+export interface NavigationHistoryEntryInit<S>
   extends NavigationHistoryEntryInitPrototype<S> {
   navigationType: NavigationNavigationType;
+  getState?: NavigationHistoryEntryGetStateFn<S>
   [NavigationHistoryEntryKnownAs]?: Set<string>;
 }
 
-export class NavigationHistoryEntry<S = unknown>
+function isPrimitiveValue(state: unknown): state is number | boolean | symbol | bigint | string {
+  return (
+      typeof state === "number" ||
+      typeof state === "boolean" ||
+      typeof state === "symbol" ||
+      typeof state === "bigint" ||
+      typeof state === "string"
+  )
+}
+
+function isValue(state: unknown) {
+  return !!(state || isPrimitiveValue(state));
+}
+
+export class NavigationHistoryEntry<S>
   extends NavigationEventTarget<NavigationHistoryEntryEventMap>
   implements NavigationHistoryEntryPrototype<S>
 {
@@ -50,7 +85,7 @@ export class NavigationHistoryEntry<S = unknown>
     return set;
   }
 
-  #options: NavigationHistoryEntryInit<S>;
+  readonly #options: NavigationHistoryEntryInit<S>;
 
   get [EventTargetListeners]() {
     return [
@@ -70,21 +105,29 @@ export class NavigationHistoryEntry<S = unknown>
     this.#state = init.state ?? undefined;
   }
 
+  [NavigationGetState]() {
+    return this.#options?.getState?.(this);
+  }
+
   getState<ST extends S>(): ST;
   getState(): S;
   getState(): unknown {
-    const state = this.#state;
+    let state = this.#state;
+
+    if (!isValue(state)) {
+      const external = this[NavigationGetState]();
+      if (isValue(external)) {
+        state = this.#state = external;
+      }
+    }
+
     /**
      * https://github.com/WICG/app-history/blob/7c0332b30746b14863f717404402bc49e497a2b2/spec.bs#L1406
      * Note that in general, unless the state value is a primitive, entry.getState() !== entry.getState(), since a fresh copy is returned each time.
      */
     if (
       typeof state === "undefined" ||
-      typeof state === "number" ||
-      typeof state === "boolean" ||
-      typeof state === "symbol" ||
-      typeof state === "bigint" ||
-      typeof state === "string"
+      isPrimitiveValue(state)
     ) {
       return state;
     }

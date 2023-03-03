@@ -25,25 +25,41 @@ async function runTests() {
   const WPT = flags?.includes("WEB_PLATFORM_TESTS"),
       playright = flags?.includes("PLAYWRIGHT")
 
-  await import("./navigation.class");
+  if (!playright) {
+    await import("./navigation.class");
+  }
   if (typeof window === "undefined" && typeof process !== "undefined") {
-    await import("./navigation.imported");
+    if (!playright) {
+      await import("./navigation.imported");
+      await import("./navigation.scope.faker");
+    }
     if (WPT) {
       await import("./navigation.playwright.wpt");
     }
     if (playright) {
       await import("./navigation.playwright");
+      await import("./navigation.class");
     }
-  } else {
-    // await import("./navigation.scope");
+  } else if (window.navigation) {
+    await import("./navigation.scope");
   }
   if (!(WPT || playright)) {
+    console.log("Starting routes tests");
     await import("./routes");
+    console.log("Starting transition tests");
     await import("./transition");
+    console.log("Starting wpt base tests");
     await import("./wpt");
+    console.log("Starting commit tests");
     await import("./commit");
+    console.log("Starting state tests");
     await import("./state");
+    console.log("Starting entrieschange tests");
     await import("./entrieschange");
+    console.log("Starting custom state tests");
+    await import("./custom-state");
+    console.log("Starting original event tests");
+    await import("./original-event");
   }
 }
 

@@ -14,6 +14,13 @@ declare global {
 
 const DEBUG = false;
 
+const config = getConfig();
+const { FLAGS } = config;
+const IS_ONLY_CHROMIUM = FLAGS?.includes("ONLY_CHROMIUM")
+const IS_ONLY_WEBKIT = FLAGS?.includes("ONLY_WEBKIT")
+const IS_ONLY_FIREFOX = FLAGS?.includes("ONLY_FIREFOX")
+const IS_ONLY_ASYNC = FLAGS?.includes("ONLY_ASYNC")
+
 const browsers = [
   // [
   //   "chromium",
@@ -28,17 +35,17 @@ const browsers = [
   [
     "chromium",
     Playwright.chromium,
-    { eventTarget: "async", esm: true, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "async", esm: true, args: [], FLAG: "", polyfill: false },
   ] as const,
   [
     "webkit",
     Playwright.webkit,
-    { eventTarget: "async", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "async", esm: false, args: [], FLAG: "", polyfill: true },
   ] as const,
   [
     "firefox",
     Playwright.firefox,
-    { eventTarget: "async", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "async", esm: false, args: [], FLAG: "", polyfill: true },
   ] as const,
   // [
   //   "chromium",
@@ -53,17 +60,17 @@ const browsers = [
   [
     "chromium",
     Playwright.chromium,
-    { eventTarget: "sync", esm: true, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "sync", esm: true, args: [], FLAG: "", polyfill: false },
   ] as const,
   [
     "webkit",
     Playwright.webkit,
-    { eventTarget: "sync", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "sync", esm: false, args: [], FLAG: "", polyfill: true },
   ] as const,
   [
     "firefox",
     Playwright.firefox,
-    { eventTarget: "sync", esm: false, args: ["--disable-web-security"], FLAG: "" },
+    { eventTarget: "sync", esm: false, args: [], FLAG: "", polyfill: true },
   ] as const,
 ] as const;
 
@@ -71,9 +78,21 @@ const browsers = [
 for (const [
   browserName,
   browserLauncher,
-  { eventTarget, esm, args, FLAG },
+  { eventTarget, esm, args, FLAG, polyfill },
 ] of browsers.filter(([, browser]) => browser)) {
-  if (FLAG && !getConfig().FLAGS?.includes(FLAG)) {
+  if (IS_ONLY_ASYNC && eventTarget !== "async") {
+    continue;
+  }
+  if (IS_ONLY_CHROMIUM && browserName !== "chromium") {
+    continue;
+  }
+  if (IS_ONLY_WEBKIT && browserName !== "webkit") {
+    continue;
+  }
+  if (IS_ONLY_FIREFOX && browserName !== "firefox") {
+    continue;
+  }
+  if (FLAG && !FLAGS?.includes(FLAG)) {
     continue;
   }
 
@@ -81,6 +100,7 @@ for (const [
     headless: !DEBUG,
     devtools: DEBUG,
     args: [...args],
+
   });
   console.log(
     `Running playwright tests for ${browserName} ${browser.version()}`
@@ -88,13 +108,15 @@ for (const [
   const context = await browser.newContext({});
   const page = await context.newPage();
 
-  const namespacePath = "/@virtualstate/navigation/";
-  const testsSrcPath = `${namespacePath}tests/${esm ? "" : "rollup.js"}`;
+  const namespace = "/@virtualstate/navigation";
+  const namespacePath = `/${namespace}`;
+  const testsSrcPath = `${namespacePath}/tests/${esm ? "" : "rollup.js"}`;
 
-  const eventTargetSyncPath = `${namespacePath}event-target/sync`;
-  const eventTargetAsyncPath = `${namespacePath}event-target/async`;
+  const eventTargetSyncPath = `${namespacePath}/event-target/sync`;
+  const eventTargetAsyncPath = `${namespacePath}/event-target/async`;
 
-  let src = `https://cdn.skypack.dev${testsSrcPath}`;
+  let src = `https://cdn.skypack.dev${testsSrcPath}`,
+      namespaceSrc = `https://cdn.skypack.dev${namespacePath}/index.js`;
 
   const dependencies = {
     imports: {
@@ -105,6 +127,7 @@ for (const [
       iterable: "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
       "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js":
         "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
+      "@virtualstate/navigation/polyfill": "https://cdn.skypack.dev/@virtualstate/navigation/polyfill.js"
     },
   };
 
@@ -120,15 +143,36 @@ for (const [
     </head>
     <body>
     <script type="module">
+        const IS_POLYFILL_BROWSER = ${polyfill};
+        
+        console.log("Polyfill browser: " + IS_POLYFILL_BROWSER);
+        
         if (typeof Navigation !== "undefined") {
           console.log("Global Navigation exists");
         } else {
           console.log("Global Navigation does not exist");
         }
+        if (typeof window.navigation !== "undefined") {
+          console.log("window.navigation exists");
+        } else {
+          console.log("window.navigation does not exist");
+        }
+        
             
         console.log("Waiting for window to load");
         await new Promise(resolve => window.addEventListener("load", resolve));
         console.log("Load event fired");
+        
+        if (IS_POLYFILL_BROWSER) {
+            const { applyPolyfill } = await import(${JSON.stringify(namespaceSrc)})
+            await applyPolyfill();
+        }
+        
+        if (typeof window.navigation !== "undefined") {
+          console.log("window.navigation exists");
+        } else {
+          console.log("window.navigation does not exist");
+        }
         
         // while (!window.testsComplete) {
         //   console.log("testsComplete not available, waiting for definition");
@@ -175,9 +219,15 @@ for (const [
 
     if (pathname.startsWith(namespacePath)) {
       const { pathname: file } = new URL(import.meta.url);
+      let fileName = pathname
+          .replace(`${namespacePath}/`, "").replace(/^\//, "");
+      if (!fileName || fileName === ".js" || fileName === namespace || fileName === `${namespace}.js`) {
+        fileName = "index.js";
+      }
       let importTarget = path.resolve(
-        path.join(path.dirname(file), "..", pathname.replace(namespacePath, ""))
+        path.join(path.dirname(file), "..", fileName)
       );
+      // console.log({ importTarget, fileName });
       // console.log({ pathname, eventTargetSyncPath, eventTargetAsyncPath })
       if (pathname === eventTargetSyncPath) {
         importTarget = path.resolve(

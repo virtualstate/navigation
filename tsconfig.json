@@ -5,10 +5,11 @@
             "es2018",
             "esnext",
             "dom",
+            "dom.iterable"
         ],
         "types": [
           "jest",
-            "node"
+          "node"
         ],
         "esModuleInterop": true,
         "target": "esnext",
@@ -30,10 +31,9 @@
         "src/**/*"
     ],
     "typeRoots": [
-        "./node_modules/@types",
         "src/types"
     ],
     "exclude": [
-        "node_modules/@opennetwork/vdom"
+
     ]
 }

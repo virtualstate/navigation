@@ -35,7 +35,22 @@ export const AppLocationUrl = Symbol.for(
   "@virtualstate/navigation/location/url"
 );
 
+export interface LocationAncestorOriginsList {
+  readonly length: number;
+  contains(string: string): boolean;
+  item(index: number): string | null;
+  [index: number]: string;
+}
+
+export interface LocationPrototype {
+  readonly ancestorOrigins: LocationAncestorOriginsList;
+}
+
+export interface Location extends LocationPrototype {}
+
 export interface NavigationLocation extends Location {}
+
+export const NAVIGATION_LOCATION_DEFAULT_URL = "https://html.spec.whatwg.org/";
 
 /**
  * @experimental
@@ -73,8 +88,6 @@ export class NavigationLocation implements Location {
     this.#navigation.addEventListener("currententrychange", reset);
   }
 
-  readonly ancestorOrigins: DOMStringList;
-
   #urls = new WeakMap<object, URL>();
 
   #transitioningURL: URL | undefined;
@@ -92,7 +105,7 @@ export class NavigationLocation implements Location {
     }
     const existing = this.#urls.get(currentEntry);
     if (existing) return existing;
-    const next = new URL(currentEntry.url);
+    const next = new URL(currentEntry.url ?? NAVIGATION_LOCATION_DEFAULT_URL);
     this.#urls.set(currentEntry, next);
     return next;
   }
@@ -248,7 +261,7 @@ export class NavigationLocation implements Location {
   #triggerIfUrlChanged = () => {
     const current = this[AppLocationUrl];
     const currentUrl = current.toString();
-    const expectedUrl = this.#navigation.currentEntry.url;
+    const expectedUrl = this.#navigation.currentEntry?.url;
     if (currentUrl !== expectedUrl) {
       return this.#transitionURL(current, () =>
         this.#navigation.navigate(currentUrl)

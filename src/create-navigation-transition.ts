@@ -6,6 +6,7 @@ import {
   NavigateEvent as NavigateEventPrototype,
   NavigationNavigateOptions as NavigationNavigateOptionsPrototype,
   NavigationNavigationType, NavigationEntriesChangeEventInit,
+  NavigationIntercept as NavigationInterceptPrototype
 } from "./spec/navigation";
 import { NavigationHistoryEntry } from "./navigation-entry";
 import {
@@ -24,6 +25,10 @@ import {defer, Deferred} from "./defer";
 import {ok} from "./is";
 import {NavigateEvent, NavigationCurrentEntryChangeEvent} from "./events";
 
+export interface PreventDefaultLike {
+  preventDefault(): void;
+}
+
 export const NavigationFormData = Symbol.for(
     "@virtualstate/navigation/formData"
 );
@@ -36,6 +41,9 @@ export const NavigationCanIntercept = Symbol.for(
 export const NavigationUserInitiated = Symbol.for(
   "@virtualstate/navigation/userInitiated"
 );
+export const NavigationOriginalEvent = Symbol.for(
+  "@virtualstate/navigation/originalEvent"
+);
 
 export interface NavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptionsPrototype<S> {
@@ -43,6 +51,7 @@ export interface NavigationNavigateOptions<S = unknown>
   [NavigationDownloadRequest]?: string;
   [NavigationCanIntercept]?: boolean;
   [NavigationUserInitiated]?: boolean;
+  [NavigationOriginalEvent]?: PreventDefaultLike;
 }
 
 export const EventAbortController = Symbol.for(
@@ -53,7 +62,7 @@ export interface AbortControllerEvent {
   [EventAbortController]: AbortController;
 }
 
-export interface InternalNavigationNavigateOptions<S>
+export interface InternalNavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptions<S> {
   entries?: NavigationHistoryEntry<S>[];
   index?: number;
@@ -61,14 +70,14 @@ export interface InternalNavigationNavigateOptions<S>
   navigationType?: NavigationNavigationType;
 }
 
-export interface NavigationTransitionCommitContext<S> {
+export interface NavigationTransitionCommitContext<S = unknown> {
   entries: NavigationHistoryEntry<S>[];
   index: number;
   known?: Set<NavigationHistoryEntry<S>>;
   entriesChange?: NavigationEntriesChangeEventInit<S>
 }
 
-export interface NavigationTransitionContext<S> {
+export interface NavigationTransitionContext<S = unknown> {
   commit(commit: NavigationTransitionCommitContext<S>): Promise<void>;
   transition: NavigationTransition<S>;
   options?: InternalNavigationNavigateOptions<S>;
@@ -79,7 +88,7 @@ export interface NavigationTransitionContext<S> {
   reportError?(reason: unknown): void;
 }
 
-export interface NavigationTransitionResult<S> {
+export interface NavigationTransitionResult<S = unknown> {
   entries: NavigationHistoryEntry<S>[];
   index: number;
   known: Set<NavigationHistoryEntry<S>>;
@@ -96,9 +105,9 @@ function noop(): void {
   return undefined;
 }
 
-function getEntryIndex(
-  entries: NavigationHistoryEntry[],
-  entry: NavigationHistoryEntry
+function getEntryIndex<S = unknown>(
+  entries: NavigationHistoryEntry<S>[],
+  entry: NavigationHistoryEntry<S>
 ) {
   const knownIndex = entry.index;
   if (knownIndex !== -1) {
@@ -227,14 +236,34 @@ export function createNavigationTransition<S = unknown>(
     destination,
   })
 
-  event.intercept = intercept;
-  event.transitionWhile = intercept;
+  const originalEvent = options?.[NavigationOriginalEvent];
+  const preventDefault = transition[NavigationTransitionAbort].bind(transition);
+
+  if (originalEvent) {
+    const definedEvent: PreventDefaultLike = originalEvent;
+    event.intercept = function originalEventIntercept(options: NavigationInterceptPrototype<unknown>) {
+      definedEvent.preventDefault();
+      return intercept(options);
+    }
+    event.preventDefault = function originalEventPreventDefault() {
+      definedEvent.preventDefault();
+      return preventDefault();
+    };
+  } else {
+    event.intercept = intercept;
+    event.preventDefault = preventDefault;
+  }
+  // Enforce that transitionWhile and intercept match
+  event.transitionWhile = event.intercept;
   event.commit = commit;
   if (reportError) {
     event.reportError = reportError;
   }
   event.scroll = noop;
-  event.preventDefault = transition[NavigationTransitionAbort].bind(transition);
+
+  if (originalEvent) {
+    event.originalEvent = originalEvent;
+  }
 
   const currentEntryChange = new NavigationCurrentEntryChangeEvent("currententrychange", {
     from: currentEntry,

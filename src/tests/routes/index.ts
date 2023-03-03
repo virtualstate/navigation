@@ -1,9 +1,6 @@
 import { getRouter, route, Router, routes } from "../../routes";
 import {NavigateEvent, Navigation} from "../../navigation";
 import { ok } from "../util";
-import { getNavigation } from "../../get-navigation";
-
-const navigation = getNavigation();
 
 {
   const navigation = new Navigation();
@@ -73,6 +70,7 @@ const navigation = getNavigation();
 }
 
 {
+  const navigation = new Navigation();
   let detach;
 
   // In one context define the routes
@@ -106,6 +104,7 @@ const navigation = getNavigation();
 }
 
 {
+  const navigation = new Navigation();
   const { detach } = route(
     "/test/:id/path",
     async (
@@ -149,6 +148,7 @@ const navigation = getNavigation();
 }
 
 {
+  const navigation = new Navigation();
   {
     let detach;
 
@@ -173,6 +173,7 @@ const navigation = getNavigation();
   }
 }
 {
+  const navigation = new Navigation();
   {
     let detach;
 
