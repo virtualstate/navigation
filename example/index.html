@@ -15,6 +15,7 @@
             console.log(window.navigation)
 
             const urlSpan = document.getElementById("url");
+            const app = document.getElementById("app");
 
             window.navigation.addEventListener(
                 "navigate",
@@ -22,8 +23,10 @@
                     console.log("Navigate event", event)
 
                     const url = new URL(event.destination.url);
-                    console.log(event.destination.url)
+                    console.log(event.destination.url);
+                    console.log("Submitted Name:", event.formData?.get("name"));
                     urlSpan.innerText = url.pathname;
+                    app.innerHTML = "";
 
                     if (url.pathname === "/some/other") {
                         console.log("Preventing default");
@@ -36,8 +39,19 @@
                         } catch (error) {
                             console.error(error);
                         }
+                    } else if (url.pathname === "/some/page") {
+                        event.intercept(() => {
+
+                            app.innerHTML = `
+                            <form action="/" method="post">
+                                <input type="text" name="name" value="" placeholder="Name" />
+                                <button type="submit">Submit</button>
+                            </form>
+                            `;
+
+
+                        })
                     } else {
-                        // Intercept by default
                         event.intercept()
                     }
 
@@ -59,5 +73,7 @@
     <a href="/">Home Link</a>
     <a href="/some/page">Some Page Link</a>
     <a href="/some/other">Some Other Page Link</a>
+
+    <div id="app"></div>
 </body>
 </html>
