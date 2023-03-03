@@ -12,6 +12,7 @@
 
         function loaded() {
 
+            console.log("Initial History State", history.state);
             console.log(window.navigation)
 
             const urlSpan = document.getElementById("url");
@@ -25,6 +26,8 @@
                     const url = new URL(event.destination.url);
                     console.log(event.destination.url);
                     console.log("Submitted Name:", event.formData?.get("name"));
+                    console.log("Previous State:", window.navigation.currentEntry.getState());
+                    console.log("State:", event.destination.getState());
                     urlSpan.innerText = url.pathname;
                     app.innerHTML = "";
 

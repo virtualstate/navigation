@@ -86,6 +86,7 @@ export interface NavigationPolyfillOptions {
 }
 
 export const NavigationKey = "__@virtualstate/navigation/key";
+export const NavigationMeta = "__@virtualstate/navigation/meta";
 
 
 declare var FormData: {
@@ -107,6 +108,7 @@ function getStateFromWindowHistory<T extends object = Record<string | symbol, un
 }
 
 interface StateHistoryMeta<T = unknown> {
+  [NavigationMeta]: true;
   key: string;
   currentIndex: number;
   entries: NavigationHistoryEntrySerialized[];
@@ -117,8 +119,12 @@ interface StateHistoryWithMeta<T = unknown> {
   [NavigationKey]: StateHistoryMeta<T>
 }
 
+function isStateHistoryMeta<T>(state: T): state is T & StateHistoryWithMeta<T> {
+  return like<StateHistoryMeta<T>>(state) && state[NavigationMeta] === true;
+}
+
 function isStateHistoryWithMeta<T>(state: T): state is T & StateHistoryWithMeta<T> {
-  return like<StateHistoryWithMeta<T>>(state) && !!state[NavigationKey];
+  return like<StateHistoryWithMeta<T>>(state) && isStateHistoryMeta(state[NavigationKey]);
 }
 
 function disposeHistoryState<T extends object>(
@@ -144,6 +150,7 @@ function getEntries(navigation: Navigation, limit: number = DEFAULT_POLYFILL_OPT
 
 function getNavigationEntryMeta<T>(navigation: Navigation<T>, entry: NavigationHistoryEntry<T>, limit = DEFAULT_POLYFILL_OPTIONS.limit): StateHistoryMeta<T> {
   return {
+    [NavigationMeta]: true,
     currentIndex: entry.index,
     key: entry.key,
     entries: getEntries(navigation, limit),
@@ -162,7 +169,6 @@ function setHistoryState<T extends object>(
 
   function getSerializableState(): StateHistoryWithMeta<T> {
     return {
-      ...entry.getState(),
       [NavigationKey]: getNavigationEntryMeta(navigation, entry, limit)
     }
   }
@@ -215,7 +221,9 @@ function getHistoryState<T extends object>(
     try {
       const raw = sessionStorage.getItem(entry.key);
       if (!raw) return undefined;
-      return parse(raw);
+      const state = parse(raw);
+      if (!isStateHistoryWithMeta(state)) return undefined;
+      return state[NavigationKey].state;
     } catch {
       return undefined;
     }
@@ -545,12 +553,16 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   // Use baseHistory so that we don't initialise entries we didn't intend to
   // if we used a polyfill history
   const historyInitialState = history?.state;
-  const initialMeta: StateHistoryMeta = isStateHistoryWithMeta(historyInitialState) ? historyInitialState[NavigationKey] : {
+  let initialMeta: StateHistoryMeta = {
+    [NavigationMeta]: true,
     currentIndex: -1,
     entries: [],
     key: "",
     state: undefined
   };
+  if (isStateHistoryWithMeta(historyInitialState)) {
+    initialMeta = historyInitialState[NavigationKey];
+  }
   let initialEntries: NavigationHistoryEntrySerialized[] = initialMeta.entries;
 
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
@@ -562,10 +574,16 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
       url = window.location.href;
     }
 
+    let state = undefined;
+    if (!isStateHistoryWithMeta(historyInitialState) && !isStateHistoryMeta(historyInitialState)) {
+      console.log("Using state history direct", historyInitialState, history.state);
+      state = historyInitialState;
+    }
+
     initialEntries = [
       {
         key: v4(),
-        state: historyInitialState,
+        state,
         url
       }
     ];
@@ -583,6 +601,8 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     //   }).finished
     // }
   }
+
+  console.log("Initial Entries", initialEntries)
 
 
   const navigation: Navigation = givenNavigation ?? new NavigationPolyfill({

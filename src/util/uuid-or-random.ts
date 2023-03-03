@@ -4,7 +4,7 @@ const fakeUUID = {
         return Array
             .from(
                 { length: 5 },
-                () => `${Math.random()}`
+                () => `${Math.random()}`.replace(/^0\./, "")
             )
             .join("-")
             .replace(".", "");

@@ -309,7 +309,7 @@ class NavigationEventTarget extends EventTarget {
 const fakeUUID = {
     v4() {
         return Array
-            .from({ length: 5 }, () => `${Math.random()}`)
+            .from({ length: 5 }, () => `${Math.random()}`.replace(/^0\./, ""))
             .join("-")
             .replace(".", "");
     },
@@ -2058,13 +2058,17 @@ const globalWindow = typeof window === "undefined" ? undefined : window;
 const globalSelf = typeof self === "undefined" ? undefined : self;
 
 const NavigationKey = "__@virtualstate/navigation/key";
+const NavigationMeta = "__@virtualstate/navigation/meta";
 function getWindowHistory(givenWindow = globalWindow) {
     if (typeof givenWindow === "undefined")
         return undefined;
     return givenWindow.history;
 }
+function isStateHistoryMeta(state) {
+    return like(state) && state[NavigationMeta] === true;
+}
 function isStateHistoryWithMeta(state) {
-    return like(state) && !!state[NavigationKey];
+    return like(state) && isStateHistoryMeta(state[NavigationKey]);
 }
 function disposeHistoryState(entry, persist) {
     if (!persist)
@@ -2086,6 +2090,7 @@ function getEntries(navigation, limit = DEFAULT_POLYFILL_OPTIONS.limit) {
 }
 function getNavigationEntryMeta(navigation, entry, limit = DEFAULT_POLYFILL_OPTIONS.limit) {
     return {
+        [NavigationMeta]: true,
         currentIndex: entry.index,
         key: entry.key,
         entries: getEntries(navigation, limit),
@@ -2096,7 +2101,6 @@ function setHistoryState(navigation, history, entry, persist, limit) {
     setStateInSession();
     function getSerializableState() {
         return {
-            ...entry.getState(),
             [NavigationKey]: getNavigationEntryMeta(navigation, entry, limit)
         };
     }
@@ -2141,7 +2145,10 @@ function getHistoryState(history, entry) {
             const raw = sessionStorage.getItem(entry.key);
             if (!raw)
                 return undefined;
-            return parse$1(raw);
+            const state = parse$1(raw);
+            if (!isStateHistoryWithMeta(state))
+                return undefined;
+            return state[NavigationKey].state;
         }
         catch {
             return undefined;
@@ -2433,12 +2440,16 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
     // Use baseHistory so that we don't initialise entries we didn't intend to
     // if we used a polyfill history
     const historyInitialState = history?.state;
-    const initialMeta = isStateHistoryWithMeta(historyInitialState) ? historyInitialState[NavigationKey] : {
+    let initialMeta = {
+        [NavigationMeta]: true,
         currentIndex: -1,
         entries: [],
         key: "",
         state: undefined
     };
+    if (isStateHistoryWithMeta(historyInitialState)) {
+        initialMeta = historyInitialState[NavigationKey];
+    }
     let initialEntries = initialMeta.entries;
     const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
     if (!initialEntries.length) {
@@ -2446,10 +2457,15 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
         if (window.location?.href) {
             url = window.location.href;
         }
+        let state = undefined;
+        if (!isStateHistoryWithMeta(historyInitialState) && !isStateHistoryMeta(historyInitialState)) {
+            console.log("Using state history direct", historyInitialState, history.state);
+            state = historyInitialState;
+        }
         initialEntries = [
             {
                 key: v4$1(),
-                state: historyInitialState,
+                state,
                 url
             }
         ];
@@ -2467,6 +2483,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
         //   }).finished
         // }
     }
+    console.log("Initial Entries", initialEntries);
     const navigation = givenNavigation ?? new Navigation({
         entries: initialEntries,
         currentIndex: initialMeta?.currentIndex,
