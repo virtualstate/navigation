@@ -189,10 +189,10 @@ export class Navigation<S = unknown, R = unknown | void>
    */
   [NavigationSetEntries](entries: NavigationHistoryEntrySerialized<S>[]) {
     this.#entries = entries.map(
-        ({ key, url, navigationType, state }, index) => new NavigationHistoryEntry<S>({
+        ({ key, url, navigationType, state, sameDocument }, index) => new NavigationHistoryEntry<S>({
           getState: this[NavigationGetState],
           navigationType: isNavigationNavigationType(navigationType) ? navigationType : "push",
-          sameDocument: true,
+          sameDocument: sameDocument ?? true,
           index,
           url,
           key,

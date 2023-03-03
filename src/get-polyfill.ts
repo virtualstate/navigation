@@ -146,10 +146,11 @@ function getEntries(navigation: Navigation, limit: number = DEFAULT_POLYFILL_OPT
   if (typeof limit === "number") {
     entries = entries.slice(-limit);
   }
-  return entries.map(({ id, key, url }) => ({
+  return entries.map(({ id, key, url, sameDocument }) => ({
     id,
     key,
-    url
+    url,
+    sameDocument
   }));
 }
 

@@ -36,6 +36,7 @@ export interface NavigationHistoryEntrySerialized<S = unknown> {
   navigationType?: string;
   url?: string;
   state?: S;
+  sameDocument?: boolean;
 }
 
 export interface NavigationHistoryEntryInit<S>
