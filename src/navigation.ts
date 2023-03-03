@@ -93,7 +93,7 @@ export class Navigation<S = unknown, R = unknown | void>
 {
   // Should be always 0 or 1
   #transitionInProgressCount = 0;
-  #activePromise?: Promise<void> = undefined;
+  // #activePromise?: Promise<void> = undefined;
 
   #entries: NavigationHistoryEntry<S>[];
   #known = new Set<NavigationHistoryEntry<S>>();
@@ -377,22 +377,24 @@ export class Navigation<S = unknown, R = unknown | void>
     };
     this.#queueTransition(nextTransition);
 
-    let nextPromise;
-    if (!this.#transitionInProgressCount || !this.#activePromise) {
-      nextPromise = handler().catch((error) => void error);
-    } else {
-      nextPromise = this.#activePromise.then(handler);
-    }
+    void handler().catch((error) => void error);
 
-    const promise = nextPromise
-        .catch(error => void error)
-        .then(() => {
-          if (this.#activePromise === promise) {
-            this.#activePromise = undefined;
-          }
-        })
-
-    this.#activePromise = promise;
+    // let nextPromise;
+    // if (!this.#transitionInProgressCount || !this.#activePromise) {
+    //   nextPromise = handler().catch((error) => void error);
+    // } else {
+    //   nextPromise = this.#activePromise.then(handler);
+    // }
+    //
+    // const promise = nextPromise
+    //     .catch(error => void error)
+    //     .then(() => {
+    //       if (this.#activePromise === promise) {
+    //         this.#activePromise = undefined;
+    //       }
+    //     })
+    //
+    // this.#activePromise = promise;
 
     return { committed, finished };
   };
@@ -412,9 +414,6 @@ export class Navigation<S = unknown, R = unknown | void>
     try {
       // This number can grow if navigation is
       // called during a transition
-      //
-      // As long as the promise change is used within
-      // #commitTransition then this will not be an issue
       //
       // ... I had used transitionInProgressCount as a
       // safeguard until I could see this flow firsthand

@@ -1150,7 +1150,7 @@ function isNavigationNavigationType(value) {
 class Navigation extends NavigationEventTarget {
     // Should be always 0 or 1
     #transitionInProgressCount = 0;
-    #activePromise = undefined;
+    // #activePromise?: Promise<void> = undefined;
     #entries;
     #known = new Set();
     #currentIndex = -1;
@@ -1371,21 +1371,23 @@ class Navigation extends NavigationEventTarget {
             return this.#immediateTransition(givenNavigationType, entry, nextTransition, options);
         };
         this.#queueTransition(nextTransition);
-        let nextPromise;
-        if (!this.#transitionInProgressCount || !this.#activePromise) {
-            nextPromise = handler().catch((error) => void error);
-        }
-        else {
-            nextPromise = this.#activePromise.then(handler);
-        }
-        const promise = nextPromise
-            .catch(error => void error)
-            .then(() => {
-            if (this.#activePromise === promise) {
-                this.#activePromise = undefined;
-            }
-        });
-        this.#activePromise = promise;
+        void handler().catch((error) => void error);
+        // let nextPromise;
+        // if (!this.#transitionInProgressCount || !this.#activePromise) {
+        //   nextPromise = handler().catch((error) => void error);
+        // } else {
+        //   nextPromise = this.#activePromise.then(handler);
+        // }
+        //
+        // const promise = nextPromise
+        //     .catch(error => void error)
+        //     .then(() => {
+        //       if (this.#activePromise === promise) {
+        //         this.#activePromise = undefined;
+        //       }
+        //     })
+        //
+        // this.#activePromise = promise;
         return { committed, finished };
     };
     #queueTransition = (transition) => {
@@ -1397,9 +1399,6 @@ class Navigation extends NavigationEventTarget {
         try {
             // This number can grow if navigation is
             // called during a transition
-            //
-            // As long as the promise change is used within
-            // #commitTransition then this will not be an issue
             //
             // ... I had used transitionInProgressCount as a
             // safeguard until I could see this flow firsthand
@@ -2188,11 +2187,8 @@ function getNavigationOnlyPolyfill(givenNavigation) {
 }
 function interceptWindowClicks(navigation, window) {
     function clickCallback(ev, aEl) {
-        console.log("<-- clickCallback -->");
-        // Move to back of task queue to let other event listeners run
-        // that are also registered on `window` (e.g. Solid.js event delegation).
-        // This gives them a chance to call `preventDefault`, which will be respected by nav api.
-        // queueMicrotask(process);
+        // console.log("<-- clickCallback -->");
+        // TODO opt into queueMicrotask before process
         process();
         function process() {
             if (!isAppNavigation(ev))
@@ -2208,7 +2204,8 @@ function interceptWindowClicks(navigation, window) {
         }
     }
     function submitCallback(ev, form) {
-        console.log("<-- submitCallback -->");
+        // console.log("<-- submitCallback -->");
+        // TODO opt into queueMicrotask before process
         process();
         function process() {
             if (ev.defaultPrevented)
@@ -2254,9 +2251,9 @@ function interceptWindowClicks(navigation, window) {
             navigation.navigate(url.href, options);
         }
     }
-    console.log("click event added");
+    // console.log("click event added")
     window.addEventListener("click", (ev) => {
-        console.log("click event", ev);
+        // console.log("click event", ev)
         if (ev.target?.ownerDocument === window.document) {
             const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
             if (like(aEl)) {
@@ -2265,7 +2262,7 @@ function interceptWindowClicks(navigation, window) {
         }
     });
     window.addEventListener("submit", (ev) => {
-        console.log("submit event");
+        // console.log("submit event")
         if (ev.target?.ownerDocument === window.document) {
             const form = matchesAncestor(ev.target, "form");
             if (like(form)) {
@@ -2419,10 +2416,10 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
         ...DEFAULT_POLYFILL_OPTIONS,
         ...options
     };
-    console.log({
-        ...DEFAULT_POLYFILL_OPTIONS,
-        ...options
-    });
+    // console.log({
+    //   ...DEFAULT_POLYFILL_OPTIONS,
+    //   ...options
+    // })
     const IS_PERSIST = PERSIST_ENTRIES || PERSIST_ENTRIES_STATE;
     const window = givenWindow ?? globalWindow;
     const history = options.history && typeof options.history !== "boolean" ?
@@ -2502,7 +2499,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
         navigation,
         history,
         apply() {
-            console.log("APPLYING POLYFILL TO NAVIGATION");
+            // console.log("APPLYING POLYFILL TO NAVIGATION");
             if (isNavigationPolyfill(givenNavigation) &&
                 IS_PERSIST &&
                 historyInitialState &&
@@ -2594,7 +2591,7 @@ function isAppNavigation(evt) {
 /** Checks if this element or any of its parents matches a given `selector` */
 function matchesAncestor(givenElement, selector) {
     let element = getDefaultElement();
-    console.log({ element });
+    // console.log({ element })
     while (element) {
         if (element.matches(selector)) {
             ok(element);
@@ -2629,8 +2626,6 @@ if (shouldApplyPolyfill(navigation)) {
         applyPolyfill({
             navigation
         });
-        console.log("Polyfill applied automatically");
-        console.log(navigation);
     }
     catch (error) {
         console.error("Failed to apply polyfill");
