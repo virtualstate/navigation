@@ -147,3 +147,35 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   console.log("Wrote coverage badges!");
 }
 
+
+{
+  let file = await fs.readFile("esnext/polyfill-rollup.js", "utf-8");
+
+  const importUuidMarker = "/** post rollup replace importUuid **/",
+      importJsonMarker = "/** post rollup replace json **/";
+
+  function replaceInsideMarkers(marker, replacement) {
+    const startIndex = file.indexOf(marker),
+        endIndex = file.lastIndexOf(marker) + marker.length;
+
+    const fileStart = file.slice(0, startIndex - 1),
+        fileEnd = file.slice(endIndex + 1);
+
+    const replacing = file.slice(startIndex, endIndex);
+
+    if (typeof replacement === "function") {
+      replacement = replacement(replacing.replaceAll(marker, ""));
+    }
+
+    file = `${fileStart}\n\n${replacement}\n\n${fileEnd}`
+  }
+
+  replaceInsideMarkers(importUuidMarker, "const getUuidModule = () => importUuid;")
+  replaceInsideMarkers(importJsonMarker, "const getStructuredClone = () => json;");
+
+
+  await fs.writeFile("esnext/polyfill-rollup.js", file);
+
+  await fs.cp("esnext/polyfill-rollup.js", "example/polyfill-rollup.js");
+
+}

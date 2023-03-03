@@ -275,7 +275,10 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
     // Move to back of task queue to let other event listeners run
     // that are also registered on `window` (e.g. Solid.js event delegation).
     // This gives them a chance to call `preventDefault`, which will be respected by nav api.
-    queueMicrotask(() => {
+    // queueMicrotask(process);
+    process();
+
+    function process() {
       if (!isAppNavigation(ev)) return;
       ok<Event>(ev);
       const options: InternalNavigationNavigateOptions = {
@@ -285,7 +288,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
         [NavigationOriginalEvent]: ev,
       };
       navigation.navigate(aEl.href, options);
-    });
+    }
   }
   function submitCallback(ev: SubmitEventPrototype, form: HTMLFormElementPrototype) {
     console.log("<-- submitCallback -->");
@@ -555,10 +558,17 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
 
   if (!initialEntries.length) {
+    let url: string | undefined = undefined;
+
+    if (window.location?.href) {
+      url = window.location.href;
+    }
+
     initialEntries = [
       {
         key: v4(),
-        state: historyInitialState
+        state: historyInitialState,
+        url
       }
     ];
     // The above in favour of doing:

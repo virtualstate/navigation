@@ -6,7 +6,7 @@ import { GlobalUUID } from "./global-uuid";
 // }
 
 if (!GlobalUUID) {
-  throw new Error("Expected crypto.randomUUID to be available or polyfilled");
+  console.error("Expected crypto.randomUUID to be available");
 }
 
 export const v4 = GlobalUUID; //await importUUID();
