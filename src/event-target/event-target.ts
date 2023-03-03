@@ -1,23 +1,23 @@
 import { AsyncEventTarget } from "./async-event-target";
 
-const defaultModule = {
+const defaultEventTargetModule = {
   EventTarget: AsyncEventTarget,
   AsyncEventTarget,
   SyncEventTarget: AsyncEventTarget,
 } as const;
 
-let module: Record<string, unknown> = defaultModule;
+let eventTargetModule: Record<string, unknown> = defaultEventTargetModule;
 //
 // try {
-//     module = await import("@virtualstate/navigation/event-target");
-//     console.log("Using @virtualstate/navigation/event-target", module);
+//     eventTargetModule = await import("@virtualstate/navigation/event-target");
+//     console.log("Using @virtualstate/navigation/event-target", eventTargetModule);
 // } catch {
-//     console.log("Using default");
-//     module = defaultModule;
+//     console.log("Using defaultEventTargetModule");
+//     eventTargetModule = defaultEventTargetModule;
 // }
 
 const EventTargetImplementation =
-  module.EventTarget || module.SyncEventTarget || module.AsyncEventTarget;
+    eventTargetModule.EventTarget || eventTargetModule.SyncEventTarget || eventTargetModule.AsyncEventTarget;
 
 function assertEventTarget(
   target: unknown

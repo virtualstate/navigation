@@ -27,6 +27,9 @@
       "polyfill": [
         "./esnext/polyfill.d.ts"
       ],
+      "polyfill/rollup": [
+        "./esnext/polyfill.d.ts"
+      ],
       "tests": [
         "./esnext/tests/index.d.ts"
       ]
@@ -58,6 +61,7 @@
     "./esnext/apply-polyfill": "./esnext/apply-polyfill.js",
     "./esnext/util/structured-json": "./esnext/util/structured-json.js",
     "./polyfill": "./esnext/polyfill.js",
+    "./polyfill/rollup": "./esnext/polyfill-rollup.js",
     "./get-polyfill": "./esnext/get-polyfill.js",
     "./apply-polyfill": "./esnext/apply-polyfill.js",
     "./routes": "./esnext/routes/index.js",
