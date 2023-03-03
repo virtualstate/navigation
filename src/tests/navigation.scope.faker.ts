@@ -90,7 +90,14 @@ console.log("applyPolyfill", navigation)
 ok<Window>(window);
 ok<Document>(document);
 
-await assertNavigationWithWindow(
-    window,
-    navigation
-)
+declare var FormData: unknown;
+
+if (typeof FormData !== "undefined") {
+    console.log("FormData exists, will test navigation as a polyfill");
+    await assertNavigationWithWindow(
+        window,
+        navigation
+    )
+} else {
+    console.log("FormData does not exists, will not test navigation as a polyfill");
+}
