@@ -21,11 +21,26 @@
                 event => {
                     console.log("Navigate event", event)
 
-                    // Intercept by default
-                    event.intercept()
-
+                    const url = new URL(event.destination.url);
                     console.log(event.destination.url)
-                    urlSpan.innerText = new URL(event.destination.url).pathname;
+                    urlSpan.innerText = url.pathname;
+
+                    if (url.pathname === "/some/other") {
+                        console.log("Preventing default");
+                        event.preventDefault();
+                        try {
+                            console.log("Navigated");
+                            window.navigation.navigate("/", {
+                                state: "returned"
+                            });
+                        } catch (error) {
+                            console.error(error);
+                        }
+                    } else {
+                        // Intercept by default
+                        event.intercept()
+                    }
+
                 }
             );
 

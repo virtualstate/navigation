@@ -1150,6 +1150,7 @@ function isNavigationNavigationType(value) {
 class Navigation extends NavigationEventTarget {
     // Should be always 0 or 1
     #transitionInProgressCount = 0;
+    #activePromise = undefined;
     #entries;
     #known = new Set();
     #currentIndex = -1;
@@ -1369,28 +1370,22 @@ class Navigation extends NavigationEventTarget {
         const handler = () => {
             return this.#immediateTransition(givenNavigationType, entry, nextTransition, options);
         };
-        void handler().catch((error) => void error);
-        // const previousPromise = this.#activePromise;
-        // let nextPromise;
-        // // console.log({ givenNavigationType });
-        // if (givenNavigationType === Rollback) {
-        //     nextPromise = handler().then(() => previousPromise);
-        // } else {
-        //     if (previousPromise) {
-        //         nextPromise = previousPromise.then(handler);
-        //     } else {
-        //         nextPromise = handler();
-        //     }
-        // }
-        // console.log({ previousPromise, nextPromise });
-        // const promise = nextPromise
-        //     .catch(error => void error)
-        //     .then(() => {
-        //         if (this.#activePromise === promise) {
-        //             this.#activePromise = undefined;
-        //         }
-        //     })
         this.#queueTransition(nextTransition);
+        let nextPromise;
+        if (!this.#transitionInProgressCount || !this.#activePromise) {
+            nextPromise = handler().catch((error) => void error);
+        }
+        else {
+            nextPromise = this.#activePromise.then(handler);
+        }
+        const promise = nextPromise
+            .catch(error => void error)
+            .then(() => {
+            if (this.#activePromise === promise) {
+                this.#activePromise = undefined;
+            }
+        });
+        this.#activePromise = promise;
         return { committed, finished };
     };
     #queueTransition = (transition) => {
@@ -1400,11 +1395,15 @@ class Navigation extends NavigationEventTarget {
     };
     #immediateTransition = (givenNavigationType, entry, transition, options) => {
         try {
+            // This number can grow if navigation is
+            // called during a transition
+            //
+            // As long as the promise change is used within
+            // #commitTransition then this will not be an issue
+            //
+            // ... I had used transitionInProgressCount as a
+            // safeguard until I could see this flow firsthand
             this.#transitionInProgressCount += 1;
-            if (this.#transitionInProgressCount > 1 &&
-                !(givenNavigationType === Rollback)) {
-                throw new InvalidStateError("Unexpected multiple transitions");
-            }
             return this.#transition(givenNavigationType, entry, transition, options);
         }
         finally {

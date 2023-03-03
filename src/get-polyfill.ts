@@ -271,11 +271,8 @@ function getNavigationOnlyPolyfill(givenNavigation?: Navigation) {
 
 function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
   function clickCallback(ev: MouseEventPrototype, aEl: HTMLAnchorElementPrototype) {
-    console.log("<-- clickCallback -->");
-    // Move to back of task queue to let other event listeners run
-    // that are also registered on `window` (e.g. Solid.js event delegation).
-    // This gives them a chance to call `preventDefault`, which will be respected by nav api.
-    // queueMicrotask(process);
+    // console.log("<-- clickCallback -->");
+    // TODO opt into queueMicrotask before process
     process();
 
     function process() {
@@ -291,7 +288,8 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
     }
   }
   function submitCallback(ev: SubmitEventPrototype, form: HTMLFormElementPrototype) {
-    console.log("<-- submitCallback -->");
+    // console.log("<-- submitCallback -->");
+    // TODO opt into queueMicrotask before process
     process();
 
     function process() {
@@ -338,9 +336,9 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
       navigation.navigate(url.href, options);
     }
   }
-  console.log("click event added")
+  // console.log("click event added")
   window.addEventListener("click", (ev: MouseEventPrototype) => {
-    console.log("click event", ev)
+    // console.log("click event", ev)
     if (ev.target?.ownerDocument === window.document) {
       const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
       if (like<HTMLAnchorElementPrototype>(aEl)) {
@@ -349,7 +347,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
     }
   });
   window.addEventListener("submit", (ev: SubmitEventPrototype) => {
-    console.log("submit event")
+    // console.log("submit event")
     if (ev.target?.ownerDocument === window.document) {
       const form: unknown = matchesAncestor(ev.target, "form");
       if (like<HTMLFormElementPrototype>(form)) {
@@ -523,10 +521,10 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     ...options
   }
 
-  console.log({
-    ...DEFAULT_POLYFILL_OPTIONS,
-    ...options
-  })
+  // console.log({
+  //   ...DEFAULT_POLYFILL_OPTIONS,
+  //   ...options
+  // })
 
   const IS_PERSIST = PERSIST_ENTRIES || PERSIST_ENTRIES_STATE;
 
@@ -627,7 +625,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
     navigation,
     history,
     apply() {
-      console.log("APPLYING POLYFILL TO NAVIGATION");
+      // console.log("APPLYING POLYFILL TO NAVIGATION");
 
       if (
           isNavigationPolyfill(givenNavigation) &&
@@ -732,7 +730,7 @@ function isAppNavigation(evt: MouseEventPrototype) {
 /** Checks if this element or any of its parents matches a given `selector` */
 function matchesAncestor(givenElement: ElementPrototype | undefined, selector: string): ElementPrototype | undefined {
   let element = getDefaultElement();
-  console.log({ element })
+  // console.log({ element })
   while (element) {
     if (element.matches(selector)) {
       ok<ElementPrototype>(element);
