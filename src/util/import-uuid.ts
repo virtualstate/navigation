@@ -5,8 +5,4 @@ import { GlobalUUID } from "./global-uuid";
 //     return v4;
 // }
 
-if (!GlobalUUID) {
-  console.error("Expected crypto.randomUUID to be available");
-}
-
 export const v4 = GlobalUUID; //await importUUID();

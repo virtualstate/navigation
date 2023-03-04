@@ -13,12 +13,12 @@
         function loaded() {
 
             console.log("Initial History State", history.state);
-            console.log(window.navigation)
+            console.log(navigation)
 
             const urlSpan = document.getElementById("url");
             const app = document.getElementById("app");
 
-            window.navigation.addEventListener(
+            navigation.addEventListener(
                 "navigate",
                 event => {
                     console.log("Navigate event", event)
@@ -26,7 +26,7 @@
                     const url = new URL(event.destination.url);
                     console.log(event.destination.url);
                     console.log("Submitted Name:", event.formData?.get("name"));
-                    console.log("Previous State:", window.navigation.currentEntry.getState());
+                    console.log("Previous State:", navigation.currentEntry.getState());
                     console.log("State:", event.destination.getState());
                     console.log("Same Document:", event.destination.sameDocument);
                     urlSpan.innerText = url.pathname;
@@ -37,7 +37,7 @@
                         event.preventDefault();
                         try {
                             console.log("Navigated");
-                            window.navigation.navigate("/", {
+                            navigation.navigate("/", {
                                 state: "returned"
                             });
                         } catch (error) {
@@ -62,11 +62,11 @@
                 }
             );
 
-            if (window.navigation.currentEntry) {
-                urlSpan.innerText = new URL(window.navigation.currentEntry.url).pathname;
+            if (navigation.currentEntry) {
+                urlSpan.innerText = new URL(navigation.currentEntry.url).pathname;
             }
 
-            console.log(window.navigation.currentEntry.url)
+            console.log(navigation.currentEntry.url)
 
 
         }
@@ -77,6 +77,7 @@
     <a href="/">Home Link</a>
     <a href="/some/page">Some Page Link</a>
     <a href="/some/other">Some Other Page Link</a>
+    <a href="/esm.html">ESM Link</a>
 
     <div id="app"></div>
 </body>

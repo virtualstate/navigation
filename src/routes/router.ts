@@ -113,28 +113,51 @@ export class Router<
   }
 
   then(pattern: string | URLPattern, fn: PatternThenFn<E, R>): this;
+  then(pattern: string | URLPattern, fn: PatternThenFn<E, R>, errorFn: PatternErrorFn<E>): this;
   then(fn: ThenFn<E, R>): this;
+  then(fn: ThenFn<E, R>, catchFn: ErrorFn<E>): this;
   then(
-      ...args: [string | URLPattern, PatternThenFn<E, R>] | [ThenFn<E, R>]
+      ...args: [string | URLPattern, PatternThenFn<E, R>] | [string | URLPattern, PatternThenFn<E, R>, PatternErrorFn<E>] | [ThenFn<E, R>] | [ThenFn<E, R>, ErrorFn<E>]
   ): this;
   then(
-      ...args: [string | URLPattern, PatternThenFn<E, R>] | [ThenFn<E, R>]
+      ...args: [string | URLPattern, PatternThenFn<E, R>] | [string | URLPattern, PatternThenFn<E, R>, PatternErrorFn<E>] | [ThenFn<E, R>] | [ThenFn<E, R>, ErrorFn<E>]
   ): this {
     if (args.length === 1) {
       const [fn] = args;
       this[Routes].resolve.push({
         fn,
       });
+    } else if (args.length === 2 && isThenError(args)) {
+
+      const [fn, errorFn] = args;
+      this[Routes].resolve.push({
+        fn,
+      });
+      this[Routes].reject.push({
+        fn: errorFn,
+      });
     } else {
-      const [pattern, fn] = args;
+      const [pattern, fn, errorFn] = args;
       this[Routes].resolve.push({
         string: getPatternString(pattern),
         pattern: getPattern(pattern),
         fn,
       });
+      if (errorFn) {
+        this[Routes].reject.push({
+          string: getPatternString(pattern),
+          pattern: getPattern(pattern),
+          fn: errorFn
+        })
+      }
     }
     // No init for just then
     return this;
+
+    function isThenError(args: [unknown, unknown]): args is [ThenFn<E, R>, ErrorFn<E>] {
+      const [left, right] = args;
+      return typeof left === "function" && typeof right === "function";
+    }
   }
 
   catch(pattern: string | URLPattern, fn: PatternErrorFn<E>): this;

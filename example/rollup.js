@@ -1,15 +1,3 @@
-let globalNavigation = undefined;
-if (typeof window !== "undefined" && window.navigation) {
-    const navigation = window.navigation;
-    assertNavigation(navigation);
-    globalNavigation = navigation;
-}
-function assertNavigation(value) {
-    if (!value) {
-        throw new Error("Expected Navigation");
-    }
-}
-
 function isEvent(value) {
     function isLike(value) {
         return !!value;
@@ -287,6 +275,13 @@ class EventTarget extends AsyncEventTarget {
     }
 }
 
+function isInterceptEvent(value) {
+    function isInterceptEventLike(value) {
+        return isEvent(value);
+    }
+    return (isInterceptEventLike(value) && typeof value.intercept === "function");
+}
+
 class NavigationEventTarget extends EventTarget {
     addEventListener(type, listener, options) {
         assertEventCallback(listener);
@@ -330,9 +325,10 @@ async function getImportUUIDOrNodeRandomUUID() {
         .then((mod) => mod ?? fakeUUID);
     return { v4 };
 }
-
-const getUuidModule = () => index;
-
+/** post rollup replace importUuid **/
+const uuidModule = (await getImportUUIDOrNodeRandomUUID());
+const getUuidModule = () => uuidModule;
+/** post rollup replace importUuid **/
 function v4$2() {
     const uuidModule = getUuidModule();
     if (!(uuidModule?.v4))
@@ -1776,38 +1772,6 @@ function getPerformance() {
     /* c8 ignore end */
 }
 
-let navigation$1;
-function getNavigation() {
-    if (globalNavigation) {
-        return globalNavigation;
-    }
-    if (navigation$1) {
-        return navigation$1;
-    }
-    return (navigation$1 = new Navigation());
-}
-
-
-const getStructuredClone = () => json;
-
-async function getStructuredCloneModule() {
-    const { stringify, parse } = await Promise.resolve().then(function () { return json; });
-    return { stringify, parse };
-}
-function structuredCloneFallback() {
-    const stringify = JSON.stringify.bind(JSON), parse = JSON.parse.bind(JSON);
-    return {
-        stringify,
-        parse
-    };
-}
-function stringify$2(value) {
-    return getStructuredClone().stringify(value);
-}
-function parse$2(value) {
-    return getStructuredClone().parse(value);
-}
-
 const AppLocationCheckChange = Symbol.for("@virtualstate/navigation/location/checkChange");
 const AppLocationAwaitFinished = Symbol.for("@virtualstate/navigation/location/awaitFinished");
 const AppLocationTransitionURL = Symbol.for("@virtualstate/navigation/location/transitionURL");
@@ -2066,6 +2030,46 @@ class NavigationHistory extends NavigationLocation {
         }
     }
 }
+/**
+ * @experimental
+ * @internal
+ */
+class NavigationSync extends NavigationHistory {
+}
+
+async function transition(navigation) {
+    let transition = undefined;
+    let finalPromise;
+    while (navigation.transition && transition !== navigation.transition) {
+        transition = navigation.transition;
+        finalPromise = transition.finished;
+        await finalPromise.catch(error => void error);
+    }
+    return finalPromise;
+}
+
+/** post rollup replace json **/
+const structuredClone = (await getStructuredCloneModule()
+    .catch(structuredCloneFallback));
+const getStructuredClone = () => structuredClone;
+/** post rollup replace json **/
+async function getStructuredCloneModule() {
+    const { stringify, parse } = await Promise.resolve().then(function () { return json; });
+    return { stringify, parse };
+}
+function structuredCloneFallback() {
+    const stringify = JSON.stringify.bind(JSON), parse = JSON.parse.bind(JSON);
+    return {
+        stringify,
+        parse
+    };
+}
+function stringify$2(value) {
+    return getStructuredClone().stringify(value);
+}
+function parse$2(value) {
+    return getStructuredClone().parse(value);
+}
 
 const globalWindow = typeof window === "undefined" ? undefined : window;
 
@@ -2181,6 +2185,10 @@ const DEFAULT_POLYFILL_OPTIONS = Object.freeze({
     patch: true,
     interceptEvents: true
 });
+function getPolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
+    const { navigation } = getCompletePolyfill(options);
+    return navigation;
+}
 function isNavigationPolyfill(navigation) {
     return (like(navigation) &&
         typeof navigation[NavigationSetEntries] === "function" &&
@@ -2636,24 +2644,6 @@ function applyPolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
     const { apply, navigation } = getCompletePolyfill(options);
     apply();
     return navigation;
-}
-function shouldApplyPolyfill(navigation = getNavigation()) {
-    return (navigation !== globalNavigation &&
-        !globalNavigation &&
-        typeof window !== "undefined");
-}
-
-const navigation = getNavigation();
-if (shouldApplyPolyfill(navigation)) {
-    try {
-        applyPolyfill({
-            navigation
-        });
-    }
-    catch (error) {
-        console.error("Failed to apply polyfill");
-        console.error(error);
-    }
 }
 
 const GlobalUUID = isRandomUUID(crypto)
@@ -3540,3 +3530,5 @@ var json = /*#__PURE__*/Object.freeze({
     parse: parse,
     stringify: stringify
 });
+
+export { AppLocationAwaitFinished, AppLocationCheckChange, AppLocationTransitionURL, AppLocationUrl, EventTarget, NAVIGATION_LOCATION_DEFAULT_URL, Navigation, NavigationCanIntercept, NavigationCurrentEntryChangeEvent, NavigationDisposeState, NavigationFormData, NavigationGetState, NavigationHistory, NavigationLocation, NavigationSetCurrentIndex, NavigationSetCurrentKey, NavigationSetEntries, NavigationSetOptions, NavigationSetState, NavigationSync, NavigationTransitionFinally, NavigationUserInitiated, applyPolyfill, getCompletePolyfill, getPolyfill, isInterceptEvent, isNavigationNavigationType, transition };

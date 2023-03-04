@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Polyfill Example</title>
+
+</head>
+<body>
+    <script type="module">
+        import { applyPolyfill } from "./rollup.js";
+
+        console.log("Applying polyfill")
+        applyPolyfill();
+        console.log("Applied polyfill")
+
+        // Importing after polyfill, which will initialise globals
+        const {
+            Router
+        } = await import("./routes-rollup.js");
+        console.log("Loaded route")
+
+        const { route, then } = new Router(navigation);
+
+        const urlSpan = document.getElementById("url");
+        const app = document.getElementById("app");
+
+        console.log({ route, then })
+
+        route(event => {
+            console.log("Navigate event", event)
+
+            const url = new URL(event.destination.url);
+            console.log(event.destination.url);
+            console.log("Previous State:", navigation.currentEntry.getState());
+            console.log("State:", event.destination.getState());
+            console.log("Same Document:", event.destination.sameDocument);
+
+            urlSpan.innerText = url.pathname;
+        });
+
+        route(event => event.intercept());
+
+        route(({ formData }) => {
+            console.log("Submitted Name:", formData?.get("name"));
+        })
+
+        route(() => {
+            // Reset page every route
+            app.classList.add("route-transition");
+            app.innerHTML = "";
+
+            navigation.transition.finished.then(() => {
+                app.classList.remove("route-transition");
+            })
+        })
+
+        route("/some/page", () => `
+            <form method="post" action="/">
+                <input type="text" name="name" value="" placeholder="Name" />
+                <button type="submit" formaction="/">Submit</button>
+            </form>
+        `);
+
+        route("/some/other", event => {
+            console.log("Preventing default");
+            event.preventDefault();
+            try {
+                console.log("Navigated");
+                navigation.navigate("/", {
+                    state: "returned"
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        then(
+            string => app.innerHTML = string ?? "",
+            console.error
+        );
+
+        console.log(navigation.currentEntry)
+
+        urlSpan.innerText = new URL(navigation.currentEntry.url).pathname;
+        console.log(navigation.currentEntry.url)
+    </script>
+
+    <p>Current Url <span id="url"></span></p>
+
+    <a href="/">Home Link</a>
+    <a href="/some/page">Some Page Link</a>
+    <a href="/some/other">Some Other Page Link</a>
+    <a href="/esm.html">ESM Link</a>
+
+    <div id="app"></div>
+</body>
+</html>

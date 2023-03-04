@@ -17,7 +17,6 @@ const cwd = resolve(dirname(pathname), "..")
         "playwright",
         "fs",
         "path",
-        "uuid",
         "cheerio",
         "@virtualstate/navigation",
         "@virtualstate/navigation-imported",
@@ -53,10 +52,75 @@ const cwd = resolve(dirname(pathname), "..")
 {
 
   const bundle = await rollup({
+    input: "./esnext/index.js",
+    plugins: [
+      ignore([
+        `${cwd}/esnext/tests/navigation.playwright.js`,
+        `${cwd}/esnext/tests/navigation.playwright.wpt.js`,
+        `${cwd}/esnext/tests/dependencies-input.js`,
+        `${cwd}/esnext/tests/dependencies.js`,
+      ]),
+      nodeResolve()
+    ],
+    inlineDynamicImports: true,
+    treeshake: {
+      preset: "smallest",
+      moduleSideEffects: "no-external"
+    }
+  });
+  await bundle.write({
+    sourcemap: true,
+    output: {
+      file: "./esnext/rollup.js",
+    },
+    inlineDynamicImports: true,
+    format: "esm",
+    interop: "auto",
+    globals: {
+
+    }
+  });
+}
+{
+
+  const bundle = await rollup({
+    input: "./esnext/routes/index.js",
+    plugins: [
+      ignore([
+        `${cwd}/esnext/tests/navigation.playwright.js`,
+        `${cwd}/esnext/tests/navigation.playwright.wpt.js`,
+        `${cwd}/esnext/tests/dependencies-input.js`,
+        `${cwd}/esnext/tests/dependencies.js`,
+      ]),
+      nodeResolve()
+    ],
+    inlineDynamicImports: true,
+    treeshake: {
+      preset: "smallest",
+      moduleSideEffects: "no-external"
+    }
+  });
+  await bundle.write({
+    sourcemap: true,
+    output: {
+      file: "./esnext/routes-rollup.js",
+    },
+    inlineDynamicImports: true,
+    format: "esm",
+    interop: "auto",
+    globals: {
+
+    }
+  });
+}
+
+
+{
+
+  const bundle = await rollup({
     input: "./esnext/polyfill.js",
     plugins: [
       ignore([
-        "uuid",
         "@virtualstate/app-history",
         `${cwd}/esnext/tests/navigation.playwright.js`,
         `${cwd}/esnext/tests/navigation.playwright.wpt.js`,
@@ -149,33 +213,38 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
 
 
 {
-  let file = await fs.readFile("esnext/polyfill-rollup.js", "utf-8");
+  async function rollupReplacements(fileName) {
+    let file = await fs.readFile(fileName, "utf-8");
 
-  const importUuidMarker = "/** post rollup replace importUuid **/",
-      importJsonMarker = "/** post rollup replace json **/";
+    const importUuidMarker = "/** post rollup replace importUuid **/",
+        importJsonMarker = "/** post rollup replace json **/";
 
-  function replaceInsideMarkers(marker, replacement) {
-    const startIndex = file.indexOf(marker),
-        endIndex = file.lastIndexOf(marker) + marker.length;
+    function replaceInsideMarkers(marker, replacement) {
+      const startIndex = file.indexOf(marker),
+          endIndex = file.lastIndexOf(marker) + marker.length;
 
-    const fileStart = file.slice(0, startIndex - 1),
-        fileEnd = file.slice(endIndex + 1);
+      const fileStart = file.slice(0, startIndex - 1),
+          fileEnd = file.slice(endIndex + 1);
 
-    const replacing = file.slice(startIndex, endIndex);
+      const replacing = file.slice(startIndex, endIndex);
 
-    if (typeof replacement === "function") {
-      replacement = replacement(replacing.replaceAll(marker, ""));
+      if (typeof replacement === "function") {
+        replacement = replacement(replacing.replaceAll(marker, ""));
+      }
+
+      file = `${fileStart}\n\n${replacement}\n\n${fileEnd}`
     }
 
-    file = `${fileStart}\n\n${replacement}\n\n${fileEnd}`
+    replaceInsideMarkers(importUuidMarker, "const getUuidModule = () => index;")
+    replaceInsideMarkers(importJsonMarker, "const getStructuredClone = () => json;");
+
+    await fs.writeFile(fileName, file);
   }
 
-  replaceInsideMarkers(importUuidMarker, "const getUuidModule = () => importUuid;")
-  replaceInsideMarkers(importJsonMarker, "const getStructuredClone = () => json;");
-
-
-  await fs.writeFile("esnext/polyfill-rollup.js", file);
+  await rollupReplacements("esnext/polyfill-rollup.js");
 
   await fs.cp("esnext/polyfill-rollup.js", "example/polyfill-rollup.js");
+  await fs.cp("esnext/routes-rollup.js", "example/routes-rollup.js");
+  await fs.cp("esnext/rollup.js", "example/rollup.js");
 
 }
