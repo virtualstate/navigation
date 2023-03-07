@@ -32,6 +32,9 @@
       ],
       "tests": [
         "./esnext/tests/index.d.ts"
+      ],
+      "rollup": [
+        "./esnext/index.d.ts"
       ]
     }
   },
@@ -49,7 +52,8 @@
     "./get-polyfill": "./esnext/get-polyfill.js",
     "./apply-polyfill": "./esnext/apply-polyfill.js",
     "./routes": "./esnext/routes/index.js",
-    "./state": "./esnext/state/index.js"
+    "./state": "./esnext/state/index.js",
+    "./rollup": "./esnext/rollup.js"
   },
   "repository": {
     "type": "git",
