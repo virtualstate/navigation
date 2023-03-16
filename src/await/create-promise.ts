@@ -1,6 +1,7 @@
 import {defer} from "../defer";
 import {NavigateEvent, Navigation, NavigationEventMap} from "../spec/navigation";
 import {getNavigation} from "../get-navigation";
+import {isPromise} from "../is";
 
 export function createRepeatingPromise<T>(fn: () => Promise<T>): Promise<T> {
     let promise: Promise<T> | undefined;
@@ -55,7 +56,7 @@ export function createNavigationEvents<S, R = void | unknown>(navigation: Naviga
 export async function createNavigationPromise<T extends keyof NavigationEventMap, S, R = void | unknown>(
     type: T,
     navigation: Navigation<S, R> = getNavigation(),
-    onEventFn?: (event: NavigationEventMap<S, R>[T]) => void
+    onEventFn?: (event: NavigationEventMap<S, R>[T]) => void | unknown
 ): Promise<NavigationEventMap<S, R>[T]> {
     const { promise, resolve, reject } = defer<NavigationEventMap<S, R>[T]>();
 
@@ -111,7 +112,17 @@ export async function createNavigationPromise<T extends keyof NavigationEventMap
     function onEvent(event: NavigationEventMap<S, R>[T]) {
         removeListeners();
         if (onEventFn) {
-            onEventFn(event);
+            try {
+                const result = onEventFn(event);
+                if (isPromise(result)) {
+                    return result.then(
+                        () => resolve(event),
+                        reject
+                    );
+                }
+            } catch (error) {
+                return reject(error);
+            }
         } else if (isNavigateEvent(event)) {
             onNavigate(event);
         }
