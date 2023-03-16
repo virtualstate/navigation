@@ -1,6 +1,6 @@
 {
   "name": "@virtualstate/navigation",
-  "version": "1.0.1-alpha.189",
+  "version": "1.0.1-alpha.190",
   "main": "./esnext/index.js",
   "module": "./esnext/index.js",
   "types": "./esnext/index.d.ts",
