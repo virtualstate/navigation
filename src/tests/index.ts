@@ -62,6 +62,8 @@ async function runTests() {
     await import("./original-event");
     console.log("Starting same document tests");
     await import("./same-document");
+    console.log("Starting await tests");
+    await import("./await");
   }
 }
 
