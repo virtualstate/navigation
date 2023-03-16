@@ -197,9 +197,6 @@ export interface NavigationInterceptOptions<R> {
   handler?: NavigationInterceptFn<R>;
   focusReset?: "after-transition" | "manual";
   scroll?: "after-transition" | "manual";
-  /**
-   * @experimental not part of spec yet
-   */
   commit?: "manual" | "immediate" | string;
 }
 
@@ -233,10 +230,8 @@ export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"n
    */
   transitionWhile?(options?: NavigationIntercept<R>): void;
 
-  /**
-   * @experimental not part of spec yet
-   */
-  commit?(): void;
+  commit(): void;
+
   /**
    * @experimental not part of spec yet
    */
