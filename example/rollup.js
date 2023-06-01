@@ -3532,3 +3532,4 @@ var json = /*#__PURE__*/Object.freeze({
 });
 
 export { AppLocationAwaitFinished, AppLocationCheckChange, AppLocationTransitionURL, AppLocationUrl, EventTarget, NAVIGATION_LOCATION_DEFAULT_URL, Navigation, NavigationCanIntercept, NavigationCurrentEntryChangeEvent, NavigationDisposeState, NavigationFormData, NavigationGetState, NavigationHistory, NavigationLocation, NavigationSetCurrentIndex, NavigationSetCurrentKey, NavigationSetEntries, NavigationSetOptions, NavigationSetState, NavigationSync, NavigationTransitionFinally, NavigationUserInitiated, applyPolyfill, getCompletePolyfill, getPolyfill, isInterceptEvent, isNavigationNavigationType, transition };
+//# sourceMappingURL=rollup.js.map

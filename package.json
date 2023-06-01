@@ -42,7 +42,10 @@
     }
   },
   "exports": {
-    ".": "./esnext/index.js",
+    ".": {
+      "require": "./esnext/rollup.cjs",
+      "import": "./esnext/index.js"
+    },
     "./event-target": "./esnext/event-target/async-event-target.js",
     "./event-target/async": "./esnext/event-target/async-event-target.js",
     "./event-target/sync": "./esnext/event-target/sync-event-target.js",
@@ -57,7 +60,10 @@
     "./routes": "./esnext/routes/index.js",
     "./state": "./esnext/state/index.js",
     "./await": "./esnext/await/index.js",
-    "./rollup": "./esnext/rollup.js"
+    "./rollup": {
+      "require": "./esnext/rollup.cjs",
+      "import": "./esnext/rollup.js"
+    }
   },
   "repository": {
     "type": "git",
