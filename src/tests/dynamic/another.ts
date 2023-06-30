@@ -1,3 +1,5 @@
-export async function intercept(...args: unknown[]) {
-    console.log("Another", { intercept: { args }});
+import {NavigateEvent, Navigation} from "../../spec/navigation";
+
+export async function intercept(event: NavigateEvent, navigation: Navigation) {
+    console.log("Another", { intercept: { event, navigation }});
 }
