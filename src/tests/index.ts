@@ -64,6 +64,8 @@ async function runTests() {
     await import("./same-document");
     console.log("Starting await tests");
     await import("./await");
+    console.log("Starting dynamic tests");
+    await import("./dynamic");
   }
 }
 

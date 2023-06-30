@@ -38,6 +38,9 @@
       ],
       "await": [
         "./esnext/await/index.d.ts"
+      ],
+      "dynamic": [
+        "./esnext/dynamic/index.d.ts"
       ]
     }
   },
@@ -60,6 +63,7 @@
     "./routes": "./esnext/routes/index.js",
     "./state": "./esnext/state/index.js",
     "./await": "./esnext/await/index.js",
+    "./dynamic": "./esnext/dynamic/index.js",
     "./rollup": {
       "require": "./esnext/rollup.cjs",
       "import": "./esnext/rollup.js"
