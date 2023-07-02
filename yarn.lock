@@ -5131,10 +5131,10 @@ urix@^0.1.0:
   resolved "https://registry.npmjs.org/urix/-/urix-0.1.0.tgz#da937f7a62e21fec1fd18d49b35c2935067a6c72"
   integrity sha1-2pN/emLiH+wf0Y1Js1wpNQZ6bHI=
 
-urlpattern-polyfill@^1.0.0-rc2:
-  version "1.0.0-rc2"
-  resolved "https://registry.npmjs.org/urlpattern-polyfill/-/urlpattern-polyfill-1.0.0-rc2.tgz#f2cd0f24f3fade1939d8e7f6735d1f6cb0e1de78"
-  integrity sha512-EH9NRgPZHXE00CkUfT8BXkpN3zuuAfrS1+GcKqDOUyIwI+a2LwV/jtuHaxMWFzFT/x3/uvR/J5G0hEO4KWwj6A==
+urlpattern-polyfill@^8.0.2:
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/urlpattern-polyfill/-/urlpattern-polyfill-8.0.2.tgz#99f096e35eff8bf4b5a2aa7d58a1523d6ebc7ce5"
+  integrity sha512-Qp95D4TPJl1kC9SKigDcqgyM2VDVO4RiJc2d4qe5GrYm+zbIQCWWKAFaJNQ4BhdFeDGwBmAxqJBwWSJDb9T3BQ==
 
 use@^3.1.0:
   version "3.1.1"
