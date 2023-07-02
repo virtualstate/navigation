@@ -42,7 +42,7 @@ if (!isWindowNavigation(getNavigation())) {
             // Do every navigate loading, refresh indicator is spinning
             // Url might change during this time
         },
-        commit: "manual"
+        commit: "after-transition"
     }, navigation);
 
     async function page() {

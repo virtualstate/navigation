@@ -193,11 +193,16 @@ export interface NavigationInterceptFn<R> {
   (): Promise<R>;
 }
 
+/**
+ * @deprecated
+ */
+export type NavigationInterceptCommitManualOption = "manual";
+
 export interface NavigationInterceptOptions<R> {
   handler?: NavigationInterceptFn<R>;
   focusReset?: "after-transition" | "manual";
   scroll?: "after-transition" | "manual";
-  commit?: "manual" | "immediate" | string;
+  commit?: "after-transition" | "immediate" | NavigationInterceptCommitManualOption | string;
 }
 
 export type NavigationIntercept<R> = NavigationInterceptFn<R> | NavigationInterceptOptions<R> | Promise<R>;

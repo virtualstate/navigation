@@ -14,7 +14,7 @@ import {Event} from "../event-target";
     navigation.addEventListener("navigate", event => {
         console.log(event);
         console.log(navigation.currentEntry);
-        event.intercept({ commit: "manual" });
+        event.intercept({ commit: "after-transition" });
         event.commit();
         console.log(navigation.currentEntry);
     });
@@ -47,7 +47,7 @@ import {Event} from "../event-target";
     navigation.addEventListener("navigateerror", resolve, { once: true });
 
     navigation.addEventListener("navigate", event => {
-        event.intercept({ commit: "manual" });
+        event.intercept({ commit: "after-transition" });
         event.reportError(new Error(errorMessage))
     });
 

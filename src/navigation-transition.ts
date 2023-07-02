@@ -186,7 +186,10 @@ export class NavigationTransition<S = unknown, R = unknown | void>
   }
 
   get [NavigationTransitionCommitIsManual](): boolean {
-    return !!this[NavigationTransitionInterceptOptionsCommit]?.includes("manual")
+    return !!(
+        this[NavigationTransitionInterceptOptionsCommit]?.includes("after-transition") ||
+        this[NavigationTransitionInterceptOptionsCommit]?.includes("manual")
+    )
   }
 
   [NavigationTransitionFinishedEntries]?: NavigationHistoryEntry<S>[];

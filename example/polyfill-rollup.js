@@ -540,7 +540,8 @@ class NavigationTransition extends EventTarget {
         return this.#options[NavigationTransitionInitialIndex];
     }
     get [NavigationTransitionCommitIsManual]() {
-        return !!this[NavigationTransitionInterceptOptionsCommit]?.includes("manual");
+        return !!(this[NavigationTransitionInterceptOptionsCommit]?.includes("after-transition") ||
+            this[NavigationTransitionInterceptOptionsCommit]?.includes("manual"));
     }
     [NavigationTransitionFinishedEntries];
     [NavigationTransitionFinishedIndex];

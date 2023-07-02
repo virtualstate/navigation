@@ -1,8 +1,14 @@
-import {Navigation, NavigateEvent} from "../navigation";
+import {
+    Navigation,
+    NavigateEvent,
+    NavigationEventMap,
+} from "../navigation";
 import {like, ok} from "../is";
 
+type AnyReturnTypeOrAsync = Promise<void | unknown> | void | unknown;
+
 interface Intercept {
-    intercept(): unknown
+    intercept(event: NavigationEventMap["navigate"], navigation: Navigation): AnyReturnTypeOrAsync
 }
 
 export interface DynamicNavigationOptions {
@@ -105,7 +111,7 @@ export class DynamicNavigation extends Navigation {
         // TODO implement cross origin runtime navigation
         ok(event.destination.sameDocument, "Must be sameDocument navigation");
         event.intercept({
-            commit: "manual",
+            commit: "after-transition",
             handler: () => this.intercept(event)
         });
     }
@@ -119,7 +125,7 @@ export class DynamicNavigation extends Navigation {
             await dynamic.intercept(event, this);
         }
 
-        function isHandler(value: unknown): value is { intercept(...args: unknown[]): unknown } {
+        function isHandler(value: unknown): value is Intercept {
             return (
                 like<Intercept>(value) &&
                 typeof value.intercept === "function"
