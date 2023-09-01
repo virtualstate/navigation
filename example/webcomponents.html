@@ -8,6 +8,16 @@
 <body>
     <script src="polyfill-rollup.js"></script>
     <script>
+        class LinkElement extends HTMLElement {
+            constructor() {
+                super();
+                const shadow = this.attachShadow({ mode: "open" });
+                shadow.innerHTML = '<a href="/">Link within Shadow DOM</a>';
+            }
+        }
+
+        window.customElements.define('link-element', LinkElement)
+
         window.addEventListener("load", loaded)
 
         function loaded() {
@@ -75,11 +85,8 @@
     <p>Current Url <span id="url"></span></p>
 
     <a href="/">Home Link</a>
-    <a href="/some/page">Some Page Link</a>
-    <a href="/some/other">Some Other Page Link</a>
     <a href="/esm.html">ESM Link</a>
-    <a href="/webcomponents.html">Web Component Link</a>
-
+    <link-element></link-element>
 
     <div id="app"></div>
 </body>
