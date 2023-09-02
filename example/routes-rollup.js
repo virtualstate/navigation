@@ -1,4 +1,1419 @@
-function u(u,D){for(var t=0;t<D.length;t++){var e=D[t];e.enumerable=e.enumerable||!1,e.configurable=!0,"value"in e&&(e.writable=!0),Object.defineProperty(u,e.key,e);}}function D(D,t,e){return t&&u(D.prototype,t),e&&u(D,e),D}function t(u,D){(null==D||D>u.length)&&(D=u.length);for(var t=0,e=new Array(D);t<D;t++)e[t]=u[t];return e}function e(u,D){var e="undefined"!=typeof Symbol&&u[Symbol.iterator]||u["@@iterator"];if(e)return (e=e.call(u)).next.bind(e);if(Array.isArray(u)||(e=function(u,D){if(u){if("string"==typeof u)return t(u,D);var e=Object.prototype.toString.call(u).slice(8,-1);return "Object"===e&&u.constructor&&(e=u.constructor.name),"Map"===e||"Set"===e?Array.from(u):"Arguments"===e||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(e)?t(u,D):void 0}}(u))||D&&u&&"number"==typeof u.length){e&&(u=e);var n=0;return function(){return n>=u.length?{done:!0}:{done:!1,value:u[n++]}}}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}var n=/(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u08A0-\u08B4\u08B6-\u08C7\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D04-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA7BF\uA7C2-\uA7CA\uA7F5-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDE80-\uDEA9\uDEB0\uDEB1\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD47\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F-\uDC61\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD2F\uDD3F\uDD41\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDEE0-\uDEF2\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD822\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879\uD880-\uD883][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3]|\uD821[\uDC00-\uDFF7]|\uD823[\uDC00-\uDCD5\uDD00-\uDD08]|\uD82C[\uDC00-\uDD1E\uDD50-\uDD52\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD838[\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDEC0-\uDEEB]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDEDD\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A])/,r=/(?:[\$0-9A-Z_a-z\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05EF-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u07FD\u0800-\u082D\u0840-\u085B\u0860-\u086A\u08A0-\u08B4\u08B6-\u08C7\u08D3-\u08E1\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u09FC\u09FE\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9-\u0AFF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B55-\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C80-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D00-\u0D0C\u0D0E-\u0D10\u0D12-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D54-\u0D57\u0D5F-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D81-\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1878\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1ABF\u1AC0\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CD0-\u1CD2\u1CD4-\u1CFA\u1D00-\u1DF9\u1DFB-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7BF\uA7C2-\uA7CA\uA7F5-\uA827\uA82C\uA840-\uA873\uA880-\uA8C5\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF2D-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD27\uDD30-\uDD39\uDE80-\uDEA9\uDEAB\uDEAC\uDEB0\uDEB1\uDF00-\uDF1C\uDF27\uDF30-\uDF50\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD44-\uDD47\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDC9-\uDDCC\uDDCE-\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE37\uDE3E\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3B-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC00-\uDC4A\uDC50-\uDC59\uDC5E-\uDC61\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB8\uDEC0-\uDEC9\uDF00-\uDF1A\uDF1D-\uDF2B\uDF30-\uDF39]|\uD806[\uDC00-\uDC3A\uDCA0-\uDCE9\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD35\uDD37\uDD38\uDD3B-\uDD43\uDD50-\uDD59\uDDA0-\uDDA7\uDDAA-\uDDD7\uDDDA-\uDDE1\uDDE3\uDDE4\uDE00-\uDE3E\uDE47\uDE50-\uDE99\uDE9D\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC36\uDC38-\uDC40\uDC50-\uDC59\uDC72-\uDC8F\uDC92-\uDCA7\uDCA9-\uDCB6\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD36\uDD3A\uDD3C\uDD3D\uDD3F-\uDD47\uDD50-\uDD59\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD8E\uDD90\uDD91\uDD93-\uDD98\uDDA0-\uDDA9\uDEE0-\uDEF6\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD822\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879\uD880-\uD883][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF4F-\uDF87\uDF8F-\uDF9F\uDFE0\uDFE1\uDFE3\uDFE4\uDFF0\uDFF1]|\uD821[\uDC00-\uDFF7]|\uD823[\uDC00-\uDCD5\uDD00-\uDD08]|\uD82C[\uDC00-\uDD1E\uDD50-\uDD52\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD838[\uDC00-\uDC06\uDC08-\uDC18\uDC1B-\uDC21\uDC23\uDC24\uDC26-\uDC2A\uDD00-\uDD2C\uDD30-\uDD3D\uDD40-\uDD49\uDD4E\uDEC0-\uDEF9]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6\uDD00-\uDD4B\uDD50-\uDD59]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD83E[\uDFF0-\uDFF9]|\uD869[\uDC00-\uDEDD\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A]|\uDB40[\uDD00-\uDDEF])/;function F(u,D){return (D?/^[\x00-\xFF]*$/:/^[\x00-\x7F]*$/).test(u)}function C(u,D){void 0===D&&(D=!1);for(var t=[],e=0;e<u.length;){var C=u[e],A=function(n){if(!D)throw new TypeError(n);t.push({type:"INVALID_CHAR",index:e,value:u[e++]});};if("*"!==C)if("+"!==C&&"?"!==C)if("\\"!==C)if("{"!==C)if("}"!==C)if(":"!==C)if("("!==C)t.push({type:"CHAR",index:e,value:u[e++]});else {var i=1,s="",a=e+1,E=!1;if("?"===u[a]){A('Pattern cannot start with "?" at '+a);continue}for(;a<u.length;){if(!F(u[a],!1)){A("Invalid character '"+u[a]+"' at "+a+"."),E=!0;break}if("\\"!==u[a]){if(")"===u[a]){if(0==--i){a++;break}}else if("("===u[a]&&(i++,"?"!==u[a+1])){A("Capturing groups are not allowed at "+a),E=!0;break}s+=u[a++];}else s+=u[a++]+u[a++];}if(E)continue;if(i){A("Unbalanced pattern at "+e);continue}if(!s){A("Missing pattern at "+e);continue}t.push({type:"PATTERN",index:e,value:s}),e=a;}else {for(var o="",h=e+1;h<u.length;){var B=u.substr(h,1);if(!(h===e+1&&n.test(B)||h!==e+1&&r.test(B)))break;o+=u[h++];}if(!o){A("Missing parameter name at "+e);continue}t.push({type:"NAME",index:e,value:o}),e=h;}else t.push({type:"CLOSE",index:e,value:u[e++]});else t.push({type:"OPEN",index:e,value:u[e++]});else t.push({type:"ESCAPED_CHAR",index:e++,value:u[e++]});else t.push({type:"MODIFIER",index:e,value:u[e++]});else t.push({type:"ASTERISK",index:e,value:u[e++]});}return t.push({type:"END",index:e,value:""}),t}function A(u,D){void 0===D&&(D={});for(var t=C(u),e=D.prefixes,n=void 0===e?"./":e,r="[^"+i$1(D.delimiter||"/#?")+"]+?",F=[],A=0,s=0,a="",E=new Set,o=function(u){if(s<t.length&&t[s].type===u)return t[s++].value},h=function(){return o("MODIFIER")||o("ASTERISK")},B=function(u){var D=o(u);if(void 0!==D)return D;var e=t[s];throw new TypeError("Unexpected "+e.type+" at "+e.index+", expected "+u)},p=function(){for(var u,D="";u=o("CHAR")||o("ESCAPED_CHAR");)D+=u;return D},c=D.encodePart||function(u){return u};s<t.length;){var f=o("CHAR"),l=o("NAME"),m=o("PATTERN");if(l||m||!o("ASTERISK")||(m=".*"),l||m){var d=f||"";-1===n.indexOf(d)&&(a+=d,d=""),a&&(F.push(c(a)),a="");var g=l||A++;if(E.has(g))throw new TypeError("Duplicate name '"+g+"'.");E.add(g),F.push({name:g,prefix:c(d),suffix:"",pattern:m||r,modifier:h()||""});}else {var S=f||o("ESCAPED_CHAR");if(S)a+=S;else if(o("OPEN")){var v=p(),x=o("NAME")||"",y=o("PATTERN")||"";x||y||!o("ASTERISK")||(y=".*");var R=p();B("CLOSE");var k=h()||"";if(!x&&!y&&!k){a+=v;continue}a&&(F.push(c(a)),a=""),F.push({name:x||(y?A++:""),pattern:x&&!y?r:y,prefix:c(v),suffix:c(R),modifier:k});}else a&&(F.push(c(a)),a=""),B("END");}}return F}function i$1(u){return u.replace(/([.+*?^${}()[\]|/\\])/g,"\\$1")}function s(u){return u&&u.sensitive?"u":"ui"}function a(u,D,t){void 0===t&&(t={});for(var n,r=t.strict,F=void 0!==r&&r,C=t.start,A=void 0===C||C,a=t.end,E=void 0===a||a,o=t.encode,h=void 0===o?function(u){return u}:o,B="["+i$1(t.endsWith||"")+"]|$",p="["+i$1(t.delimiter||"/#?")+"]",c=A?"^":"",f=e(u);!(n=f()).done;){var l=n.value;if("string"==typeof l)c+=i$1(h(l));else {var m=i$1(h(l.prefix)),d=i$1(h(l.suffix));l.pattern?(D&&D.push(l),c+=m||d?"+"===l.modifier||"*"===l.modifier?"(?:"+m+"((?:"+l.pattern+")(?:"+d+m+"(?:"+l.pattern+"))*)"+d+")"+("*"===l.modifier?"?":""):"(?:"+m+"("+l.pattern+")"+d+")"+l.modifier:"+"===l.modifier||"*"===l.modifier?"((?:"+l.pattern+")"+l.modifier+")":"("+l.pattern+")"+l.modifier):c+="(?:"+m+d+")"+l.modifier;}}if(E)F||(c+=p+"?"),c+=t.endsWith?"(?="+B+")":"$";else {var g=u[u.length-1],S="string"==typeof g?p.indexOf(g[g.length-1])>-1:void 0===g;F||(c+="(?:"+p+"(?="+B+"))?"),S||(c+="(?="+p+"|"+B+")");}return new RegExp(c,s(t))}function E(u,D,t){return u instanceof RegExp?function(u,D){if(!D)return u;for(var t=/\((?:\?<(.*?)>)?(?!\?)/g,e=0,n=t.exec(u.source);n;)D.push({name:n[1]||e++,prefix:"",suffix:"",modifier:"",pattern:""}),n=t.exec(u.source);return u}(u,D):Array.isArray(u)?function(u,D,t){var e=u.map(function(u){return E(u,D,t).source});return new RegExp("(?:"+e.join("|")+")",s(t))}(u,D,t):function(u,D,t){return a(A(u,t),D,t)}(u,D,t)}var o={delimiter:"",prefixes:"",sensitive:!0,strict:!0},h={delimiter:".",prefixes:"",sensitive:!0,strict:!0},B={delimiter:"/",prefixes:"/",sensitive:!0,strict:!0};function p(u,D){return u.startsWith(D)?u.substring(D.length,u.length):u}function c(u){return !(!u||u.length<2||"["!==u[0]&&("\\"!==u[0]&&"{"!==u[0]||"["!==u[1]))}var f$1,l=["ftp","file","http","https","ws","wss"];function m(u){if(!u)return !0;for(var D,t=e(l);!(D=t()).done;)if(u.test(D.value))return !0;return !1}function d(u){switch(u){case"ws":case"http":return "80";case"wws":case"https":return "443";case"ftp":return "21";default:return ""}}function g(u){if(""===u)return u;if(/^[-+.A-Za-z0-9]*$/.test(u))return u.toLowerCase();throw new TypeError("Invalid protocol '"+u+"'.")}function S(u){if(""===u)return u;var D=new URL("https://example.com");return D.username=u,D.username}function v(u){if(""===u)return u;var D=new URL("https://example.com");return D.password=u,D.password}function x(u){if(""===u)return u;if(/[\t\n\r #%/:<>?@[\]^\\|]/g.test(u))throw new TypeError("Invalid hostname '"+u+"'");var D=new URL("https://example.com");return D.hostname=u,D.hostname}function y(u){if(""===u)return u;if(/[^0-9a-fA-F[\]:]/g.test(u))throw new TypeError("Invalid IPv6 hostname '"+u+"'");return u.toLowerCase()}function R(u){if(""===u)return u;if(/^[0-9]*$/.test(u)&&parseInt(u)<=65535)return u;throw new TypeError("Invalid port '"+u+"'.")}function k(u){if(""===u)return u;var D=new URL("https://example.com");return D.pathname=u,"/"!==u[0]?D.pathname.substring(1,D.pathname.length):D.pathname}function w(u){return ""===u?u:new URL("data:"+u).pathname}function P(u){if(""===u)return u;var D=new URL("https://example.com");return D.search=u,D.search.substring(1,D.search.length)}function T(u){if(""===u)return u;var D=new URL("https://example.com");return D.hash=u,D.hash.substring(1,D.hash.length)}!function(u){u[u.INIT=0]="INIT",u[u.PROTOCOL=1]="PROTOCOL",u[u.AUTHORITY=2]="AUTHORITY",u[u.USERNAME=3]="USERNAME",u[u.PASSWORD=4]="PASSWORD",u[u.HOSTNAME=5]="HOSTNAME",u[u.PORT=6]="PORT",u[u.PATHNAME=7]="PATHNAME",u[u.SEARCH=8]="SEARCH",u[u.HASH=9]="HASH",u[u.DONE=10]="DONE";}(f$1||(f$1={}));var b=function(){function u(u){this.input=void 0,this.tokenList=[],this.internalResult={},this.tokenIndex=0,this.tokenIncrement=1,this.componentStart=0,this.state=f$1.INIT,this.groupDepth=0,this.hostnameIPv6BracketDepth=0,this.shouldTreatAsStandardURL=!1,this.input=u;}var t=u.prototype;return t.parse=function(){for(this.tokenList=C(this.input,!0);this.tokenIndex<this.tokenList.length;this.tokenIndex+=this.tokenIncrement){if(this.tokenIncrement=1,"END"===this.tokenList[this.tokenIndex].type){if(this.state===f$1.INIT){this.rewind(),this.isHashPrefix()?this.changeState(f$1.HASH,1):this.isSearchPrefix()?(this.changeState(f$1.SEARCH,1),this.internalResult.hash=""):(this.changeState(f$1.PATHNAME,0),this.internalResult.search="",this.internalResult.hash="");continue}if(this.state===f$1.AUTHORITY){this.rewindAndSetState(f$1.HOSTNAME);continue}this.changeState(f$1.DONE,0);break}if(this.groupDepth>0){if(!this.isGroupClose())continue;this.groupDepth-=1;}if(this.isGroupOpen())this.groupDepth+=1;else switch(this.state){case f$1.INIT:this.isProtocolSuffix()&&(this.internalResult.username="",this.internalResult.password="",this.internalResult.hostname="",this.internalResult.port="",this.internalResult.pathname="",this.internalResult.search="",this.internalResult.hash="",this.rewindAndSetState(f$1.PROTOCOL));break;case f$1.PROTOCOL:if(this.isProtocolSuffix()){this.computeShouldTreatAsStandardURL();var u=f$1.PATHNAME,D=1;this.shouldTreatAsStandardURL&&(this.internalResult.pathname="/"),this.nextIsAuthoritySlashes()?(u=f$1.AUTHORITY,D=3):this.shouldTreatAsStandardURL&&(u=f$1.AUTHORITY),this.changeState(u,D);}break;case f$1.AUTHORITY:this.isIdentityTerminator()?this.rewindAndSetState(f$1.USERNAME):(this.isPathnameStart()||this.isSearchPrefix()||this.isHashPrefix())&&this.rewindAndSetState(f$1.HOSTNAME);break;case f$1.USERNAME:this.isPasswordPrefix()?this.changeState(f$1.PASSWORD,1):this.isIdentityTerminator()&&this.changeState(f$1.HOSTNAME,1);break;case f$1.PASSWORD:this.isIdentityTerminator()&&this.changeState(f$1.HOSTNAME,1);break;case f$1.HOSTNAME:this.isIPv6Open()?this.hostnameIPv6BracketDepth+=1:this.isIPv6Close()&&(this.hostnameIPv6BracketDepth-=1),this.isPortPrefix()&&!this.hostnameIPv6BracketDepth?this.changeState(f$1.PORT,1):this.isPathnameStart()?this.changeState(f$1.PATHNAME,0):this.isSearchPrefix()?this.changeState(f$1.SEARCH,1):this.isHashPrefix()&&this.changeState(f$1.HASH,1);break;case f$1.PORT:this.isPathnameStart()?this.changeState(f$1.PATHNAME,0):this.isSearchPrefix()?this.changeState(f$1.SEARCH,1):this.isHashPrefix()&&this.changeState(f$1.HASH,1);break;case f$1.PATHNAME:this.isSearchPrefix()?this.changeState(f$1.SEARCH,1):this.isHashPrefix()&&this.changeState(f$1.HASH,1);break;case f$1.SEARCH:this.isHashPrefix()&&this.changeState(f$1.HASH,1);}}},t.changeState=function(u,D){switch(this.state){case f$1.INIT:break;case f$1.PROTOCOL:this.internalResult.protocol=this.makeComponentString();break;case f$1.AUTHORITY:break;case f$1.USERNAME:this.internalResult.username=this.makeComponentString();break;case f$1.PASSWORD:this.internalResult.password=this.makeComponentString();break;case f$1.HOSTNAME:this.internalResult.hostname=this.makeComponentString();break;case f$1.PORT:this.internalResult.port=this.makeComponentString();break;case f$1.PATHNAME:this.internalResult.pathname=this.makeComponentString();break;case f$1.SEARCH:this.internalResult.search=this.makeComponentString();break;case f$1.HASH:this.internalResult.hash=this.makeComponentString();}this.changeStateWithoutSettingComponent(u,D);},t.changeStateWithoutSettingComponent=function(u,D){this.state=u,this.componentStart=this.tokenIndex+D,this.tokenIndex+=D,this.tokenIncrement=0;},t.rewind=function(){this.tokenIndex=this.componentStart,this.tokenIncrement=0;},t.rewindAndSetState=function(u){this.rewind(),this.state=u;},t.safeToken=function(u){return u<0&&(u=this.tokenList.length-u),u<this.tokenList.length?this.tokenList[u]:this.tokenList[this.tokenList.length-1]},t.isNonSpecialPatternChar=function(u,D){var t=this.safeToken(u);return t.value===D&&("CHAR"===t.type||"ESCAPED_CHAR"===t.type||"INVALID_CHAR"===t.type)},t.isProtocolSuffix=function(){return this.isNonSpecialPatternChar(this.tokenIndex,":")},t.nextIsAuthoritySlashes=function(){return this.isNonSpecialPatternChar(this.tokenIndex+1,"/")&&this.isNonSpecialPatternChar(this.tokenIndex+2,"/")},t.isIdentityTerminator=function(){return this.isNonSpecialPatternChar(this.tokenIndex,"@")},t.isPasswordPrefix=function(){return this.isNonSpecialPatternChar(this.tokenIndex,":")},t.isPortPrefix=function(){return this.isNonSpecialPatternChar(this.tokenIndex,":")},t.isPathnameStart=function(){return this.isNonSpecialPatternChar(this.tokenIndex,"/")},t.isSearchPrefix=function(){if(this.isNonSpecialPatternChar(this.tokenIndex,"?"))return !0;if("?"!==this.tokenList[this.tokenIndex].value)return !1;var u=this.safeToken(this.tokenIndex-1);return "NAME"!==u.type&&"PATTERN"!==u.type&&"CLOSE"!==u.type&&"ASTERISK"!==u.type},t.isHashPrefix=function(){return this.isNonSpecialPatternChar(this.tokenIndex,"#")},t.isGroupOpen=function(){return "OPEN"==this.tokenList[this.tokenIndex].type},t.isGroupClose=function(){return "CLOSE"==this.tokenList[this.tokenIndex].type},t.isIPv6Open=function(){return this.isNonSpecialPatternChar(this.tokenIndex,"[")},t.isIPv6Close=function(){return this.isNonSpecialPatternChar(this.tokenIndex,"]")},t.makeComponentString=function(){var u=this.tokenList[this.tokenIndex],D=this.safeToken(this.componentStart).index;return this.input.substring(D,u.index)},t.computeShouldTreatAsStandardURL=function(){var u={};Object.assign(u,o),u.encodePart=g;var D=E(this.makeComponentString(),void 0,u);this.shouldTreatAsStandardURL=m(D);},D(u,[{key:"result",get:function(){return this.internalResult}}]),u}(),I=["protocol","username","password","hostname","port","pathname","search","hash"];function O(u,D){if("string"!=typeof u)throw new TypeError("parameter 1 is not of type 'string'.");var t=new URL(u,D);return {protocol:t.protocol.substring(0,t.protocol.length-1),username:t.username,password:t.password,hostname:t.hostname,port:t.port,pathname:t.pathname,search:""!=t.search?t.search.substring(1,t.search.length):void 0,hash:""!=t.hash?t.hash.substring(1,t.hash.length):void 0}}function H(u,D,t){var e;if("string"==typeof D.baseURL)try{e=new URL(D.baseURL),u.protocol=e.protocol?e.protocol.substring(0,e.protocol.length-1):"",u.username=e.username,u.password=e.password,u.hostname=e.hostname,u.port=e.port,u.pathname=e.pathname,u.search=e.search?e.search.substring(1,e.search.length):"",u.hash=e.hash?e.hash.substring(1,e.hash.length):"";}catch(u){throw new TypeError("invalid baseURL '"+D.baseURL+"'.")}if("string"==typeof D.protocol&&(u.protocol=function(u,D){var t;return u=(t=u).endsWith(":")?t.substr(0,t.length-":".length):t,D||""===u?u:g(u)}(D.protocol,t)),"string"==typeof D.username&&(u.username=function(u,D){if(D||""===u)return u;var t=new URL("https://example.com");return t.username=u,t.username}(D.username,t)),"string"==typeof D.password&&(u.password=function(u,D){if(D||""===u)return u;var t=new URL("https://example.com");return t.password=u,t.password}(D.password,t)),"string"==typeof D.hostname&&(u.hostname=function(u,D){return D||""===u?u:c(u)?y(u):x(u)}(D.hostname,t)),"string"==typeof D.port&&(u.port=function(u,D,t){return d(D)===u&&(u=""),t||""===u?u:R(u)}(D.port,u.protocol,t)),"string"==typeof D.pathname){if(u.pathname=D.pathname,e&&!function(u,D){return !(!u.length||"/"!==u[0]&&(!D||u.length<2||"\\"!=u[0]&&"{"!=u[0]||"/"!=u[1]))}(u.pathname,t)){var n=e.pathname.lastIndexOf("/");n>=0&&(u.pathname=e.pathname.substring(0,n+1)+u.pathname);}u.pathname=function(u,D,t){if(t||""===u)return u;if(D&&!l.includes(D))return new URL(D+":"+u).pathname;var e="/"==u[0];return u=new URL(u,"https://example.com").pathname,e||(u=u.substring(1,u.length)),u}(u.pathname,u.protocol,t);}return "string"==typeof D.search&&(u.search=function(u,D){if(u=p(u,"?"),D||""===u)return u;var t=new URL("https://example.com");return t.search=u,t.search?t.search.substring(1,t.search.length):""}(D.search,t)),"string"==typeof D.hash&&(u.hash=function(u,D){if(u=p(u,"#"),D||""===u)return u;var t=new URL("https://example.com");return t.hash=u,t.hash?t.hash.substring(1,t.hash.length):""}(D.hash,t)),u}function N(u){return u.replace(/([+*?:{}()\\])/g,"\\$1")}function L(u,D){for(var t,n="",r=e(u);!(t=r()).done;){var F=t.value;if("string"!=typeof F)if(""!==F.pattern){var C=""!==F.suffix||""!==F.prefix&&(1!==F.prefix.length||!(D.prefixes||"./").includes(F.prefix)),A="number"!=typeof F.name;C&&(n+="{"),n+=N(F.prefix),A&&(n+=":"+F.name);var i="[^"+(D.delimiter||"/#?").replace(/([.+*?^${}()[\]|/\\])/g,"\\$1")+"]+?";".*"===F.pattern?n+=A?"(.*)":"*":F.pattern===i?A||(n+="("+i+")"):n+="("+F.pattern+")",n+=N(F.suffix),C&&(n+="}"),n+=F.modifier;}else {if(""===F.modifier){n+=N(F.prefix);continue}n+="{"+N(F.prefix)+"}"+F.modifier;}else n+=N(F);}return n}var U=function(){function u(u,D){void 0===u&&(u={}),this.pattern=void 0,this.regexp={},this.keys={},this.component_pattern={};try{if("string"==typeof u){var t=new b(u);if(t.parse(),u=t.result,D){if("string"!=typeof D)throw new TypeError("'baseURL' parameter is not of type 'string'.");u.baseURL=D;}else if("string"!=typeof u.protocol)throw new TypeError("A base URL must be provided for a relative constructor string.")}else if(D)throw new TypeError("parameter 1 is not of type 'string'.");if(!u||"object"!=typeof u)throw new TypeError("parameter 1 is not of type 'string' and cannot convert to dictionary.");var n;this.pattern=H({pathname:"*",protocol:"*",username:"*",password:"*",hostname:"*",port:"*",search:"*",hash:"*"},u,!0),d(this.pattern.protocol)===this.pattern.port&&(this.pattern.port="");for(var r,F=e(I);!(r=F()).done;)if((n=r.value)in this.pattern){var C={},i=this.pattern[n];switch(this.keys[n]=[],n){case"protocol":Object.assign(C,o),C.encodePart=g;break;case"username":Object.assign(C,o),C.encodePart=S;break;case"password":Object.assign(C,o),C.encodePart=v;break;case"hostname":Object.assign(C,h),C.encodePart=c(i)?y:x;break;case"port":Object.assign(C,o),C.encodePart=R;break;case"pathname":m(this.regexp.protocol)?(Object.assign(C,B),C.encodePart=k):(Object.assign(C,o),C.encodePart=w);break;case"search":Object.assign(C,o),C.encodePart=P;break;case"hash":Object.assign(C,o),C.encodePart=T;}try{var s=A(i,C);this.regexp[n]=a(s,this.keys[n],C),this.component_pattern[n]=L(s,C);}catch(u){throw new TypeError("invalid "+n+" pattern '"+this.pattern[n]+"'.")}}}catch(u){throw new TypeError("Failed to construct 'URLPattern': "+u.message)}}var t=u.prototype;return t.test=function(u,D){void 0===u&&(u={});var t,e={pathname:"",protocol:"",username:"",password:"",hostname:"",port:"",search:"",hash:""};if("string"!=typeof u&&D)throw new TypeError("parameter 1 is not of type 'string'.");if(void 0===u)return !1;try{e=H(e,"object"==typeof u?u:O(u,D),!1);}catch(u){return !1}for(t in this.pattern)if(!this.regexp[t].exec(e[t]))return !1;return !0},t.exec=function(u,D){void 0===u&&(u={});var t={pathname:"",protocol:"",username:"",password:"",hostname:"",port:"",search:"",hash:""};if("string"!=typeof u&&D)throw new TypeError("parameter 1 is not of type 'string'.");if(void 0!==u){try{t=H(t,"object"==typeof u?u:O(u,D),!1);}catch(u){return null}var n,r={};for(n in r.inputs=D?[u,D]:[u],this.pattern){var F=this.regexp[n].exec(t[n]);if(!F)return null;for(var C,A={},i=e(this.keys[n].entries());!(C=i()).done;){var s=C.value,a=s[1];"string"!=typeof a.name&&"number"!=typeof a.name||(A[a.name]=F[s[0]+1]||"");}r[n]={input:t[n]||"",groups:A};}return r}},D(u,[{key:"protocol",get:function(){return this.component_pattern.protocol}},{key:"username",get:function(){return this.component_pattern.username}},{key:"password",get:function(){return this.component_pattern.password}},{key:"hostname",get:function(){return this.component_pattern.hostname}},{key:"port",get:function(){return this.component_pattern.port}},{key:"pathname",get:function(){return this.component_pattern.pathname}},{key:"search",get:function(){return this.component_pattern.search}},{key:"hash",get:function(){return this.component_pattern.hash}}]),u}();
+// src/path-to-regex-modified.ts
+var Part = class {
+  constructor(type, name, prefix, value, suffix, modifier) {
+    this.type = 3 /* kFixed */;
+    this.name = "";
+    this.prefix = "";
+    this.value = "";
+    this.suffix = "";
+    this.modifier = 3 /* kNone */;
+    this.type = type;
+    this.name = name;
+    this.prefix = prefix;
+    this.value = value;
+    this.suffix = suffix;
+    this.modifier = modifier;
+  }
+  hasCustomName() {
+    return this.name !== "" && typeof this.name !== "number";
+  }
+};
+var regexIdentifierStart = /[$_\p{ID_Start}]/u;
+var regexIdentifierPart = /[$_\u200C\u200D\p{ID_Continue}]/u;
+var kFullWildcardRegex = ".*";
+function isASCII(str, extended) {
+  return (extended ? /^[\x00-\xFF]*$/ : /^[\x00-\x7F]*$/).test(str);
+}
+function lexer(str, lenient = false) {
+  const tokens = [];
+  let i = 0;
+  while (i < str.length) {
+    const char = str[i];
+    const ErrorOrInvalid = function(msg) {
+      if (!lenient)
+        throw new TypeError(msg);
+      tokens.push({ type: "INVALID_CHAR", index: i, value: str[i++] });
+    };
+    if (char === "*") {
+      tokens.push({ type: "ASTERISK", index: i, value: str[i++] });
+      continue;
+    }
+    if (char === "+" || char === "?") {
+      tokens.push({ type: "OTHER_MODIFIER", index: i, value: str[i++] });
+      continue;
+    }
+    if (char === "\\") {
+      tokens.push({ type: "ESCAPED_CHAR", index: i++, value: str[i++] });
+      continue;
+    }
+    if (char === "{") {
+      tokens.push({ type: "OPEN", index: i, value: str[i++] });
+      continue;
+    }
+    if (char === "}") {
+      tokens.push({ type: "CLOSE", index: i, value: str[i++] });
+      continue;
+    }
+    if (char === ":") {
+      let name = "";
+      let j = i + 1;
+      while (j < str.length) {
+        const code = str.substr(j, 1);
+        if (j === i + 1 && regexIdentifierStart.test(code) || j !== i + 1 && regexIdentifierPart.test(code)) {
+          name += str[j++];
+          continue;
+        }
+        break;
+      }
+      if (!name) {
+        ErrorOrInvalid(`Missing parameter name at ${i}`);
+        continue;
+      }
+      tokens.push({ type: "NAME", index: i, value: name });
+      i = j;
+      continue;
+    }
+    if (char === "(") {
+      let count = 1;
+      let pattern = "";
+      let j = i + 1;
+      let error = false;
+      if (str[j] === "?") {
+        ErrorOrInvalid(`Pattern cannot start with "?" at ${j}`);
+        continue;
+      }
+      while (j < str.length) {
+        if (!isASCII(str[j], false)) {
+          ErrorOrInvalid(`Invalid character '${str[j]}' at ${j}.`);
+          error = true;
+          break;
+        }
+        if (str[j] === "\\") {
+          pattern += str[j++] + str[j++];
+          continue;
+        }
+        if (str[j] === ")") {
+          count--;
+          if (count === 0) {
+            j++;
+            break;
+          }
+        } else if (str[j] === "(") {
+          count++;
+          if (str[j + 1] !== "?") {
+            ErrorOrInvalid(`Capturing groups are not allowed at ${j}`);
+            error = true;
+            break;
+          }
+        }
+        pattern += str[j++];
+      }
+      if (error) {
+        continue;
+      }
+      if (count) {
+        ErrorOrInvalid(`Unbalanced pattern at ${i}`);
+        continue;
+      }
+      if (!pattern) {
+        ErrorOrInvalid(`Missing pattern at ${i}`);
+        continue;
+      }
+      tokens.push({ type: "REGEX", index: i, value: pattern });
+      i = j;
+      continue;
+    }
+    tokens.push({ type: "CHAR", index: i, value: str[i++] });
+  }
+  tokens.push({ type: "END", index: i, value: "" });
+  return tokens;
+}
+function parse$1(str, options = {}) {
+  const tokens = lexer(str);
+  options.delimiter ?? (options.delimiter = "/#?");
+  options.prefixes ?? (options.prefixes = "./");
+  const segmentWildcardRegex = `[^${escapeString(options.delimiter)}]+?`;
+  const result = [];
+  let key = 0;
+  let i = 0;
+  let nameSet = /* @__PURE__ */ new Set();
+  const tryConsume = (type) => {
+    if (i < tokens.length && tokens[i].type === type)
+      return tokens[i++].value;
+  };
+  const tryConsumeModifier = () => {
+    return tryConsume("OTHER_MODIFIER") ?? tryConsume("ASTERISK");
+  };
+  const mustConsume = (type) => {
+    const value = tryConsume(type);
+    if (value !== void 0)
+      return value;
+    const { type: nextType, index } = tokens[i];
+    throw new TypeError(`Unexpected ${nextType} at ${index}, expected ${type}`);
+  };
+  const consumeText = () => {
+    let result2 = "";
+    let value;
+    while (value = tryConsume("CHAR") ?? tryConsume("ESCAPED_CHAR")) {
+      result2 += value;
+    }
+    return result2;
+  };
+  const DefaultEncodePart = (value) => {
+    return value;
+  };
+  const encodePart = options.encodePart || DefaultEncodePart;
+  let pendingFixedValue = "";
+  const appendToPendingFixedValue = (value) => {
+    pendingFixedValue += value;
+  };
+  const maybeAddPartFromPendingFixedValue = () => {
+    if (!pendingFixedValue.length) {
+      return;
+    }
+    result.push(new Part(3 /* kFixed */, "", "", encodePart(pendingFixedValue), "", 3 /* kNone */));
+    pendingFixedValue = "";
+  };
+  const addPart = (prefix, nameToken, regexOrWildcardToken, suffix, modifierToken) => {
+    let modifier = 3 /* kNone */;
+    switch (modifierToken) {
+      case "?":
+        modifier = 1 /* kOptional */;
+        break;
+      case "*":
+        modifier = 0 /* kZeroOrMore */;
+        break;
+      case "+":
+        modifier = 2 /* kOneOrMore */;
+        break;
+    }
+    if (!nameToken && !regexOrWildcardToken && modifier === 3 /* kNone */) {
+      appendToPendingFixedValue(prefix);
+      return;
+    }
+    maybeAddPartFromPendingFixedValue();
+    if (!nameToken && !regexOrWildcardToken) {
+      if (!prefix) {
+        return;
+      }
+      result.push(new Part(3 /* kFixed */, "", "", encodePart(prefix), "", modifier));
+      return;
+    }
+    let regexValue;
+    if (!regexOrWildcardToken) {
+      regexValue = segmentWildcardRegex;
+    } else if (regexOrWildcardToken === "*") {
+      regexValue = kFullWildcardRegex;
+    } else {
+      regexValue = regexOrWildcardToken;
+    }
+    let type = 2 /* kRegex */;
+    if (regexValue === segmentWildcardRegex) {
+      type = 1 /* kSegmentWildcard */;
+      regexValue = "";
+    } else if (regexValue === kFullWildcardRegex) {
+      type = 0 /* kFullWildcard */;
+      regexValue = "";
+    }
+    let name;
+    if (nameToken) {
+      name = nameToken;
+    } else if (regexOrWildcardToken) {
+      name = key++;
+    }
+    if (nameSet.has(name)) {
+      throw new TypeError(`Duplicate name '${name}'.`);
+    }
+    nameSet.add(name);
+    result.push(new Part(type, name, encodePart(prefix), regexValue, encodePart(suffix), modifier));
+  };
+  while (i < tokens.length) {
+    const charToken = tryConsume("CHAR");
+    const nameToken = tryConsume("NAME");
+    let regexOrWildcardToken = tryConsume("REGEX");
+    if (!nameToken && !regexOrWildcardToken) {
+      regexOrWildcardToken = tryConsume("ASTERISK");
+    }
+    if (nameToken || regexOrWildcardToken) {
+      let prefix = charToken ?? "";
+      if (options.prefixes.indexOf(prefix) === -1) {
+        appendToPendingFixedValue(prefix);
+        prefix = "";
+      }
+      maybeAddPartFromPendingFixedValue();
+      let modifierToken = tryConsumeModifier();
+      addPart(prefix, nameToken, regexOrWildcardToken, "", modifierToken);
+      continue;
+    }
+    const value = charToken ?? tryConsume("ESCAPED_CHAR");
+    if (value) {
+      appendToPendingFixedValue(value);
+      continue;
+    }
+    const openToken = tryConsume("OPEN");
+    if (openToken) {
+      const prefix = consumeText();
+      const nameToken2 = tryConsume("NAME");
+      let regexOrWildcardToken2 = tryConsume("REGEX");
+      if (!nameToken2 && !regexOrWildcardToken2) {
+        regexOrWildcardToken2 = tryConsume("ASTERISK");
+      }
+      const suffix = consumeText();
+      mustConsume("CLOSE");
+      const modifierToken = tryConsumeModifier();
+      addPart(prefix, nameToken2, regexOrWildcardToken2, suffix, modifierToken);
+      continue;
+    }
+    maybeAddPartFromPendingFixedValue();
+    mustConsume("END");
+  }
+  return result;
+}
+function escapeString(str) {
+  return str.replace(/([.+*?^${}()[\]|/\\])/g, "\\$1");
+}
+function flags(options) {
+  return options && options.ignoreCase ? "ui" : "u";
+}
+function stringToRegexp(path, names, options) {
+  return partsToRegexp(parse$1(path, options), names, options);
+}
+function modifierToString(modifier) {
+  switch (modifier) {
+    case 0 /* kZeroOrMore */:
+      return "*";
+    case 1 /* kOptional */:
+      return "?";
+    case 2 /* kOneOrMore */:
+      return "+";
+    case 3 /* kNone */:
+      return "";
+  }
+}
+function partsToRegexp(parts, names, options = {}) {
+  options.delimiter ?? (options.delimiter = "/#?");
+  options.prefixes ?? (options.prefixes = "./");
+  options.sensitive ?? (options.sensitive = false);
+  options.strict ?? (options.strict = false);
+  options.end ?? (options.end = true);
+  options.start ?? (options.start = true);
+  options.endsWith = "";
+  let result = options.start ? "^" : "";
+  for (const part of parts) {
+    if (part.type === 3 /* kFixed */) {
+      if (part.modifier === 3 /* kNone */) {
+        result += escapeString(part.value);
+      } else {
+        result += `(?:${escapeString(part.value)})${modifierToString(part.modifier)}`;
+      }
+      continue;
+    }
+    if (names)
+      names.push(part.name);
+    const segmentWildcardRegex = `[^${escapeString(options.delimiter)}]+?`;
+    let regexValue = part.value;
+    if (part.type === 1 /* kSegmentWildcard */)
+      regexValue = segmentWildcardRegex;
+    else if (part.type === 0 /* kFullWildcard */)
+      regexValue = kFullWildcardRegex;
+    if (!part.prefix.length && !part.suffix.length) {
+      if (part.modifier === 3 /* kNone */ || part.modifier === 1 /* kOptional */) {
+        result += `(${regexValue})${modifierToString(part.modifier)}`;
+      } else {
+        result += `((?:${regexValue})${modifierToString(part.modifier)})`;
+      }
+      continue;
+    }
+    if (part.modifier === 3 /* kNone */ || part.modifier === 1 /* kOptional */) {
+      result += `(?:${escapeString(part.prefix)}(${regexValue})${escapeString(part.suffix)})`;
+      result += modifierToString(part.modifier);
+      continue;
+    }
+    result += `(?:${escapeString(part.prefix)}`;
+    result += `((?:${regexValue})(?:`;
+    result += escapeString(part.suffix);
+    result += escapeString(part.prefix);
+    result += `(?:${regexValue}))*)${escapeString(part.suffix)})`;
+    if (part.modifier === 0 /* kZeroOrMore */) {
+      result += "?";
+    }
+  }
+  const endsWith = `[${escapeString(options.endsWith)}]|$`;
+  const delimiter = `[${escapeString(options.delimiter)}]`;
+  if (options.end) {
+    if (!options.strict) {
+      result += `${delimiter}?`;
+    }
+    if (!options.endsWith.length) {
+      result += "$";
+    } else {
+      result += `(?=${endsWith})`;
+    }
+    return new RegExp(result, flags(options));
+  }
+  if (!options.strict) {
+    result += `(?:${delimiter}(?=${endsWith}))?`;
+  }
+  let isEndDelimited = false;
+  if (parts.length) {
+    const lastPart = parts[parts.length - 1];
+    if (lastPart.type === 3 /* kFixed */ && lastPart.modifier === 3 /* kNone */) {
+      isEndDelimited = options.delimiter.indexOf(lastPart) > -1;
+    }
+  }
+  if (!isEndDelimited) {
+    result += `(?=${delimiter}|${endsWith})`;
+  }
+  return new RegExp(result, flags(options));
+}
+
+// src/url-utils.ts
+var DEFAULT_OPTIONS = {
+  delimiter: "",
+  prefixes: "",
+  sensitive: true,
+  strict: true
+};
+var HOSTNAME_OPTIONS = {
+  delimiter: ".",
+  prefixes: "",
+  sensitive: true,
+  strict: true
+};
+var PATHNAME_OPTIONS = {
+  delimiter: "/",
+  prefixes: "/",
+  sensitive: true,
+  strict: true
+};
+function isAbsolutePathname(pathname, isPattern) {
+  if (!pathname.length) {
+    return false;
+  }
+  if (pathname[0] === "/") {
+    return true;
+  }
+  if (!isPattern) {
+    return false;
+  }
+  if (pathname.length < 2) {
+    return false;
+  }
+  if ((pathname[0] == "\\" || pathname[0] == "{") && pathname[1] == "/") {
+    return true;
+  }
+  return false;
+}
+function maybeStripPrefix(value, prefix) {
+  if (value.startsWith(prefix)) {
+    return value.substring(prefix.length, value.length);
+  }
+  return value;
+}
+function maybeStripSuffix(value, suffix) {
+  if (value.endsWith(suffix)) {
+    return value.substr(0, value.length - suffix.length);
+  }
+  return value;
+}
+function treatAsIPv6Hostname(value) {
+  if (!value || value.length < 2) {
+    return false;
+  }
+  if (value[0] === "[") {
+    return true;
+  }
+  if ((value[0] === "\\" || value[0] === "{") && value[1] === "[") {
+    return true;
+  }
+  return false;
+}
+var SPECIAL_SCHEMES = [
+  "ftp",
+  "file",
+  "http",
+  "https",
+  "ws",
+  "wss"
+];
+function isSpecialScheme(protocol_regexp) {
+  if (!protocol_regexp) {
+    return true;
+  }
+  for (const scheme of SPECIAL_SCHEMES) {
+    if (protocol_regexp.test(scheme)) {
+      return true;
+    }
+  }
+  return false;
+}
+function canonicalizeHash(hash, isPattern) {
+  hash = maybeStripPrefix(hash, "#");
+  if (isPattern || hash === "") {
+    return hash;
+  }
+  const url = new URL("https://example.com");
+  url.hash = hash;
+  return url.hash ? url.hash.substring(1, url.hash.length) : "";
+}
+function canonicalizeSearch(search, isPattern) {
+  search = maybeStripPrefix(search, "?");
+  if (isPattern || search === "") {
+    return search;
+  }
+  const url = new URL("https://example.com");
+  url.search = search;
+  return url.search ? url.search.substring(1, url.search.length) : "";
+}
+function canonicalizeHostname(hostname, isPattern) {
+  if (isPattern || hostname === "") {
+    return hostname;
+  }
+  if (treatAsIPv6Hostname(hostname)) {
+    return ipv6HostnameEncodeCallback(hostname);
+  } else {
+    return hostnameEncodeCallback(hostname);
+  }
+}
+function canonicalizePassword(password, isPattern) {
+  if (isPattern || password === "") {
+    return password;
+  }
+  const url = new URL("https://example.com");
+  url.password = password;
+  return url.password;
+}
+function canonicalizeUsername(username, isPattern) {
+  if (isPattern || username === "") {
+    return username;
+  }
+  const url = new URL("https://example.com");
+  url.username = username;
+  return url.username;
+}
+function canonicalizePathname(pathname, protocol, isPattern) {
+  if (isPattern || pathname === "") {
+    return pathname;
+  }
+  if (protocol && !SPECIAL_SCHEMES.includes(protocol)) {
+    const url = new URL(`${protocol}:${pathname}`);
+    return url.pathname;
+  }
+  const leadingSlash = pathname[0] == "/";
+  pathname = new URL(
+    !leadingSlash ? "/-" + pathname : pathname,
+    "https://example.com"
+  ).pathname;
+  if (!leadingSlash) {
+    pathname = pathname.substring(2, pathname.length);
+  }
+  return pathname;
+}
+function canonicalizePort(port, protocol, isPattern) {
+  if (defaultPortForProtocol(protocol) === port) {
+    port = "";
+  }
+  if (isPattern || port === "") {
+    return port;
+  }
+  return portEncodeCallback(port);
+}
+function canonicalizeProtocol(protocol, isPattern) {
+  protocol = maybeStripSuffix(protocol, ":");
+  if (isPattern || protocol === "") {
+    return protocol;
+  }
+  return protocolEncodeCallback(protocol);
+}
+function defaultPortForProtocol(protocol) {
+  switch (protocol) {
+    case "ws":
+    case "http":
+      return "80";
+    case "wws":
+    case "https":
+      return "443";
+    case "ftp":
+      return "21";
+    default:
+      return "";
+  }
+}
+function protocolEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  if (/^[-+.A-Za-z0-9]*$/.test(input))
+    return input.toLowerCase();
+  throw new TypeError(`Invalid protocol '${input}'.`);
+}
+function usernameEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  const url = new URL("https://example.com");
+  url.username = input;
+  return url.username;
+}
+function passwordEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  const url = new URL("https://example.com");
+  url.password = input;
+  return url.password;
+}
+function hostnameEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  if (/[\t\n\r #%/:<>?@[\]^\\|]/g.test(input)) {
+    throw new TypeError(`Invalid hostname '${input}'`);
+  }
+  const url = new URL("https://example.com");
+  url.hostname = input;
+  return url.hostname;
+}
+function ipv6HostnameEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  if (/[^0-9a-fA-F[\]:]/g.test(input)) {
+    throw new TypeError(`Invalid IPv6 hostname '${input}'`);
+  }
+  return input.toLowerCase();
+}
+function portEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  if (/^[0-9]*$/.test(input) && parseInt(input) <= 65535) {
+    return input;
+  }
+  throw new TypeError(`Invalid port '${input}'.`);
+}
+function standardURLPathnameEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  const url = new URL("https://example.com");
+  url.pathname = input[0] !== "/" ? "/-" + input : input;
+  if (input[0] !== "/") {
+    return url.pathname.substring(2, url.pathname.length);
+  }
+  return url.pathname;
+}
+function pathURLPathnameEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  const url = new URL(`data:${input}`);
+  return url.pathname;
+}
+function searchEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  const url = new URL("https://example.com");
+  url.search = input;
+  return url.search.substring(1, url.search.length);
+}
+function hashEncodeCallback(input) {
+  if (input === "") {
+    return input;
+  }
+  const url = new URL("https://example.com");
+  url.hash = input;
+  return url.hash.substring(1, url.hash.length);
+}
+
+// src/url-pattern-parser.ts
+var Parser = class {
+  constructor(input) {
+    // The list of `LexToken`s produced by the path-to-regexp `lexer()` function
+    // when passed `input` with lenient mode enabled.
+    this.tokenList = [];
+    // As we parse the input string we populate a `URLPatternInit` dictionary
+    // with each component pattern.  This is then the final result of the parse.
+    this.internalResult = {};
+    // The index of the current `LexToken` being considered.
+    this.tokenIndex = 0;
+    // The value to add to `tokenIndex` on each turn through the parse loop.
+    // While typically this is `1`, it is also set to `0` at times for things
+    // like state transitions, etc.  It is automatically reset back to `1` at
+    // the top of the parse loop.
+    this.tokenIncrement = 1;
+    // The index of the first `LexToken` to include in the component string.
+    this.componentStart = 0;
+    // The current parse state.  This should only be changed via `changeState()`
+    // or `rewindAndSetState()`.
+    this.state = 0 /* INIT */;
+    // The current nest depth of `{ }` pattern groupings.
+    this.groupDepth = 0;
+    // The current nesting depth of `[ ]` in hostname patterns.
+    this.hostnameIPv6BracketDepth = 0;
+    // True if we should apply parse rules as if this is a "standard" URL.  If
+    // false then this is treated as a "not a base URL".
+    this.shouldTreatAsStandardURL = false;
+    this.input = input;
+  }
+  // Return the parse result.  The result is only available after the
+  // `parse()` method completes.
+  get result() {
+    return this.internalResult;
+  }
+  // Attempt to parse the input string used to construct the Parser object.
+  // This method may only be called once.  Any errors will be thrown as an
+  // exception.  Retrieve the parse result by accessing the `Parser.result`
+  // property getter.
+  parse() {
+    this.tokenList = lexer(
+      this.input,
+      /*lenient=*/
+      true
+    );
+    for (; this.tokenIndex < this.tokenList.length; this.tokenIndex += this.tokenIncrement) {
+      this.tokenIncrement = 1;
+      if (this.tokenList[this.tokenIndex].type === "END") {
+        if (this.state === 0 /* INIT */) {
+          this.rewind();
+          if (this.isHashPrefix()) {
+            this.changeState(
+              9 /* HASH */,
+              /*skip=*/
+              1
+            );
+          } else if (this.isSearchPrefix()) {
+            this.changeState(
+              8 /* SEARCH */,
+              /*skip=*/
+              1
+            );
+            this.internalResult.hash = "";
+          } else {
+            this.changeState(
+              7 /* PATHNAME */,
+              /*skip=*/
+              0
+            );
+            this.internalResult.search = "";
+            this.internalResult.hash = "";
+          }
+          continue;
+        } else if (this.state === 2 /* AUTHORITY */) {
+          this.rewindAndSetState(5 /* HOSTNAME */);
+          continue;
+        }
+        this.changeState(
+          10 /* DONE */,
+          /*skip=*/
+          0
+        );
+        break;
+      }
+      if (this.groupDepth > 0) {
+        if (this.isGroupClose()) {
+          this.groupDepth -= 1;
+        } else {
+          continue;
+        }
+      }
+      if (this.isGroupOpen()) {
+        this.groupDepth += 1;
+        continue;
+      }
+      switch (this.state) {
+        case 0 /* INIT */:
+          if (this.isProtocolSuffix()) {
+            this.internalResult.username = "";
+            this.internalResult.password = "";
+            this.internalResult.hostname = "";
+            this.internalResult.port = "";
+            this.internalResult.pathname = "";
+            this.internalResult.search = "";
+            this.internalResult.hash = "";
+            this.rewindAndSetState(1 /* PROTOCOL */);
+          }
+          break;
+        case 1 /* PROTOCOL */:
+          if (this.isProtocolSuffix()) {
+            this.computeShouldTreatAsStandardURL();
+            let nextState = 7 /* PATHNAME */;
+            let skip = 1;
+            if (this.shouldTreatAsStandardURL) {
+              this.internalResult.pathname = "/";
+            }
+            if (this.nextIsAuthoritySlashes()) {
+              nextState = 2 /* AUTHORITY */;
+              skip = 3;
+            } else if (this.shouldTreatAsStandardURL) {
+              nextState = 2 /* AUTHORITY */;
+            }
+            this.changeState(nextState, skip);
+          }
+          break;
+        case 2 /* AUTHORITY */:
+          if (this.isIdentityTerminator()) {
+            this.rewindAndSetState(3 /* USERNAME */);
+          } else if (this.isPathnameStart() || this.isSearchPrefix() || this.isHashPrefix()) {
+            this.rewindAndSetState(5 /* HOSTNAME */);
+          }
+          break;
+        case 3 /* USERNAME */:
+          if (this.isPasswordPrefix()) {
+            this.changeState(
+              4 /* PASSWORD */,
+              /*skip=*/
+              1
+            );
+          } else if (this.isIdentityTerminator()) {
+            this.changeState(
+              5 /* HOSTNAME */,
+              /*skip=*/
+              1
+            );
+          }
+          break;
+        case 4 /* PASSWORD */:
+          if (this.isIdentityTerminator()) {
+            this.changeState(
+              5 /* HOSTNAME */,
+              /*skip=*/
+              1
+            );
+          }
+          break;
+        case 5 /* HOSTNAME */:
+          if (this.isIPv6Open()) {
+            this.hostnameIPv6BracketDepth += 1;
+          } else if (this.isIPv6Close()) {
+            this.hostnameIPv6BracketDepth -= 1;
+          }
+          if (this.isPortPrefix() && !this.hostnameIPv6BracketDepth) {
+            this.changeState(
+              6 /* PORT */,
+              /*skip=*/
+              1
+            );
+          } else if (this.isPathnameStart()) {
+            this.changeState(
+              7 /* PATHNAME */,
+              /*skip=*/
+              0
+            );
+          } else if (this.isSearchPrefix()) {
+            this.changeState(
+              8 /* SEARCH */,
+              /*skip=*/
+              1
+            );
+          } else if (this.isHashPrefix()) {
+            this.changeState(
+              9 /* HASH */,
+              /*skip=*/
+              1
+            );
+          }
+          break;
+        case 6 /* PORT */:
+          if (this.isPathnameStart()) {
+            this.changeState(
+              7 /* PATHNAME */,
+              /*skip=*/
+              0
+            );
+          } else if (this.isSearchPrefix()) {
+            this.changeState(
+              8 /* SEARCH */,
+              /*skip=*/
+              1
+            );
+          } else if (this.isHashPrefix()) {
+            this.changeState(
+              9 /* HASH */,
+              /*skip=*/
+              1
+            );
+          }
+          break;
+        case 7 /* PATHNAME */:
+          if (this.isSearchPrefix()) {
+            this.changeState(
+              8 /* SEARCH */,
+              /*skip=*/
+              1
+            );
+          } else if (this.isHashPrefix()) {
+            this.changeState(
+              9 /* HASH */,
+              /*skip=*/
+              1
+            );
+          }
+          break;
+        case 8 /* SEARCH */:
+          if (this.isHashPrefix()) {
+            this.changeState(
+              9 /* HASH */,
+              /*skip=*/
+              1
+            );
+          }
+          break;
+      }
+    }
+  }
+  changeState(newState, skip) {
+    switch (this.state) {
+      case 0 /* INIT */:
+        break;
+      case 1 /* PROTOCOL */:
+        this.internalResult.protocol = this.makeComponentString();
+        break;
+      case 2 /* AUTHORITY */:
+        break;
+      case 3 /* USERNAME */:
+        this.internalResult.username = this.makeComponentString();
+        break;
+      case 4 /* PASSWORD */:
+        this.internalResult.password = this.makeComponentString();
+        break;
+      case 5 /* HOSTNAME */:
+        this.internalResult.hostname = this.makeComponentString();
+        break;
+      case 6 /* PORT */:
+        this.internalResult.port = this.makeComponentString();
+        break;
+      case 7 /* PATHNAME */:
+        this.internalResult.pathname = this.makeComponentString();
+        break;
+      case 8 /* SEARCH */:
+        this.internalResult.search = this.makeComponentString();
+        break;
+      case 9 /* HASH */:
+        this.internalResult.hash = this.makeComponentString();
+        break;
+    }
+    this.changeStateWithoutSettingComponent(newState, skip);
+  }
+  changeStateWithoutSettingComponent(newState, skip) {
+    this.state = newState;
+    this.componentStart = this.tokenIndex + skip;
+    this.tokenIndex += skip;
+    this.tokenIncrement = 0;
+  }
+  rewind() {
+    this.tokenIndex = this.componentStart;
+    this.tokenIncrement = 0;
+  }
+  rewindAndSetState(newState) {
+    this.rewind();
+    this.state = newState;
+  }
+  safeToken(index) {
+    if (index < 0) {
+      index = this.tokenList.length - index;
+    }
+    if (index < this.tokenList.length) {
+      return this.tokenList[index];
+    }
+    return this.tokenList[this.tokenList.length - 1];
+  }
+  isNonSpecialPatternChar(index, value) {
+    const token = this.safeToken(index);
+    return token.value === value && (token.type === "CHAR" || token.type === "ESCAPED_CHAR" || token.type === "INVALID_CHAR");
+  }
+  isProtocolSuffix() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, ":");
+  }
+  nextIsAuthoritySlashes() {
+    return this.isNonSpecialPatternChar(this.tokenIndex + 1, "/") && this.isNonSpecialPatternChar(this.tokenIndex + 2, "/");
+  }
+  isIdentityTerminator() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, "@");
+  }
+  isPasswordPrefix() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, ":");
+  }
+  isPortPrefix() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, ":");
+  }
+  isPathnameStart() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, "/");
+  }
+  isSearchPrefix() {
+    if (this.isNonSpecialPatternChar(this.tokenIndex, "?")) {
+      return true;
+    }
+    if (this.tokenList[this.tokenIndex].value !== "?") {
+      return false;
+    }
+    const previousToken = this.safeToken(this.tokenIndex - 1);
+    return previousToken.type !== "NAME" && previousToken.type !== "REGEX" && previousToken.type !== "CLOSE" && previousToken.type !== "ASTERISK";
+  }
+  isHashPrefix() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, "#");
+  }
+  isGroupOpen() {
+    return this.tokenList[this.tokenIndex].type == "OPEN";
+  }
+  isGroupClose() {
+    return this.tokenList[this.tokenIndex].type == "CLOSE";
+  }
+  isIPv6Open() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, "[");
+  }
+  isIPv6Close() {
+    return this.isNonSpecialPatternChar(this.tokenIndex, "]");
+  }
+  makeComponentString() {
+    const token = this.tokenList[this.tokenIndex];
+    const componentCharStart = this.safeToken(this.componentStart).index;
+    return this.input.substring(componentCharStart, token.index);
+  }
+  computeShouldTreatAsStandardURL() {
+    const options = {};
+    Object.assign(options, DEFAULT_OPTIONS);
+    options.encodePart = protocolEncodeCallback;
+    const regexp = stringToRegexp(
+      this.makeComponentString(),
+      /*keys=*/
+      void 0,
+      options
+    );
+    this.shouldTreatAsStandardURL = isSpecialScheme(regexp);
+  }
+};
+
+// src/url-pattern.ts
+var COMPONENTS = [
+  "protocol",
+  "username",
+  "password",
+  "hostname",
+  "port",
+  "pathname",
+  "search",
+  "hash"
+];
+var DEFAULT_PATTERN = "*";
+function extractValues(url, baseURL) {
+  if (typeof url !== "string") {
+    throw new TypeError(`parameter 1 is not of type 'string'.`);
+  }
+  const o = new URL(url, baseURL);
+  return {
+    protocol: o.protocol.substring(0, o.protocol.length - 1),
+    username: o.username,
+    password: o.password,
+    hostname: o.hostname,
+    port: o.port,
+    pathname: o.pathname,
+    search: o.search !== "" ? o.search.substring(1, o.search.length) : void 0,
+    hash: o.hash !== "" ? o.hash.substring(1, o.hash.length) : void 0
+  };
+}
+function processBaseURLString(input, isPattern) {
+  if (!isPattern) {
+    return input;
+  }
+  return escapePatternString(input);
+}
+function applyInit(o, init, isPattern) {
+  let baseURL;
+  if (typeof init.baseURL === "string") {
+    try {
+      baseURL = new URL(init.baseURL);
+      o.protocol = processBaseURLString(baseURL.protocol.substring(0, baseURL.protocol.length - 1), isPattern);
+      o.username = processBaseURLString(baseURL.username, isPattern);
+      o.password = processBaseURLString(baseURL.password, isPattern);
+      o.hostname = processBaseURLString(baseURL.hostname, isPattern);
+      o.port = processBaseURLString(baseURL.port, isPattern);
+      o.pathname = processBaseURLString(baseURL.pathname, isPattern);
+      o.search = processBaseURLString(baseURL.search.substring(1, baseURL.search.length), isPattern);
+      o.hash = processBaseURLString(baseURL.hash.substring(1, baseURL.hash.length), isPattern);
+    } catch {
+      throw new TypeError(`invalid baseURL '${init.baseURL}'.`);
+    }
+  }
+  if (typeof init.protocol === "string") {
+    o.protocol = canonicalizeProtocol(init.protocol, isPattern);
+  }
+  if (typeof init.username === "string") {
+    o.username = canonicalizeUsername(init.username, isPattern);
+  }
+  if (typeof init.password === "string") {
+    o.password = canonicalizePassword(init.password, isPattern);
+  }
+  if (typeof init.hostname === "string") {
+    o.hostname = canonicalizeHostname(init.hostname, isPattern);
+  }
+  if (typeof init.port === "string") {
+    o.port = canonicalizePort(init.port, o.protocol, isPattern);
+  }
+  if (typeof init.pathname === "string") {
+    o.pathname = init.pathname;
+    if (baseURL && !isAbsolutePathname(o.pathname, isPattern)) {
+      const slashIndex = baseURL.pathname.lastIndexOf("/");
+      if (slashIndex >= 0) {
+        o.pathname = processBaseURLString(baseURL.pathname.substring(0, slashIndex + 1), isPattern) + o.pathname;
+      }
+    }
+    o.pathname = canonicalizePathname(o.pathname, o.protocol, isPattern);
+  }
+  if (typeof init.search === "string") {
+    o.search = canonicalizeSearch(init.search, isPattern);
+  }
+  if (typeof init.hash === "string") {
+    o.hash = canonicalizeHash(init.hash, isPattern);
+  }
+  return o;
+}
+function escapePatternString(value) {
+  return value.replace(/([+*?:{}()\\])/g, "\\$1");
+}
+function escapeRegexpString(value) {
+  return value.replace(/([.+*?^${}()[\]|/\\])/g, "\\$1");
+}
+function partsToPattern(parts, options) {
+  options.delimiter ?? (options.delimiter = "/#?");
+  options.prefixes ?? (options.prefixes = "./");
+  options.sensitive ?? (options.sensitive = false);
+  options.strict ?? (options.strict = false);
+  options.end ?? (options.end = true);
+  options.start ?? (options.start = true);
+  options.endsWith = "";
+  const kFullWildcardRegex2 = ".*";
+  const segmentWildcardRegex = `[^${escapeRegexpString(options.delimiter)}]+?`;
+  const regexIdentifierPart2 = /[$_\u200C\u200D\p{ID_Continue}]/u;
+  let result = "";
+  for (let i = 0; i < parts.length; ++i) {
+    const part = parts[i];
+    if (part.type === 3 /* kFixed */) {
+      if (part.modifier === 3 /* kNone */) {
+        result += escapePatternString(part.value);
+        continue;
+      }
+      result += `{${escapePatternString(part.value)}}${modifierToString(part.modifier)}`;
+      continue;
+    }
+    const customName = part.hasCustomName();
+    let needsGrouping = !!part.suffix.length || !!part.prefix.length && (part.prefix.length !== 1 || !options.prefixes.includes(part.prefix));
+    const lastPart = i > 0 ? parts[i - 1] : null;
+    const nextPart = i < parts.length - 1 ? parts[i + 1] : null;
+    if (!needsGrouping && customName && part.type === 1 /* kSegmentWildcard */ && part.modifier === 3 /* kNone */ && nextPart && !nextPart.prefix.length && !nextPart.suffix.length) {
+      if (nextPart.type === 3 /* kFixed */) {
+        const code = nextPart.value.length > 0 ? nextPart.value[0] : "";
+        needsGrouping = regexIdentifierPart2.test(code);
+      } else {
+        needsGrouping = !nextPart.hasCustomName();
+      }
+    }
+    if (!needsGrouping && !part.prefix.length && lastPart && lastPart.type === 3 /* kFixed */) {
+      const code = lastPart.value[lastPart.value.length - 1];
+      needsGrouping = options.prefixes.includes(code);
+    }
+    if (needsGrouping) {
+      result += "{";
+    }
+    result += escapePatternString(part.prefix);
+    if (customName) {
+      result += `:${part.name}`;
+    }
+    if (part.type === 2 /* kRegex */) {
+      result += `(${part.value})`;
+    } else if (part.type === 1 /* kSegmentWildcard */) {
+      if (!customName) {
+        result += `(${segmentWildcardRegex})`;
+      }
+    } else if (part.type === 0 /* kFullWildcard */) {
+      if (!customName && (!lastPart || lastPart.type === 3 /* kFixed */ || lastPart.modifier !== 3 /* kNone */ || needsGrouping || part.prefix !== "")) {
+        result += "*";
+      } else {
+        result += `(${kFullWildcardRegex2})`;
+      }
+    }
+    if (part.type === 1 /* kSegmentWildcard */ && customName && !!part.suffix.length) {
+      if (regexIdentifierPart2.test(part.suffix[0])) {
+        result += "\\";
+      }
+    }
+    result += escapePatternString(part.suffix);
+    if (needsGrouping) {
+      result += "}";
+    }
+    if (part.modifier !== 3 /* kNone */) {
+      result += modifierToString(part.modifier);
+    }
+  }
+  return result;
+}
+var URLPattern$2 = class {
+  constructor(init = {}, baseURLOrOptions, options) {
+    this.regexp = {};
+    this.names = {};
+    this.component_pattern = {};
+    this.parts = {};
+    try {
+      let baseURL = void 0;
+      if (typeof baseURLOrOptions === "string") {
+        baseURL = baseURLOrOptions;
+      } else {
+        options = baseURLOrOptions;
+      }
+      if (typeof init === "string") {
+        const parser = new Parser(init);
+        parser.parse();
+        init = parser.result;
+        if (baseURL === void 0 && typeof init.protocol !== "string") {
+          throw new TypeError(`A base URL must be provided for a relative constructor string.`);
+        }
+        init.baseURL = baseURL;
+      } else {
+        if (!init || typeof init !== "object") {
+          throw new TypeError(`parameter 1 is not of type 'string' and cannot convert to dictionary.`);
+        }
+        if (baseURL) {
+          throw new TypeError(`parameter 1 is not of type 'string'.`);
+        }
+      }
+      if (typeof options === "undefined") {
+        options = { ignoreCase: false };
+      }
+      const ignoreCaseOptions = { ignoreCase: options.ignoreCase === true };
+      const defaults = {
+        pathname: DEFAULT_PATTERN,
+        protocol: DEFAULT_PATTERN,
+        username: DEFAULT_PATTERN,
+        password: DEFAULT_PATTERN,
+        hostname: DEFAULT_PATTERN,
+        port: DEFAULT_PATTERN,
+        search: DEFAULT_PATTERN,
+        hash: DEFAULT_PATTERN
+      };
+      this.pattern = applyInit(defaults, init, true);
+      if (defaultPortForProtocol(this.pattern.protocol) === this.pattern.port) {
+        this.pattern.port = "";
+      }
+      let component;
+      for (component of COMPONENTS) {
+        if (!(component in this.pattern))
+          continue;
+        const options2 = {};
+        const pattern = this.pattern[component];
+        this.names[component] = [];
+        switch (component) {
+          case "protocol":
+            Object.assign(options2, DEFAULT_OPTIONS);
+            options2.encodePart = protocolEncodeCallback;
+            break;
+          case "username":
+            Object.assign(options2, DEFAULT_OPTIONS);
+            options2.encodePart = usernameEncodeCallback;
+            break;
+          case "password":
+            Object.assign(options2, DEFAULT_OPTIONS);
+            options2.encodePart = passwordEncodeCallback;
+            break;
+          case "hostname":
+            Object.assign(options2, HOSTNAME_OPTIONS);
+            if (treatAsIPv6Hostname(pattern)) {
+              options2.encodePart = ipv6HostnameEncodeCallback;
+            } else {
+              options2.encodePart = hostnameEncodeCallback;
+            }
+            break;
+          case "port":
+            Object.assign(options2, DEFAULT_OPTIONS);
+            options2.encodePart = portEncodeCallback;
+            break;
+          case "pathname":
+            if (isSpecialScheme(this.regexp.protocol)) {
+              Object.assign(options2, PATHNAME_OPTIONS, ignoreCaseOptions);
+              options2.encodePart = standardURLPathnameEncodeCallback;
+            } else {
+              Object.assign(options2, DEFAULT_OPTIONS, ignoreCaseOptions);
+              options2.encodePart = pathURLPathnameEncodeCallback;
+            }
+            break;
+          case "search":
+            Object.assign(options2, DEFAULT_OPTIONS, ignoreCaseOptions);
+            options2.encodePart = searchEncodeCallback;
+            break;
+          case "hash":
+            Object.assign(options2, DEFAULT_OPTIONS, ignoreCaseOptions);
+            options2.encodePart = hashEncodeCallback;
+            break;
+        }
+        try {
+          this.parts[component] = parse$1(pattern, options2);
+          this.regexp[component] = partsToRegexp(
+            this.parts[component],
+            /* out */
+            this.names[component],
+            options2
+          );
+          this.component_pattern[component] = partsToPattern(this.parts[component], options2);
+        } catch (err) {
+          throw new TypeError(`invalid ${component} pattern '${this.pattern[component]}'.`);
+        }
+      }
+    } catch (err) {
+      throw new TypeError(`Failed to construct 'URLPattern': ${err.message}`);
+    }
+  }
+  test(input = {}, baseURL) {
+    let values = {
+      pathname: "",
+      protocol: "",
+      username: "",
+      password: "",
+      hostname: "",
+      port: "",
+      search: "",
+      hash: ""
+    };
+    if (typeof input !== "string" && baseURL) {
+      throw new TypeError(`parameter 1 is not of type 'string'.`);
+    }
+    if (typeof input === "undefined") {
+      return false;
+    }
+    try {
+      if (typeof input === "object") {
+        values = applyInit(values, input, false);
+      } else {
+        values = applyInit(values, extractValues(input, baseURL), false);
+      }
+    } catch (err) {
+      return false;
+    }
+    let component;
+    for (component of COMPONENTS) {
+      if (!this.regexp[component].exec(values[component])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  exec(input = {}, baseURL) {
+    let values = {
+      pathname: "",
+      protocol: "",
+      username: "",
+      password: "",
+      hostname: "",
+      port: "",
+      search: "",
+      hash: ""
+    };
+    if (typeof input !== "string" && baseURL) {
+      throw new TypeError(`parameter 1 is not of type 'string'.`);
+    }
+    if (typeof input === "undefined") {
+      return;
+    }
+    try {
+      if (typeof input === "object") {
+        values = applyInit(values, input, false);
+      } else {
+        values = applyInit(values, extractValues(input, baseURL), false);
+      }
+    } catch (err) {
+      return null;
+    }
+    let result = {};
+    if (baseURL) {
+      result.inputs = [input, baseURL];
+    } else {
+      result.inputs = [input];
+    }
+    let component;
+    for (component of COMPONENTS) {
+      let match = this.regexp[component].exec(values[component]);
+      if (!match) {
+        return null;
+      }
+      let groups = {};
+      for (let [i, name] of this.names[component].entries()) {
+        if (typeof name === "string" || typeof name === "number") {
+          let value = match[i + 1];
+          groups[name] = value;
+        }
+      }
+      result[component] = {
+        input: values[component] ?? "",
+        groups
+      };
+    }
+    return result;
+  }
+  static compareComponent(component, left, right) {
+    const comparePart = (left2, right2) => {
+      for (let attr of ["type", "modifier", "prefix", "value", "suffix"]) {
+        if (left2[attr] < right2[attr])
+          return -1;
+        else if (left2[attr] === right2[attr])
+          continue;
+        else
+          return 1;
+      }
+      return 0;
+    };
+    const emptyFixedPart = new Part(3 /* kFixed */, "", "", "", "", 3 /* kNone */);
+    const wildcardOnlyPart = new Part(0 /* kFullWildcard */, "", "", "", "", 3 /* kNone */);
+    const comparePartList = (left2, right2) => {
+      let i = 0;
+      for (; i < Math.min(left2.length, right2.length); ++i) {
+        let result = comparePart(left2[i], right2[i]);
+        if (result)
+          return result;
+      }
+      if (left2.length === right2.length) {
+        return 0;
+      }
+      return comparePart(left2[i] ?? emptyFixedPart, right2[i] ?? emptyFixedPart);
+    };
+    if (!left.component_pattern[component] && !right.component_pattern[component]) {
+      return 0;
+    }
+    if (left.component_pattern[component] && !right.component_pattern[component]) {
+      return comparePartList(left.parts[component], [wildcardOnlyPart]);
+    }
+    if (!left.component_pattern[component] && right.component_pattern[component]) {
+      return comparePartList([wildcardOnlyPart], right.parts[component]);
+    }
+    return comparePartList(left.parts[component], right.parts[component]);
+  }
+  get protocol() {
+    return this.component_pattern.protocol;
+  }
+  get username() {
+    return this.component_pattern.username;
+  }
+  get password() {
+    return this.component_pattern.password;
+  }
+  get hostname() {
+    return this.component_pattern.hostname;
+  }
+  get port() {
+    return this.component_pattern.port;
+  }
+  get pathname() {
+    return this.component_pattern.pathname;
+  }
+  get search() {
+    return this.component_pattern.search;
+  }
+  get hash() {
+    return this.component_pattern.hash;
+  }
+};
+
+if (!globalThis.URLPattern) {
+  globalThis.URLPattern = URLPattern$2;
+}
 
 const globalURLPattern = typeof URLPattern === "undefined" ? undefined : URLPattern;
 
@@ -95,7 +1510,7 @@ function compositeKey(...parts) {
     return internalCompositeKey(...parts);
 }
 
-class URLPattern$1 extends (globalURLPattern ?? U) {
+class URLPattern$1 extends (globalURLPattern ?? URLPattern$2) {
 }
 function isURLPatternStringWildcard(pattern) {
     return pattern === "*";
@@ -2359,8 +3774,8 @@ function isRandomUUID(value) {
 const v4$1 = GlobalUUID; //await importUUID();
 
 var importUuid = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    v4: v4$1
+  __proto__: null,
+  v4: v4$1
 });
 
 // Unique ID creation requires a high quality random # generator. In the browser we therefore
@@ -2949,16 +4364,16 @@ function version(uuid) {
 }
 
 var index = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    v1: v1,
-    v3: v3$1,
-    v4: v4,
-    v5: v5$1,
-    NIL: nil,
-    version: version,
-    validate: validate,
-    stringify: stringify,
-    parse: parse
+  __proto__: null,
+  v1: v1,
+  v3: v3$1,
+  v4: v4,
+  v5: v5$1,
+  NIL: nil,
+  version: version,
+  validate: validate,
+  stringify: stringify,
+  parse: parse
 });
 
 export { Router, enableURLPatternCache, getRouter, getRouterRoutes, isRouter, route, routes, transitionEvent };

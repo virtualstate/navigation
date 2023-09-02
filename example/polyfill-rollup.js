@@ -2281,7 +2281,7 @@ function interceptWindowClicks(navigation, window) {
     window.addEventListener("click", (ev) => {
         // console.log("click event", ev)
         if (ev.target?.ownerDocument === window.document) {
-            const aEl = matchesAncestor(ev.target, "a[href]"); // XXX: not sure what <a> tags without href do
+            const aEl = matchesAncestor(ev.composedPath()[0], "a[href]"); // XXX: not sure what <a> tags without href do
             if (like(aEl)) {
                 clickCallback(ev, aEl);
             }
@@ -2290,7 +2290,7 @@ function interceptWindowClicks(navigation, window) {
     window.addEventListener("submit", (ev) => {
         // console.log("submit event")
         if (ev.target?.ownerDocument === window.document) {
-            const form = matchesAncestor(ev.target, "form");
+            const form = matchesAncestor(ev.composedPath()[0], "form");
             if (like(form)) {
                 submitCallback(ev, form);
             }
