@@ -11,7 +11,7 @@ import { stringify, parse } from './util/structured-json';
 import {NavigationHistory} from "./history";
 import {like, ok} from "./is";
 import {
-  ElementPrototype,
+  ElementPrototype, EventPrototype,
   globalWindow,
   HTMLAnchorElementPrototype,
   HTMLFormElementPrototype,
@@ -358,7 +358,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
   window.addEventListener("click", (ev: MouseEventPrototype) => {
     // console.log("click event", ev)
     if (ev.target?.ownerDocument === window.document) {
-      const aEl = matchesAncestor(ev.composedPath()[0], "a[href]"); // XXX: not sure what <a> tags without href do
+      const aEl = matchesAncestor(getComposedPathTarget(ev), "a[href]"); // XXX: not sure what <a> tags without href do
       if (like<HTMLAnchorElementPrototype>(aEl)) {
         clickCallback(ev, aEl);
       }
@@ -367,12 +367,20 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
   window.addEventListener("submit", (ev: SubmitEventPrototype) => {
     // console.log("submit event")
     if (ev.target?.ownerDocument === window.document) {
-      const form: unknown = matchesAncestor(ev.composedPath()[0], "form");
+      const form: unknown = matchesAncestor(getComposedPathTarget(ev), "form");
       if (like<HTMLFormElementPrototype>(form)) {
         submitCallback(ev, form);
       }
     }
   });
+}
+
+function getComposedPathTarget(event: EventPrototype) {
+  if (!event.composedPath) {
+    return event.target;
+  }
+  const targets = event.composedPath();
+  return targets[0] ?? event.target;
 }
 
 function patchGlobalScope(window: WindowLike, history: NavigationHistory<object>, navigation: Navigation) {
