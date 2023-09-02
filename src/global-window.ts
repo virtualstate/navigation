@@ -20,7 +20,7 @@ export interface HTMLFormElementPrototype extends ElementPrototype {
 
 export interface EventPrototype {
     target: ElementPrototype;
-    composedPath(): ElementPrototype[];
+    composedPath?(): ElementPrototype[];
     defaultPrevented: unknown;
     submitter: Record<string, unknown>;
 }
