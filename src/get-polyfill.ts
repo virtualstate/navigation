@@ -680,7 +680,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
           // console.log("currentEntry change", historyState);
 
-          switch (navigationType) {
+          switch (navigationType || "replace") {
             case "push":
               return pushState(historyState, "", url)
             case "replace":
@@ -739,6 +739,12 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
       if (PATCH_HISTORY) {
         patchGlobalScope(window, history, navigation);
+      }
+
+      if (!history.state) {
+        // Initialise history state if not available
+        const historyState = getNavigationEntryWithMeta(navigation, navigation.currentEntry, patchLimit);
+        replaceState(historyState, "", navigation.currentEntry.url);
       }
     }
   };

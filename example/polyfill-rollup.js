@@ -2555,7 +2555,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                         return;
                     const historyState = getNavigationEntryWithMeta(navigation, currentEntry, patchLimit);
                     // console.log("currentEntry change", historyState);
-                    switch (navigationType) {
+                    switch (navigationType || "replace") {
                         case "push":
                             return pushState(historyState, "", url);
                         case "replace":
@@ -2607,6 +2607,11 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
             }
             if (PATCH_HISTORY) {
                 patchGlobalScope(window, history, navigation);
+            }
+            if (!history.state) {
+                // Initialise history state if not available
+                const historyState = getNavigationEntryWithMeta(navigation, navigation.currentEntry, patchLimit);
+                replaceState(historyState, "", navigation.currentEntry.url);
             }
         }
     };
