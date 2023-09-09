@@ -2076,6 +2076,12 @@ const globalWindow = typeof window === "undefined" ? undefined : window;
 
 const globalSelf = typeof self === "undefined" ? undefined : self;
 
+function isLike(value, ...and) {
+    if (!and.length)
+        return !!value;
+    return !!value && and.every((value) => !!value);
+}
+
 const NavigationKey = "__@virtualstate/navigation/key";
 const NavigationMeta = "__@virtualstate/navigation/meta";
 function getWindowHistory(givenWindow = globalWindow) {
@@ -2289,7 +2295,7 @@ function interceptWindowClicks(navigation, window) {
     window.addEventListener("click", (ev) => {
         // console.log("click event", ev)
         if (ev.target?.ownerDocument === window.document) {
-            const aEl = matchesAncestor(getComposedPathTarget(ev), "a[href]"); // XXX: not sure what <a> tags without href do
+            const aEl = getAnchorFromEvent(ev); // XXX: not sure what <a> tags without href do
             if (like(aEl)) {
                 clickCallback(ev, aEl);
             }
@@ -2298,12 +2304,18 @@ function interceptWindowClicks(navigation, window) {
     window.addEventListener("submit", (ev) => {
         // console.log("submit event")
         if (ev.target?.ownerDocument === window.document) {
-            const form = matchesAncestor(getComposedPathTarget(ev), "form");
+            const form = getFormFromEvent(ev);
             if (like(form)) {
                 submitCallback(ev, form);
             }
         }
     });
+}
+function getAnchorFromEvent(event) {
+    return matchesAncestor(getComposedPathTarget(event), "a[href]:not([data-navigation-ignore])");
+}
+function getFormFromEvent(event) {
+    return matchesAncestor(getComposedPathTarget(event), "form:not([data-navigation-ignore])");
 }
 function getComposedPathTarget(event) {
     if (!event.composedPath) {
@@ -2553,6 +2565,50 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
             if (HISTORY_INTEGRATION) {
                 const ignorePopState = new Set();
                 const ignoreCurrentEntryChange = new Set();
+                navigation.addEventListener("navigate", event => {
+                    if (event.destination.sameDocument) {
+                        return;
+                    }
+                    // If the destination is not the same document, we are navigating away
+                    event.intercept({
+                        // Set commit after transition... and never commit!
+                        commit: "after-transition",
+                        async handler() {
+                            // Let other tasks do something and abort if needed
+                            queueMicrotask(() => {
+                                if (event.signal.aborted)
+                                    return;
+                                submit();
+                            });
+                        }
+                    });
+                    function submit() {
+                        if (isLike(event.originalEvent)) {
+                            const anchor = getAnchorFromEvent(event.originalEvent);
+                            if (anchor) {
+                                return submitAnchor(anchor);
+                            }
+                            else {
+                                const form = getFormFromEvent(event.originalEvent);
+                                if (form) {
+                                    return submitForm(form);
+                                }
+                            }
+                        }
+                        // Assumption that navigation event means to navigate...
+                        location.href = event.destination.url;
+                    }
+                    function submitAnchor(element) {
+                        const cloned = element.cloneNode();
+                        cloned.setAttribute("data-navigation-ignore", "1");
+                        cloned.click();
+                    }
+                    function submitForm(element) {
+                        const cloned = element.cloneNode();
+                        cloned.setAttribute("data-navigation-ignore", "1");
+                        cloned.submit();
+                    }
+                });
                 navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
                     // console.log("<-- currententrychange event listener -->");
                     const { currentEntry } = navigation;

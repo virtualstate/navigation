@@ -21,6 +21,8 @@ import {
 import {globalSelf} from "./global-self";
 import {v4} from "./util/uuid-or-random";
 import {NavigationHistoryEntrySerialized} from "./navigation-entry";
+import {isEvent} from "./event-target";
+import {isLike} from "@virtualstate/focus";
 
 export interface NavigationPolyfillOptions {
   /**
@@ -358,7 +360,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
   window.addEventListener("click", (ev: MouseEventPrototype) => {
     // console.log("click event", ev)
     if (ev.target?.ownerDocument === window.document) {
-      const aEl = matchesAncestor(getComposedPathTarget(ev), "a[href]"); // XXX: not sure what <a> tags without href do
+      const aEl = getAnchorFromEvent(ev); // XXX: not sure what <a> tags without href do
       if (like<HTMLAnchorElementPrototype>(aEl)) {
         clickCallback(ev, aEl);
       }
@@ -367,12 +369,20 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
   window.addEventListener("submit", (ev: SubmitEventPrototype) => {
     // console.log("submit event")
     if (ev.target?.ownerDocument === window.document) {
-      const form: unknown = matchesAncestor(getComposedPathTarget(ev), "form");
+      const form: unknown = getFormFromEvent(ev);
       if (like<HTMLFormElementPrototype>(form)) {
         submitCallback(ev, form);
       }
     }
   });
+}
+
+function getAnchorFromEvent(event: EventPrototype) {
+  return matchesAncestor(getComposedPathTarget(event), "a[href]:not([data-navigation-ignore])");
+}
+
+function getFormFromEvent(event: EventPrototype) {
+  return matchesAncestor(getComposedPathTarget(event), "form:not([data-navigation-ignore])");
 }
 
 function getComposedPathTarget(event: EventPrototype) {
@@ -668,6 +678,55 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
       if (HISTORY_INTEGRATION) {
         const ignorePopState = new Set<string>();
         const ignoreCurrentEntryChange = new Set<string>();
+
+        navigation.addEventListener("navigate", event => {
+          if (event.destination.sameDocument) {
+            return;
+          }
+
+          // If the destination is not the same document, we are navigating away
+          event.intercept({
+            // Set commit after transition... and never commit!
+            commit: "after-transition",
+            async handler() {
+              // Let other tasks do something and abort if needed
+              queueMicrotask(() => {
+                if (event.signal.aborted) return;
+                submit();
+              })
+            }
+          });
+
+          function submit() {
+            if (isLike<EventPrototype>(event.originalEvent)) {
+              const anchor = getAnchorFromEvent(event.originalEvent);
+              if (anchor) {
+                return submitAnchor(anchor);
+              } else {
+                const form = getFormFromEvent(event.originalEvent);
+                if (form) {
+                  return submitForm(form);
+                }
+              }
+            }
+            // Assumption that navigation event means to navigate...
+            location.href = event.destination.url;
+          }
+
+          function submitAnchor(element: ElementPrototype) {
+            const cloned = element.cloneNode();
+            cloned.setAttribute("data-navigation-ignore", "1");
+            cloned.click();
+          }
+
+          function submitForm(element: ElementPrototype) {
+            const cloned = element.cloneNode();
+            cloned.setAttribute("data-navigation-ignore", "1");
+            cloned.submit();
+          }
+
+
+        });
 
         navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
           // console.log("<-- currententrychange event listener -->");

@@ -6,6 +6,11 @@ export interface ElementPrototype {
     ownerDocument: unknown;
     parentElement?: ElementPrototype;
     matches(string: string): boolean;
+    getAttribute(name: string): string;
+    setAttribute(name: string, value: string): void;
+    cloneNode(): ElementPrototype;
+    click(): void;
+    submit(): void;
 }
 
 export interface HTMLAnchorElementPrototype extends ElementPrototype {
