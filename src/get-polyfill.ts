@@ -21,8 +21,6 @@ import {
 import {globalSelf} from "./global-self";
 import {v4} from "./util/uuid-or-random";
 import {NavigationHistoryEntrySerialized} from "./navigation-entry";
-import {isEvent} from "./event-target";
-import {isLike} from "@virtualstate/focus";
 
 export interface NavigationPolyfillOptions {
   /**
@@ -698,7 +696,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
           });
 
           function submit() {
-            if (isLike<EventPrototype>(event.originalEvent)) {
+            if (like<EventPrototype>(event.originalEvent)) {
               const anchor = getAnchorFromEvent(event.originalEvent);
               if (anchor) {
                 return submitAnchor(anchor);

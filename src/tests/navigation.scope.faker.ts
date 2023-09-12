@@ -48,11 +48,10 @@ function createElement(type: string) {
         });
     }
     target.matches = (query: string) => {
-        if (query === type) return true;
-        if (query === "a[href]") {
+        if (query.startsWith("a[href]")) {
             return type === "a" && !!target.href
         }
-        return false;
+        return query.startsWith(type);
     }
     target.appendChild = (child: { parentElement: unknown }) => {
         children.add(child)

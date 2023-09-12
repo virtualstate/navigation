@@ -2072,12 +2072,6 @@ const globalWindow = typeof window === "undefined" ? undefined : window;
 
 const globalSelf = typeof self === "undefined" ? undefined : self;
 
-function isLike(value, ...and) {
-    if (!and.length)
-        return !!value;
-    return !!value && and.every((value) => !!value);
-}
-
 const NavigationKey = "__@virtualstate/navigation/key";
 const NavigationMeta = "__@virtualstate/navigation/meta";
 function getWindowHistory(givenWindow = globalWindow) {
@@ -2575,7 +2569,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                         }
                     });
                     function submit() {
-                        if (isLike(event.originalEvent)) {
+                        if (like(event.originalEvent)) {
                             const anchor = getAnchorFromEvent(event.originalEvent);
                             if (anchor) {
                                 return submitAnchor(anchor);
