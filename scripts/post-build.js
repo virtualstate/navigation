@@ -166,7 +166,7 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   )
 
   badges.push(
-      '### Test Coverage\n\n',
+      '<details><summary>Test Coverage</summary>\n\n',
       // `![nycrc config on GitHub](https://img.shields.io/nycrc/${name.replace(/^@/, "")})`
   )
 
@@ -190,6 +190,8 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
         `![${message} ${name} covered](https://img.shields.io/badge/${name}-${message}-${color})`
     );
   }
+
+  badges.push("\n\n</details>");
 
   const tag = "[//]: # (badges)";
 

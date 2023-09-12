@@ -1481,10 +1481,10 @@
   resolved "https://registry.npmjs.org/@virtualstate/promise/-/promise-1.1.4.tgz#9513ab3dfe8a9e5d3ad674daaac9556893de6673"
   integrity sha512-Ar48Y+89sY6e+UmfxHZrC+gfrbE9fXqPAL7I+tXuwm4pOpPxEFRYPkyo5nWWir9y91tIiGO4Psb+9opwqe8N7Q==
 
-"@virtualstate/promise@^1.2.1":
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/@virtualstate/promise/-/promise-1.2.1.tgz#085a5d5830464f1331f180c3180b38414b1cffd6"
-  integrity sha512-+1Yc2xS9za2zOeaoYgidC96XQ3YwmFSej87p+LWojP+S7GVaLSxQCNYiL83Pv0MpGIJT+j0XDEG+LufhB3Xzug==
+"@virtualstate/promise@^1.3.4":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@virtualstate/promise/-/promise-1.3.4.tgz#5f8820cb574c647c9d6ecb36c946eb2572e3f7be"
+  integrity sha512-isZzYFJitHv826K8yyBD5bp8+hsPn3iUM5R7eexzGPttIR7A04ZQnRvnlh7ZoSklzZ1/bbRsVwwpUxAb49N7QA==
 
 "@virtualstate/union@^2.48.1":
   version "2.48.1"

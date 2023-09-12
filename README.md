@@ -8,30 +8,18 @@ Native JavaScript [navigation](https://html.spec.whatwg.org/multipage/nav-histor
 
  ![Node.js supported](https://img.shields.io/badge/node-%3E%3D16.0.0-blue) ![Deno supported](https://img.shields.io/badge/deno-%3E%3D1.17.0-blue) ![Bun supported](https://img.shields.io/badge/bun-%3E%3D0.1.11-blue) ![Chromium supported](https://img.shields.io/badge/chromium-%3E%3D98.0.4695.0-blue) ![Webkit supported](https://img.shields.io/badge/webkit-%3E%3D15.4-blue) ![Firefox supported](https://img.shields.io/badge/firefox-%3E%3D94.0.1-blue)
 
- ### Test Coverage
+ <details><summary>Test Coverage</summary>
 
- ![Web Platform Tests 129/237](https://img.shields.io/badge/Web%20Platform%20Tests-129%2F237-brightgreen) ![92.48%25 lines covered](https://img.shields.io/badge/lines-92.48%25-brightgreen) ![92.48%25 statements covered](https://img.shields.io/badge/statements-92.48%25-brightgreen) ![82.03%25 functions covered](https://img.shields.io/badge/functions-82.03%25-brightgreen) ![80.84%25 branches covered](https://img.shields.io/badge/branches-80.84%25-brightgreen)
+ ![Web Platform Tests 129/237](https://img.shields.io/badge/Web%20Platform%20Tests-129%2F237-brightgreen) ![92.8%25 lines covered](https://img.shields.io/badge/lines-92.8%25-brightgreen) ![92.8%25 statements covered](https://img.shields.io/badge/statements-92.8%25-brightgreen) ![83.33%25 functions covered](https://img.shields.io/badge/functions-83.33%25-brightgreen) ![83%25 branches covered](https://img.shields.io/badge/branches-83%25-brightgreen) 
+
+</details>
 
 [//]: # (badges)
 
 ## Install 
 
-### Skypack
 
-- [Package Registry Link - Skypack](https://www.skypack.dev/view/@virtualstate/navigation)
-
-```typescript
-const { Navigation } = await import("https://cdn.skypack.dev/@virtualstate/navigation");
-```
-
-_Or_
-
-```typescript
-import { Navigation } from "https://cdn.skypack.dev/@virtualstate/navigation";
-```
-
-
-### npm / yarn / GitHub
+<details><summary>npm / yarn / GitHub</summary>
 
 
 - [Package Registry Link - GitHub](https://github.com/virtualstate/navigation/packages)
@@ -52,6 +40,46 @@ Then
 ```typescript
 import { Navigation } from "@virtualstate/navigation";
 ```
+</details>
+
+<details><summary>Skypack</summary>
+
+- [Package Registry Link - Skypack](https://www.skypack.dev/view/@virtualstate/navigation)
+
+```typescript
+const { Navigation } = await import("https://cdn.skypack.dev/@virtualstate/navigation");
+```
+
+_Or_
+
+```typescript
+import { Navigation } from "https://cdn.skypack.dev/@virtualstate/navigation";
+```
+</details>
+
+<details><summary>importmap</summary>
+
+[`importmap` documentation](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap)
+
+```html
+<script type="importmap">
+    {  
+        "imports": {
+            "@virtualstate/navigation": "https://cdn.skypack.dev/@virtualstate/navigation"
+        }
+    }
+</script>
+<script type="module">
+    import { Navigation } from "@virtualstate/navigation"
+</script>
+```
+</details>
+
+## Usage
+
+See the [MDN documentation for the Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) for in depth information on usage. 
+
+<details><summary>Examples</summary>
 
 ## Navigation
 
@@ -155,33 +183,14 @@ await navigation.updateCurrentEntry({
     }
 }).finished;
 ```
+</details>
 
+## Polyfill
 
-## Updating browser url
-
-> This is a pending development task.
-> The below code will help visually update the window
-
-This can be achieved various ways, but if your application completely utilises
-the app history interface, then you can directly use `pushState` to immediately
-update the window's url.
-
-This does not take into account the browser's native back/forward functionality,
-which would need to be investigated further.
+If a global instance of the navigation API is not available, this will provide one integrated into the History API
 
 ```typescript
-import { Navigation } from "@virtualstate/navigation";
+import "@virtualstate/navigation/polyfill";
 
-const navigation = new Navigation();
-const origin = typeof location === "undefined" ? "https://example.com" : location.origin;
-
-navigation.addEventListener("currententrychange", () => {
-    const { currentEntry } = navigation;
-    if (!currentEntry || !currentEntry.sameDocument) return;
-    const state = currentEntry.getState() ?? {};
-    const { pathname } = new URL(currentEntry.url, origin);
-    if (typeof window !== "undefined" && window.history) {
-        window.history.pushState(state, state.title, origin)
-    }
-})
+await navigation.navigate("/").finished;
 ```
