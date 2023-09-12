@@ -1,6 +1,6 @@
 # `@virtualstate/navigation`
 
-Native JavaScript [navigation](https://github.com/WICG/navigation-api) implementation 
+Native JavaScript [navigation](https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api) implementation 
 
 [//]: # (badges)
 
