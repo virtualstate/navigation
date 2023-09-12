@@ -187,7 +187,7 @@ await navigation.updateCurrentEntry({
 
 ## Polyfill
 
-If a global instance of the navigation API is not available, this will provide one integrated into the History API
+If a global instance of the navigation API is not available, this will provide one, integrated into the History API if available. 
 
 ```typescript
 import "@virtualstate/navigation/polyfill";
