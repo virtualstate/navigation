@@ -46,7 +46,7 @@ export async function createJavaScriptBundle(url: URL) {
   const cwd = resolve(dirname(new URL(import.meta.url).pathname), "../..");
   const withoutExtension = url.pathname.replace(/\.html\.js$/, "");
   console.log({ cwd, withoutExtension });
-  if (withoutExtension.includes(".")) throw new Error("Unexpected dot in path");
+  if (withoutExtension.includes("..")) throw new Error("Unexpected double dot in path");
   const htmlPath = join(cwd, namespacePath, `${withoutExtension}.html`);
   console.log({ cwd, withoutExtension, htmlPath });
   const html = await fs.readFile(htmlPath, "utf-8");

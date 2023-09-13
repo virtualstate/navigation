@@ -5287,9 +5287,9 @@ word-wrap@~1.2.3:
   resolved "https://registry.npmjs.org/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
 
-"wpt@https://github.com/web-platform-tests/wpt.git#86d251acc8f2176cda0177e900f551d939de5c8f":
+"wpt@https://github.com/web-platform-tests/wpt.git#b12ab0e21743953c5919daf361455dd5c7df7a43":
   version "0.0.0"
-  resolved "https://github.com/web-platform-tests/wpt.git#86d251acc8f2176cda0177e900f551d939de5c8f"
+  resolved "https://github.com/web-platform-tests/wpt.git#b12ab0e21743953c5919daf361455dd5c7df7a43"
 
 wrap-ansi@^6.2.0:
   version "6.2.0"

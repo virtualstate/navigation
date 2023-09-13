@@ -122,7 +122,7 @@
     "typescript": "^4.9.5",
     "urlpattern-polyfill": "^8.0.2",
     "v8-to-istanbul": "^8.1.0",
-    "wpt": "https://github.com/web-platform-tests/wpt.git#86d251acc8f2176cda0177e900f551d939de5c8f"
+    "wpt": "https://github.com/web-platform-tests/wpt.git#b12ab0e21743953c5919daf361455dd5c7df7a43"
   },
   "scripts": {
     "build": "rm -rf esnext && tsc",
