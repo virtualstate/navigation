@@ -8,7 +8,6 @@
             "dom.iterable"
         ],
         "types": [
-          "jest",
           "node"
         ],
         "esModuleInterop": true,
