@@ -30,7 +30,6 @@
     "iterable": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
     "https://cdn.skypack.dev/-/iterable@v5.7.0-CNtyuMJo9f2zFu6CuB1D/dist=es2019,mode=imports/optimized/iterable.js": "https://cdn.skypack.dev/iterable@6.0.1-beta.5",
     "uuid": "./src/util/deno-uuid.ts",
-    "abort-controller": "https://cdn.skypack.dev/abort-controller",
     "deno:std/uuid/mod": "https://deno.land/std@0.113.0/uuid/mod.ts",
     "deno:std/uuid/v4": "https://deno.land/std@0.113.0/uuid/v4.ts",
     "deno:deno_dom/deno-dom-wasm.ts": "https://deno.land/x/deno_dom/deno-dom-wasm.ts",

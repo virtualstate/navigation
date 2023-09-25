@@ -450,15 +450,10 @@ function ok$1(value) {
 
 const GlobalAbortController = typeof AbortController !== "undefined" ? AbortController : undefined;
 
-// import ImportedAbortController from "abort-controller";
-// async function importAbortController() {
-//     const { default: AbortController } = await import("abort-controller");
-//     return AbortController;
-// }
 if (!GlobalAbortController) {
     throw new Error("AbortController expected to be available or polyfilled");
 }
-const AbortController$1 = GlobalAbortController; // await importAbortController();
+const AbortController$1 = GlobalAbortController;
 
 function isPromise(value) {
     return (like(value) &&
