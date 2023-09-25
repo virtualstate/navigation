@@ -23,7 +23,6 @@ export const DefaultDependencies = [
   "dom-lite",
   "iterable",
   "uuid",
-  "abort-controller",
   "urlpattern-polyfill",
   "@ungap/structured-clone",
   "@ungap/structured-clone/json"
