@@ -10,7 +10,7 @@ Native JavaScript [navigation](https://html.spec.whatwg.org/multipage/nav-histor
 
  <details><summary>Test Coverage</summary>
 
- 
+ ![Web Platform Tests 140/277](https://img.shields.io/badge/Web%20Platform%20Tests-140%2F277-brightgreen) ![92.8%25 lines covered](https://img.shields.io/badge/lines-92.8%25-brightgreen) ![92.8%25 statements covered](https://img.shields.io/badge/statements-92.8%25-brightgreen) ![83.33%25 functions covered](https://img.shields.io/badge/functions-83.33%25-brightgreen) ![82.97%25 branches covered](https://img.shields.io/badge/branches-82.97%25-brightgreen) 
 
 </details>
 

@@ -47,7 +47,8 @@
   "exports": {
     ".": {
       "require": "./esnext/rollup.cjs",
-      "import": "./esnext/index.js"
+      "import": "./esnext/index.js",
+      "module": "./esnext/index.js"
     },
     "./event-target": "./esnext/event-target/async-event-target.js",
     "./event-target/async": "./esnext/event-target/async-event-target.js",
@@ -56,7 +57,11 @@
     "./esnext/get-polyfill": "./esnext/get-polyfill.js",
     "./esnext/apply-polyfill": "./esnext/apply-polyfill.js",
     "./esnext/util/structured-json": "./esnext/util/structured-json.js",
-    "./polyfill": "./esnext/polyfill.js",
+    "./polyfill": {
+      "require": "./esnext/polyfill-rollup.js",
+      "import": "./esnext/polyfill.js",
+      "module": "./esnext/polyfill.js"
+    },
     "./polyfill/rollup": "./esnext/polyfill-rollup.js",
     "./get-polyfill": "./esnext/get-polyfill.js",
     "./apply-polyfill": "./esnext/apply-polyfill.js",
