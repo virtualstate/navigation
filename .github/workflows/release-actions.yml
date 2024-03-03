@@ -90,6 +90,3 @@ jobs:
           export TEST_CONFIG='{"@virtualstate/navigation/test/imported/path": "@virtualstate/navigation-local-build"}'
           yarn test
         continue-on-error: true
-      - name: Publish jsr package
-        run: npx jsr publish
-        continue-on-error: true
