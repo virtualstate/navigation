@@ -9,6 +9,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     env:
       NO_COVERAGE_BADGE_UPDATE: 1
       FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST
@@ -86,3 +89,5 @@ jobs:
           export TEST_CONFIG='{"@virtualstate/navigation/test/imported/path": "@virtualstate/navigation-local-build"}'
           yarn test
         continue-on-error: true
+      - name: Publish jsr package
+        run: npx jsr publish
