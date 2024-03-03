@@ -14,8 +14,9 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+          node-version: '21.x'
           registry-url: 'https://registry.npmjs.org'
+          cache: "yarn"
       - uses: denoland/setup-deno@v1
         with:
           deno-version: 'v1.x'
