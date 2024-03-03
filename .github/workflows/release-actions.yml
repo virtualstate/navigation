@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+          node-version: '21.x'
           registry-url: 'https://registry.npmjs.org'
       - uses: denoland/setup-deno@v1
         with:
@@ -52,7 +52,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
       - uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+          node-version: '21.x'
           registry-url: 'https://npm.pkg.github.com'
       - name: Package Registry Publish - GitHub
         run: |
@@ -69,7 +69,7 @@ jobs:
         continue-on-error: true
       - uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+          node-version: '21.x'
           registry-url: 'https://registry.npmjs.org'
       - name: Package Registry Test - npm
         run: |
@@ -80,7 +80,7 @@ jobs:
         continue-on-error: true
       - uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+          node-version: '21.x'
           registry-url: 'https://npm.pkg.github.com'
       - name: Package Registry Test - GitHub
         run: |
@@ -91,3 +91,4 @@ jobs:
         continue-on-error: true
       - name: Publish jsr package
         run: npx jsr publish
+        continue-on-error: true
