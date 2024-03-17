@@ -13,26 +13,26 @@ export type ScrollRestoration = "auto" | "manual";
 
 // export interface History {}
 
-export interface NavigationHistoryOptions extends NavigationLocationOptions {
-  navigation: Navigation;
+export interface NavigationHistoryOptions<S extends object = object> extends NavigationLocationOptions {
+  navigation: Navigation<S>;
   [State]?: unknown
 }
 
-export interface NavigationHistory<S extends object> {}
+export interface NavigationHistory<S extends object = object> {}
 
 
 
 /**
  * @experimental
  */
-export class NavigationHistory<S extends object>
+export class NavigationHistory<S extends object = object>
   extends NavigationLocation
   implements History
 {
-  readonly #options: NavigationHistoryOptions;
-  readonly #navigation: Navigation;
+  readonly #options: NavigationHistoryOptions<S>;
+  readonly #navigation: Navigation<S>;
 
-  constructor(options: NavigationHistoryOptions) {
+  constructor(options: NavigationHistoryOptions<S>) {
     super(options);
     this.#options = options;
     this.#navigation = options.navigation;
@@ -126,15 +126,21 @@ export class NavigationHistory<S extends object>
   }
 
   pushState(
-    data: object,
-    unused: string,
-    url?: string | URL | null
+      data: S,
+      unused: string,
+      url?: string | URL | null
+  ): unknown;
+  pushState(
+      data: object,
+      unused: string,
+      url?: string | URL | null
   ): unknown;
   pushState(data: unknown, unused: string, url?: string | URL): unknown;
+  pushState(data: S, unused: string, url?: string | URL | null): void;
   pushState(data: object, unused: string, url?: string | URL | null): void;
   pushState(data: unknown, unused: string, url?: string | URL): void;
   pushState(
-    data: object,
+    data: S,
     unused: string,
     url?: string | URL | null
   ): unknown {
