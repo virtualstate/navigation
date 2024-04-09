@@ -2686,7 +2686,7 @@ function matchesAncestor(givenElement, selector) {
             ok(element);
             return element;
         }
-        element = element.parentElement;
+        element = element.parentElement ?? element.getRootNode()?.host;
     }
     return undefined;
     function getDefaultElement() {
@@ -2695,6 +2695,16 @@ function matchesAncestor(givenElement, selector) {
         if (givenElement.matches instanceof Function)
             return givenElement;
         return givenElement.parentElement;
+    }
+}
+
+if (typeof window !== "undefined" && window.navigation) {
+    const navigation = window.navigation;
+    assertNavigation(navigation);
+}
+function assertNavigation(value) {
+    if (!value) {
+        throw new Error("Expected Navigation");
     }
 }
 

@@ -825,7 +825,7 @@ function matchesAncestor(givenElement: ElementPrototype | undefined, selector: s
       ok<ElementPrototype>(element);
       return element;
     }
-    element = element.parentElement;
+    element = element.parentElement ?? element.getRootNode()?.host;
   }
   return undefined;
 

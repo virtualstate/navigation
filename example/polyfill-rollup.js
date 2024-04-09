@@ -2678,7 +2678,7 @@ function matchesAncestor(givenElement, selector) {
             ok(element);
             return element;
         }
-        element = element.parentElement;
+        element = element.parentElement ?? element.getRootNode()?.host;
     }
     return undefined;
     function getDefaultElement() {
