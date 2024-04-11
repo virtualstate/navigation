@@ -8,6 +8,18 @@
 <body>
     <script src="polyfill-rollup.js"></script>
     <script>
+
+        class RootNodeHavingComponent extends HTMLElement {
+            connectedCallback() {
+                const shadow = this.attachShadow({ mode: "open" });
+                const imageEl = document.createElement("img");
+                imageEl.setAttribute("src", "https://www.w3schools.com/images/w3schools_green.jpg");
+                shadow.appendChild(imageEl);
+            }
+        }
+
+        customElements.define("root-node-having-component", RootNodeHavingComponent);
+
         class LinkElement extends HTMLElement {
             constructor() {
                 super();
@@ -87,6 +99,9 @@
     <a href="/">Home Link</a>
     <a href="/esm.html">ESM Link</a>
     <link-element></link-element>
+    <a href="/esm.html?from=web-component">
+        <root-node-having-component></root-node-having-component>
+    </a>
 
     <div id="app"></div>
 </body>
