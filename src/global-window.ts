@@ -5,12 +5,14 @@ export interface ElementPrototype {
     new(): ElementPrototype;
     ownerDocument: unknown;
     parentElement?: ElementPrototype;
+    host?: ElementPrototype;
     matches(string: string): boolean;
     getAttribute(name: string): string;
     setAttribute(name: string, value: string): void;
     cloneNode(): ElementPrototype;
     click(): void;
     submit(): void;
+    getRootNode(): ElementPrototype | null;
 }
 
 export interface HTMLAnchorElementPrototype extends ElementPrototype {
