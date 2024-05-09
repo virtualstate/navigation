@@ -8,7 +8,7 @@ import { getConfig } from "./config";
 import * as Cheerio from "cheerio";
 import { DependenciesHTML, DependenciesSyncHTML } from "./dependencies";
 import { Browser, Page } from "playwright";
-import { v4 } from "uuid";
+import {v4} from "../util/uuid-or-random";
 import { createJavaScriptBundle } from "./navigation.server.wpt";
 
 const namespacePath = "/node_modules/wpt/navigation-api";

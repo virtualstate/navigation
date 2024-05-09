@@ -216,8 +216,7 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
   async function rollupReplacements(fileName) {
     let file = await fs.readFile(fileName, "utf-8");
 
-    const importUuidMarker = "/** post rollup replace importUuid **/",
-        importJsonMarker = "/** post rollup replace json **/";
+    const importJsonMarker = "/** post rollup replace json **/";
 
     function replaceInsideMarkers(marker, replacement) {
       const startIndex = file.indexOf(marker),
@@ -235,7 +234,6 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
       file = `${fileStart}\n\n${replacement}\n\n${fileEnd}`
     }
 
-    replaceInsideMarkers(importUuidMarker, "const getUuidModule = () => index;")
     replaceInsideMarkers(importJsonMarker, "const getStructuredClone = () => json;");
 
     await fs.writeFile(fileName, file);

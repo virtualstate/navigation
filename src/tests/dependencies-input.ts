@@ -22,7 +22,6 @@ export const DefaultDependencies = [
   "@virtualstate/composite-key",
   "dom-lite",
   "iterable",
-  "uuid",
   "urlpattern-polyfill",
   "@ungap/structured-clone",
   "@ungap/structured-clone/json"

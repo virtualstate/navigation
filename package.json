@@ -85,8 +85,7 @@
   "license": "MIT",
   "dependencies": {
     "@ungap/structured-clone": "^1.0.2",
-    "@virtualstate/composite-key": "^1.0.0",
-    "uuid": "^8.3.2"
+    "@virtualstate/composite-key": "^1.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.15.4",
@@ -99,7 +98,6 @@
     "@types/mkdirp": "^1.0.2",
     "@types/node": "^18.14.1",
     "@types/rimraf": "^3.0.2",
-    "@types/uuid": "^8.3.3",
     "@types/whatwg-url": "^8.2.1",
     "@virtualstate/focus": "^1.4.9",
     "@virtualstate/kdl": "^1.0.1-alpha.32",
