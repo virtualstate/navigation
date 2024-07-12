@@ -206,3 +206,15 @@ which can be utilised alongside this polyfill.
 ```bash
 yarn add --dev @types/dom-navigation
 ```
+
+This should then be included as a type in your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "types": [
+      "dom-navigation"
+    ]
+  }
+}
+```
