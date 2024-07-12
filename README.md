@@ -198,7 +198,7 @@ await window.navigation.navigate("/").finished;
 await navigation.navigate("/").finished;
 ```
 
-#### Polyfill Global Window Types
+<details><summary>Polyfill Global Window Types</summary>
 
 See [`@types/dom-navigation`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/dom-navigation/package.json) for a standardised type definition for the Navigation API
 which can be utilised alongside this polyfill. 
@@ -218,3 +218,5 @@ This should then be included as a type in your `tsconfig.json`:
   }
 }
 ```
+
+</details>
