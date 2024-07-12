@@ -192,5 +192,17 @@ If a global instance of the navigation API is not available, this will provide o
 ```typescript
 import "@virtualstate/navigation/polyfill";
 
+await window.navigation.navigate("/").finished;
+
+// Or if within a window global scope, aka in a browser:
 await navigation.navigate("/").finished;
+```
+
+#### Polyfill Global Window Types
+
+See [`@types/dom-navigation`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/dom-navigation/package.json) for a standardised type definition for the Navigation API
+which can be utilised alongside this polyfill. 
+
+```bash
+yarn add --dev @types/dom-navigation
 ```
