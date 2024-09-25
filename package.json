@@ -55,7 +55,7 @@
     "./esnext/polyfill": "./esnext/polyfill.js",
     "./esnext/get-polyfill": "./esnext/get-polyfill.js",
     "./esnext/apply-polyfill": "./esnext/apply-polyfill.js",
-    "./esnext/util/structured-json": "./esnext/util/structured-json.js",
+    "./esnext/util/serialization": "./esnext/util/serialization.js",
     "./polyfill": {
       "require": "./esnext/polyfill-rollup.js",
       "import": "./esnext/polyfill.js",
@@ -84,7 +84,6 @@
   "author": "Fabian Cook <hello@fabiancook.dev>",
   "license": "MIT",
   "dependencies": {
-    "@ungap/structured-clone": "^1.0.2",
     "@virtualstate/composite-key": "^1.0.0"
   },
   "devDependencies": {
