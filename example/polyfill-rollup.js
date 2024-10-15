@@ -1756,13 +1756,12 @@ function getNavigation() {
     return (navigation$1 = new Navigation());
 }
 
-let _stringify = JSON.stringify.bind(JSON);
-let _parse = JSON.parse.bind(JSON);
+let GLOBAL_SERIALIZER = JSON;
 function stringify(value) {
-    return _stringify(value);
+    return GLOBAL_SERIALIZER.stringify(value);
 }
 function parse(value) {
-    return _parse(value);
+    return GLOBAL_SERIALIZER.parse(value);
 }
 
 const AppLocationCheckChange = Symbol.for("@virtualstate/navigation/location/checkChange");
@@ -2121,6 +2120,8 @@ function getHistoryState(history, entry) {
             if (!raw)
                 return undefined;
             const state = parse(raw);
+            if (!like(state))
+                return undefined;
             if (!isStateHistoryWithMeta(state))
                 return undefined;
             return state[NavigationKey].state;

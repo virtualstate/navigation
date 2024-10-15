@@ -2016,17 +2016,15 @@ async function transition(navigation) {
     return finalPromise;
 }
 
-let _stringify = JSON.stringify.bind(JSON);
-let _parse = JSON.parse.bind(JSON);
-function configureSerialization(stringify, parse) {
-    _stringify = stringify;
-    _parse = parse;
+let GLOBAL_SERIALIZER = JSON;
+function setSerializer(serializer) {
+    GLOBAL_SERIALIZER = serializer;
 }
 function stringify(value) {
-    return _stringify(value);
+    return GLOBAL_SERIALIZER.stringify(value);
 }
 function parse(value) {
-    return _parse(value);
+    return GLOBAL_SERIALIZER.parse(value);
 }
 
 const globalWindow = typeof window === "undefined" ? undefined : window;
@@ -2126,6 +2124,8 @@ function getHistoryState(history, entry) {
             if (!raw)
                 return undefined;
             const state = parse(raw);
+            if (!like(state))
+                return undefined;
             if (!isStateHistoryWithMeta(state))
                 return undefined;
             return state[NavigationKey].state;
@@ -2676,5 +2676,5 @@ function applyPolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
     return navigation;
 }
 
-export { AppLocationAwaitFinished, AppLocationCheckChange, AppLocationTransitionURL, AppLocationUrl, EventTarget, NAVIGATION_LOCATION_DEFAULT_URL, Navigation, NavigationCanIntercept, NavigationCurrentEntryChangeEvent, NavigationDisposeState, NavigationFormData, NavigationGetState, NavigationHistory, NavigationLocation, NavigationSetCurrentIndex, NavigationSetCurrentKey, NavigationSetEntries, NavigationSetOptions, NavigationSetState, NavigationSync, NavigationTransitionFinally, NavigationUserInitiated, applyPolyfill, configureSerialization, getCompletePolyfill, getPolyfill, isInterceptEvent, isNavigationNavigationType, transition };
+export { AppLocationAwaitFinished, AppLocationCheckChange, AppLocationTransitionURL, AppLocationUrl, EventTarget, NAVIGATION_LOCATION_DEFAULT_URL, Navigation, NavigationCanIntercept, NavigationCurrentEntryChangeEvent, NavigationDisposeState, NavigationFormData, NavigationGetState, NavigationHistory, NavigationLocation, NavigationSetCurrentIndex, NavigationSetCurrentKey, NavigationSetEntries, NavigationSetOptions, NavigationSetState, NavigationSync, NavigationTransitionFinally, NavigationUserInitiated, applyPolyfill, getCompletePolyfill, getPolyfill, isInterceptEvent, isNavigationNavigationType, setSerializer, transition };
 //# sourceMappingURL=rollup.js.map
