@@ -201,7 +201,7 @@ await navigation.navigate("/").finished;
 <details><summary>Polyfill Global Window Types</summary>
 
 See [`@types/dom-navigation`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/dom-navigation/package.json) for a standardised type definition for the Navigation API
-which can be utilised alongside this polyfill. 
+which can be utilised alongside this polyfill.
 
 ```bash
 yarn add --dev @types/dom-navigation
@@ -220,3 +220,31 @@ This should then be included as a type in your `tsconfig.json`:
 ```
 
 </details>
+
+<details><summary>Polyfill Serializer</summary>
+
+You may want to set a custom serializer state stored in history
+
+The default serializer is [JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON)
+
+In the past, a [structured clone like serializer](https://www.npmjs.com/package/@ungap/structured-clone) was used. This may be useful for you if 
+you're using native types rather than just JSON compatible values.
+
+An example of making use of a custom serializer with the polyfill:
+
+```typescript
+import { setSerializer } from "@virtualstate/navigation/polyfill";
+import { serialize, deserialize } from '@ungap/structured-clone';
+
+setSerializer({
+    stringify(value) {
+        return serialize(value)
+    },
+    parse(value) {
+        return deserialize(value)
+    }
+});
+```
+
+</details>
+

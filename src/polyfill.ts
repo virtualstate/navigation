@@ -1,5 +1,6 @@
 import { getNavigation } from "./get-navigation";
 import { applyPolyfill, shouldApplyPolyfill } from "./apply-polyfill";
+import { setSerializer } from "./util/serialization";
 
 const navigation = getNavigation();
 
@@ -12,4 +13,8 @@ if (shouldApplyPolyfill(navigation)) {
     console.error("Failed to apply polyfill");
     console.error(error);
   }
+}
+
+export {
+  setSerializer
 }
