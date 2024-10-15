@@ -3724,3 +3724,4 @@ function routes(...args) {
 }
 
 export { Router, enableURLPatternCache, getRouter, getRouterRoutes, isRouter, route, routes, transitionEvent };
+//# sourceMappingURL=routes-rollup.js.map

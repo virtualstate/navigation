@@ -1,3 +1,7 @@
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 let globalNavigation = undefined;
 if (typeof window !== "undefined" && window.navigation) {
     const navigation = window.navigation;
@@ -1757,6 +1761,9 @@ function getNavigation() {
 }
 
 let GLOBAL_SERIALIZER = JSON;
+function setSerializer(serializer) {
+    GLOBAL_SERIALIZER = serializer;
+}
 function stringify(value) {
     return GLOBAL_SERIALIZER.stringify(value);
 }
@@ -2675,3 +2682,6 @@ if (shouldApplyPolyfill(navigation)) {
         console.error(error);
     }
 }
+
+exports.setSerializer = setSerializer;
+//# sourceMappingURL=polyfill-rollup.js.map

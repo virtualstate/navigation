@@ -37,12 +37,10 @@ const cwd = resolve(dirname(pathname), "..")
   });
   await bundle.write({
     sourcemap: true,
-    output: {
-      file: "./esnext/tests/rollup.js",
-    },
+    file: "./esnext/tests/rollup.js",
     inlineDynamicImports: true,
-    format: "cjs",
-    interop: "auto",
+    format: "es",
+    interop: "esModule",
     globals: {
       "esnext/tests/navigation.playwright.js": "globalThis"
     }
@@ -100,9 +98,7 @@ const cwd = resolve(dirname(pathname), "..")
   });
   await bundle.write({
     sourcemap: true,
-    output: {
-      file: "./esnext/routes-rollup.js",
-    },
+    file: "./esnext/routes-rollup.js",
     inlineDynamicImports: true,
     format: "esm",
     interop: "auto",
@@ -137,15 +133,14 @@ const cwd = resolve(dirname(pathname), "..")
   });
   await bundle.write({
     sourcemap: true,
-    output: {
-      file: "./esnext/polyfill-rollup.js",
-    },
+    file: "./esnext/polyfill-rollup.js",
     inlineDynamicImports: true,
     format: "cjs",
-    interop: "auto",
+    interop: "esModule",
     globals: {
 
-    }
+    },
+    exports: "auto"
   });
 }
 
