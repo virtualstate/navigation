@@ -248,3 +248,10 @@ setSerializer({
 
 </details>
 
+## What's Changed
+
+<details><summary>Change Log</summary>
+
+- (1.0.1-alpha.x) Updated default serializer for polyfill to JSON [#35](https://github.com/virtualstate/navigation/pull/35)
+
+</details>
