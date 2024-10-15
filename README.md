@@ -223,7 +223,7 @@ This should then be included as a type in your `tsconfig.json`:
 
 <details><summary>Polyfill Serializer</summary>
 
-You may want to set a custom serializer state stored in history
+You may want to set a custom serializer to store state in history
 
 The default serializer is [JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON)
 
