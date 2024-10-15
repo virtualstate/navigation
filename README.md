@@ -234,7 +234,7 @@ An example of making use of a custom serializer with the polyfill:
 
 ```typescript
 import { setSerializer } from "@virtualstate/navigation/polyfill";
-import { serialize, deserialize } from '@ungap/structured-clone';
+import { serialize, deserialize } from "@ungap/structured-clone";
 
 setSerializer({
     stringify(value) {
