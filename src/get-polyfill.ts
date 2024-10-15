@@ -232,7 +232,8 @@ function getHistoryState<T extends object>(
       const raw = sessionStorage.getItem(entry.key);
       if (!raw) return undefined;
       const state = parse(raw);
-      if (!isStateHistoryWithMeta(state)) return undefined;
+      if (!like<T>(state)) return undefined;
+      if (!isStateHistoryWithMeta<T>(state)) return undefined;
       return state[NavigationKey].state;
     } catch {
       return undefined;

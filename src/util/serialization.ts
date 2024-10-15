@@ -1,15 +1,18 @@
-let _stringify = JSON.stringify.bind(JSON);
-let _parse = JSON.parse.bind(JSON);
+export interface Serializer {
+    stringify(value: unknown): string;
+    parse(value: string): unknown
+}
 
-export function configureSerialization(stringify: typeof JSON.stringify, parse: typeof JSON.parse) {
-    _stringify = stringify;
-    _parse = parse;
+let GLOBAL_SERIALIZER: Serializer = JSON;
+
+export function setSerializer(serializer: Serializer) {
+    GLOBAL_SERIALIZER = serializer;
 }
 
 export function stringify(value: unknown) {
-    return _stringify(value);
+    return GLOBAL_SERIALIZER.stringify(value);
 }
 
 export function parse(value: string) {
-    return _parse(value);
+    return GLOBAL_SERIALIZER.parse(value);
 }

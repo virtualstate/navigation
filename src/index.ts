@@ -17,4 +17,4 @@ export {
 } from "./events";
 export { applyPolyfill } from "./apply-polyfill"
 export { getPolyfill, getCompletePolyfill } from "./get-polyfill";
-export { configureSerialization } from "./util/serialization";
+export { setSerializer, Serializer } from "./util/serialization";
