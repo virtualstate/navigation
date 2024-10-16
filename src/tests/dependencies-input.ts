@@ -22,9 +22,7 @@ export const DefaultDependencies = [
   "@virtualstate/composite-key",
   "dom-lite",
   "iterable",
-  "urlpattern-polyfill",
-  "@ungap/structured-clone",
-  "@ungap/structured-clone/json"
+  "urlpattern-polyfill"
 ] as const;
 export const DefaultImportMap = Object.fromEntries(
   DefaultDependencies.filter(

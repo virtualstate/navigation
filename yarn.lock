@@ -1088,11 +1088,6 @@
     "@types/node" "*"
     "@types/webidl-conversions" "*"
 
-"@ungap/structured-clone@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.0.2.tgz#112bd30f3c27cb4c7b85d59ee3918c13803238ad"
-  integrity sha512-06PHwE0K24Wi8FBmC8MuMi/+nQ3DTpcXYL3y/IaZz2ScY2GOJXOe8fyMykVXyLOKxpL2Y0frAnJZmm65OxzMLQ==
-
 "@virtualstate/composite-key@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@virtualstate/composite-key/-/composite-key-1.0.0.tgz#352b93df5b9199951cc370897bca8bb5b171a375"

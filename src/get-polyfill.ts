@@ -7,7 +7,7 @@ import {
 } from "./navigation";
 import { InvalidStateError } from "./navigation-errors";
 import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationUserInitiated } from "./create-navigation-transition";
-import { stringify, parse } from './util/structured-json';
+import { stringify, parse } from './util/serialization';
 import {NavigationHistory} from "./history";
 import {like, ok} from "./is";
 import {
@@ -232,7 +232,8 @@ function getHistoryState<T extends object>(
       const raw = sessionStorage.getItem(entry.key);
       if (!raw) return undefined;
       const state = parse(raw);
-      if (!isStateHistoryWithMeta(state)) return undefined;
+      if (!like<T>(state)) return undefined;
+      if (!isStateHistoryWithMeta<T>(state)) return undefined;
       return state[NavigationKey].state;
     } catch {
       return undefined;

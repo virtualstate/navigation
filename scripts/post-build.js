@@ -37,12 +37,10 @@ const cwd = resolve(dirname(pathname), "..")
   });
   await bundle.write({
     sourcemap: true,
-    output: {
-      file: "./esnext/tests/rollup.js",
-    },
+    file: "./esnext/tests/rollup.js",
     inlineDynamicImports: true,
-    format: "cjs",
-    interop: "auto",
+    format: "es",
+    interop: "esModule",
     globals: {
       "esnext/tests/navigation.playwright.js": "globalThis"
     }
@@ -100,9 +98,7 @@ const cwd = resolve(dirname(pathname), "..")
   });
   await bundle.write({
     sourcemap: true,
-    output: {
-      file: "./esnext/routes-rollup.js",
-    },
+    file: "./esnext/routes-rollup.js",
     inlineDynamicImports: true,
     format: "esm",
     interop: "auto",
@@ -137,15 +133,14 @@ const cwd = resolve(dirname(pathname), "..")
   });
   await bundle.write({
     sourcemap: true,
-    output: {
-      file: "./esnext/polyfill-rollup.js",
-    },
+    file: "./esnext/polyfill-rollup.js",
     inlineDynamicImports: true,
     format: "cjs",
-    interop: "auto",
+    interop: "esModule",
     globals: {
 
-    }
+    },
+    exports: "auto"
   });
 }
 
@@ -213,43 +208,11 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
 
 
 {
-  async function rollupReplacements(fileName) {
-    let file = await fs.readFile(fileName, "utf-8");
-
-    const importJsonMarker = "/** post rollup replace json **/";
-
-    function replaceInsideMarkers(marker, replacement) {
-      const startIndex = file.indexOf(marker),
-          endIndex = file.lastIndexOf(marker) + marker.length;
-
-      const fileStart = file.slice(0, startIndex - 1),
-          fileEnd = file.slice(endIndex + 1);
-
-      const replacing = file.slice(startIndex, endIndex);
-
-      if (typeof replacement === "function") {
-        replacement = replacement(replacing.replaceAll(marker, ""));
-      }
-
-      file = `${fileStart}\n\n${replacement}\n\n${fileEnd}`
-    }
-
-    replaceInsideMarkers(importJsonMarker, "const getStructuredClone = () => json;");
-
-    await fs.writeFile(fileName, file);
-  }
-
-  await rollupReplacements("esnext/polyfill-rollup.js");
-
-  await fs.cp("esnext/rollup.js", "esnext/rollup-input.cjs");
-
-  await rollupReplacements("esnext/rollup-input.cjs");
-
 
   {
 
     const bundle = await rollup({
-      input: "./esnext/rollup-input.cjs",
+      input: "./esnext/rollup.js",
       plugins: [
         ignore([
           `${cwd}/esnext/tests/navigation.playwright.js`,
@@ -276,8 +239,6 @@ if (!process.env.NO_COVERAGE_BADGE_UPDATE) {
       }
     });
   }
-
-  await fs.rm("./esnext/rollup-input.cjs");
 
   await fs.cp("esnext/polyfill-rollup.js", "example/polyfill-rollup.js");
   await fs.cp("esnext/routes-rollup.js", "example/routes-rollup.js");
