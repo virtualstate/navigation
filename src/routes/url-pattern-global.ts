@@ -1,3 +1,4 @@
+import "urlpattern-polyfill";
 import type {URLPattern as URLPatternPolyfill} from "urlpattern-polyfill";
 
 export interface URLPatternInit {
@@ -16,4 +17,10 @@ declare var URLPattern: {
     new (init?: URLPatternInit | string, baseURL?: string): URLPatternPolyfill;
 };
 
-export const globalURLPattern = typeof URLPattern === "undefined" ? undefined : URLPattern;
+if (typeof URLPattern === "undefined") {
+    throw new Error("urlpattern-polyfill did not import correctly");
+}
+
+export {
+    URLPattern
+}

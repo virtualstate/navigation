@@ -1,10 +1,12 @@
-import { URLPattern } from "urlpattern-polyfill";
-import {URLPatternResult} from "./types";
-import {compositeKey} from "@virtualstate/composite-key";
+import { URLPattern } from "./url-pattern-global";
+import { URLPatternResult } from "./types";
+import { compositeKey } from "@virtualstate/composite-key";
 
 export { URLPatternInit } from "./url-pattern-global";
 
-export { URLPattern }
+export {
+    URLPattern
+}
 
 export function isURLPatternStringWildcard(pattern: string): pattern is "*" {
     return pattern === "*";
