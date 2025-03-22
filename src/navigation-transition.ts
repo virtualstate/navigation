@@ -17,7 +17,8 @@ import {
 } from "./navigation-errors";
 import { Event, EventTarget } from "./event-target";
 import { AbortController } from "./import-abort-controller";
-import {isPromise} from "./is";
+import { isPromise } from "./is";
+import { logWarning } from "./util/warnings";
 
 export const Rollback = Symbol.for("@virtualstate/navigation/rollback");
 export const Unset = Symbol.for("@virtualstate/navigation/unset");
@@ -435,9 +436,11 @@ export class NavigationTransition<S = unknown, R = unknown | void>
     function parseOptions(): Promise<R> | undefined {
       if (!options) return undefined
       if (isPromise<R>(options)) {
+        logWarning("EVENT_INTERCEPT_HANDLER");
         return options;
       }
       if (typeof options === "function") {
+        logWarning("EVENT_INTERCEPT_HANDLER");
         return options();
       }
       const { handler, commit } = options;

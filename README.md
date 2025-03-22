@@ -261,6 +261,7 @@ setSerializer({
 - (1.0.1-alpha.206) Updated default serializer for polyfill to JSON [PR #35](https://github.com/virtualstate/navigation/pull/35)
 - (1.0.1-alpha.207) Use `!Object.hasOwn(globalThis, 'navigation')` for existing global check [PR #36](https://github.com/virtualstate/navigation/pull/36)
 - (1.0.1-alpha.207) Update documentation to match latest spec [Issue #37](https://github.com/virtualstate/navigation/issues/37)
+- (1.0.1-alpha.207) Include warning for old signature usage [Issue #37](https://github.com/virtualstate/navigation/issues/37)
 
 
 </details>

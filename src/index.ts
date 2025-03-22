@@ -18,3 +18,4 @@ export {
 export { applyPolyfill } from "./apply-polyfill"
 export { getPolyfill, getCompletePolyfill } from "./get-polyfill";
 export { setSerializer, Serializer } from "./util/serialization";
+export { setIgnoreWarnings, setTraceWarnings } from "./util/warnings";
