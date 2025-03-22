@@ -22,7 +22,11 @@ export async function initialNavigateThenBack(navigation: Navigation) {
     "navigate",
     (event) => {
       navigateCalled = true;
-      event.intercept(new Promise<void>(queueMicrotask));
+      event.intercept({
+        handler() {
+          return new Promise<void>(queueMicrotask)
+        }
+      });
     },
     { once: true }
   );
@@ -70,7 +74,11 @@ export async function initialNavigateThenBackAssigned(navigation: Navigation) {
       currentEntryChangeCalled = false;
   navigation.onnavigate = (event) => {
     navigateCalled = true;
-    event.intercept(new Promise<void>(queueMicrotask));
+    event.intercept({
+      handler() {
+        return new Promise<void>(queueMicrotask)
+      }
+    });
   };
   navigation.oncurrententrychange = () => {
     currentEntryChangeCalled = true;
@@ -122,7 +130,9 @@ export async function routeHandlerExample(navigation: Navigation) {
     if (routesTable.has(url)) {
       const routeHandler = routesTable.get(url);
       if (!routeHandler) return;
-      event.intercept(routeHandler);
+      event.intercept({
+        handler: routeHandler
+      });
     }
   }
   navigation.addEventListener("navigate", handler);
@@ -508,7 +518,11 @@ export async function rollbackExample(navigation: Navigation) {
   navigation.addEventListener(
     "navigate",
     (event) => {
-      event.intercept(Promise.reject(new Error(expectedError)));
+      event.intercept({
+        handler() {
+          return Promise.reject(new Error(expectedError))
+        }
+      });
     },
     { once: true }
   );
@@ -618,8 +632,8 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
     console.log("Adding");
     seen.add(e);
     seen.add(e.intercept);
-    e.intercept(
-      async () => {
+    e.intercept({
+      async handler() {
         const result = determineAction(e.destination);
 
         if (result.type === "redirect") {
@@ -628,13 +642,13 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
           }
           console.log("Redirecting");
           redirectFinished = navigation.transition
-            ?.rollback()
-            .finished.then(
-              () =>
-                navigation.navigate(result.destinationURL, {
-                  state: result.destinationState,
-                }).finished
-            );
+              ?.rollback()
+              .finished.then(
+                  () =>
+                      navigation.navigate(result.destinationURL, {
+                        state: result.destinationState,
+                      }).finished
+              );
           // await navigation.transition?.rollback().finished;
           // await navigation.navigate(result.destinationURL, { state: result.destinationState }).finished;
         } else if (result.type === "disallow") {
@@ -647,7 +661,7 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
           return;
         }
       }
-    );
+    });
   });
 
   ok(navigation.currentEntry)
@@ -838,10 +852,10 @@ export async function usingInfoExample(navigation: Navigation) {
   }
 
   navigation.addEventListener("navigate", (e) => {
-    e.intercept(
-      async () => {
+    e.intercept({
+      async handler() {
         if (isPhotoNavigation(e)) {
-          const { thumbnail, via } = e.info;
+          const {thumbnail, via} = e.info;
           switch (via) {
             case "go-left": {
               await animateLeft();
@@ -859,7 +873,7 @@ export async function usingInfoExample(navigation: Navigation) {
         }
         await loadPhoto(e.destination.url);
       }
-    );
+    });
   });
 
   const middleIndex = Math.round(photoUrls.length / 2);
@@ -1086,7 +1100,11 @@ export async function nextPreviousButtons(navigation: Navigation) {
     console.log({ canIntercept: event.canIntercept, photoNumberMaybe });
     if (!(typeof photoNumberMaybe === "number" && event.canIntercept)) return;
     const photoNumber: number = photoNumberMaybe;
-    event.intercept((navigateFinished = handler()));
+    event.intercept({
+      handler() {
+        return (navigateFinished = handler());
+      }
+    });
     async function handler() {
       console.log("transitioning for ", { photoNumber });
 

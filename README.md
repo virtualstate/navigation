@@ -125,7 +125,11 @@ import { loadPhotoIntoCache } from "./cache";
 const navigation = new Navigation();
 
 navigation.addEventListener("navigate", async ({ destination, intercept }) => {
-    intercept(loadPhotoIntoCache(destination.url));
+    intercept({
+        async handler() {
+            await loadPhotoIntoCache(destination.url)
+        }
+    });
 });
 ```
 
@@ -143,7 +147,9 @@ navigation.addEventListener("navigate", async ({destination, intercept}) => {
     const pattern = new URLPattern({ pathname: "/books/:id" });
     const match = pattern.exec(destination.url);
     if (match) {
-        intercept(transition());
+        intercept({
+            handler: transition
+        });
     }
 
     async function transition() {
@@ -252,6 +258,9 @@ setSerializer({
 
 <details><summary>Change Log</summary>
 
-- (1.0.1-alpha.206) Updated default serializer for polyfill to JSON [#35](https://github.com/virtualstate/navigation/pull/35)
+- (1.0.1-alpha.206) Updated default serializer for polyfill to JSON [PR #35](https://github.com/virtualstate/navigation/pull/35)
+- (1.0.1-alpha.207) Use `!Object.hasOwn(globalThis, 'navigation')` for existing global check [PR #36](https://github.com/virtualstate/navigation/pull/36)
+- (1.0.1-alpha.207) Update documentation to match latest spec [Issue #37](https://github.com/virtualstate/navigation/issues/37)
+
 
 </details>
