@@ -4,6 +4,11 @@ if (!globalThis.URLPattern) {
   globalThis.URLPattern = me;
 }
 
+if (typeof URLPattern === "undefined") {
+    throw new Error("urlpattern-polyfill did not import correctly");
+}
+const globalURLPattern = URLPattern;
+
 /* c8 ignore start */
 function isLike(value, ...and) {
     if (!and.length)
@@ -314,7 +319,7 @@ function getPattern(pattern) {
     if (typeof pattern !== "string") {
         return pattern;
     }
-    return new me({ pathname: pattern });
+    return new globalURLPattern({ pathname: pattern });
 }
 class Router {
     [Routes] = {

@@ -21,6 +21,4 @@ if (typeof URLPattern === "undefined") {
     throw new Error("urlpattern-polyfill did not import correctly");
 }
 
-export {
-    URLPattern
-}
+export const globalURLPattern = URLPattern;

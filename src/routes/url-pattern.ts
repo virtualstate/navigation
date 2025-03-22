@@ -1,4 +1,4 @@
-import { URLPattern } from "./url-pattern-global";
+import { globalURLPattern as URLPattern } from "./url-pattern-global";
 import { URLPatternResult } from "./types";
 import { compositeKey } from "@virtualstate/composite-key";
 
