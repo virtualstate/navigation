@@ -144,7 +144,7 @@ for (const [
     </head>
     <body>
     <!-- This should be ignored in tests -->
-    <div id="navigation"></div>
+<!--    <div id="navigation"></div>-->
     <script type="module">
         const IS_POLYFILL_BROWSER = ${polyfill};
         
