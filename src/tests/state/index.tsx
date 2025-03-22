@@ -90,6 +90,14 @@ if (!isWindowNavigation(getNavigation())) {
         console.log("Test end");
     }
 
+    route("/*", () => {
+        return "Default";
+    })
+
+    route("/test", () => {
+        return "test"
+    })
+
     route("/route",  () => {
         console.log("/route");
         return <Test />
