@@ -9,9 +9,18 @@ export function applyPolyfill(options: NavigationPolyfillOptions = DEFAULT_POLYF
 }
 
 export function shouldApplyPolyfill(navigation = getNavigation()) {
-  return (
+  const globalThat: { Element?: unknown, navigation?: unknown } = globalThis;
+    return (
       navigation !== globalNavigation &&
-      !Object.hasOwn(globalThis, 'navigation') &&
+      (
+          !Object.hasOwn(globalThat, 'navigation') ||
+          (
+              "Element" in globalThat &&
+              "navigation" in globalThat &&
+              globalThat.Element &&
+              globalThat.navigation instanceof globalThis.Element
+          )
+      ) &&
       typeof window !== "undefined"
   );
 }

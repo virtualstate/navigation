@@ -133,6 +133,8 @@ export async function routeHandlerExample(navigation: Navigation) {
       event.intercept({
         handler: routeHandler
       });
+    } else {
+      event.intercept();
     }
   }
   navigation.addEventListener("navigate", handler);
