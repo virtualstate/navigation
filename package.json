@@ -116,7 +116,7 @@
     "rollup-plugin-ignore": "^1.0.10",
     "ts-node": "^10.2.1",
     "typescript": "^5.4.5",
-    "urlpattern-polyfill": "^10.0.0",
+    "urlpattern-polyfill": "^8.0.2",
     "v8-to-istanbul": "^8.1.0"
   },
   "scripts": {
