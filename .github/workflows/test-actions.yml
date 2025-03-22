@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       NO_COVERAGE_BADGE_UPDATE: 1
       FLAGS: FETCH_SERVICE_DISABLE,POST_CONFIGURE_TEST,CONTINUE_ON_ERROR
