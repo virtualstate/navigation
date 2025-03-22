@@ -27,13 +27,13 @@ if (!isWindowNavigation(getNavigation())) {
         console.log("Test end");
     }
 
-    route("/test",  () => (<Test />));
+    route("/test-state",  () => (<Test />));
 
     // This is detaching the promise from the route transition.
     then(node => void descendants(node).catch(error => error))
 
-    console.log("Navigate /test");
-    await navigation.navigate("/test").finished;
+    console.log("Navigate /test-state");
+    await navigation.navigate("/test-state").finished;
 
     const initialEntry = navigation.currentEntry;
 

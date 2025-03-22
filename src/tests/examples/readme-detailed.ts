@@ -83,7 +83,7 @@ export async function initialNavigateThenBackAssigned(navigation: Navigation) {
   navigation.oncurrententrychange = () => {
     currentEntryChangeCalled = true;
   };
-  const { committed, finished } = navigation.navigate("/test", {
+  const { committed, finished } = navigation.navigate("/test-route-on-navigate", {
     state: {
       value: 1,
     },
@@ -140,10 +140,10 @@ export async function routeHandlerExample(navigation: Navigation) {
   navigation.addEventListener("navigate", handler);
   try {
     let indexed = 0;
-    routesTable.set("/test", async () => {
+    routesTable.set("/test-route", async () => {
       indexed += 1;
     });
-    const { finished } = navigation.navigate("/test", {
+    const { finished } = navigation.navigate("/test-route", {
       state: {
         value: 1,
       },

@@ -4,16 +4,16 @@ import { ok } from "../util";
 
 {
   const navigation = new Navigation();
-  const { finished } = navigation.navigate("/");
+  const { finished } = navigation.navigate("/main");
   await finished;
 
   const router = new Router(navigation);
 
-  router.route("/", () => {
+  router.route("/main", () => {
     console.log("main");
   });
 
-  router.route("/test", () => {
+  router.route("/test-routing", () => {
     console.log("test");
   });
 
@@ -28,9 +28,9 @@ import { ok } from "../util";
     console.log("done resource", { id });
   });
 
-  navigation.navigate("/test");
-  navigation.navigate("/");
-  navigation.navigate("/test");
+  navigation.navigate("/test-routing");
+  navigation.navigate("/main");
+  navigation.navigate("/test-routing");
   navigation.navigate("/resource/1");
 
   await navigation.transition?.finished;
@@ -50,7 +50,7 @@ import { ok } from "../util";
 
   {
     const navigation = new Navigation();
-    navigation.navigate("/");
+    navigation.navigate("/main");
     await navigation.transition?.finished;
 
     const third = new Router(navigation);
