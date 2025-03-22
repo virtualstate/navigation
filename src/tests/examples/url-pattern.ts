@@ -1,5 +1,5 @@
 import { Navigation } from "../../navigation";
-import { URLPattern } from "urlpattern-polyfill";
+import { URLPattern } from "../../routes/url-pattern";
 import { EventTarget } from "../../event-target";
 import { assert, ok } from "../util";
 
