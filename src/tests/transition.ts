@@ -22,9 +22,9 @@ import {ok} from "./util";
 {
     const navigation = new Navigation();
 
-    navigation.addEventListener("navigate", event => event.intercept(
-        new Promise(resolve => setTimeout(resolve, 10))
-    ));
+    navigation.addEventListener("navigate", event => event.intercept({
+        handler: () => new Promise(resolve => setTimeout(resolve, 10))
+    }));
 
     navigation.navigate("/a"); // This one should be cancelled
     navigation.navigate("/b"); // This one should be cancelled

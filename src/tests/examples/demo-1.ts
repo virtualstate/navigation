@@ -89,8 +89,8 @@ export async function demo1(navigation: Navigation) {
       return;
     }
 
-    e.intercept(
-      (async () => {
+    e.intercept({
+      async handler() {
         e.signal.addEventListener("abort", () => {
           // console.log(e.signal);
           const newMain = document.createElement("main");
@@ -112,7 +112,7 @@ export async function demo1(navigation: Navigation) {
         // }
 
         const body = await (
-          await fetch(e.destination.url, { signal: e.signal })
+            await fetch(e.destination.url, { signal: e.signal })
         ).text();
         const { title, main } = await getResult(body);
 
@@ -122,8 +122,8 @@ export async function demo1(navigation: Navigation) {
         // if (useSET.checked) {
         //     await document.documentTransition.start();
         // }
-      })()
-    );
+      }
+    });
   });
 
   async function getResult(htmlString: string) {

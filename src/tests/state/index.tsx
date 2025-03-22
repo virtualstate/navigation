@@ -185,9 +185,9 @@ if (!isWindowNavigation(getNavigation())) {
         }
     }
 
-    navigation.addEventListener("navigate", event => event.intercept(
-        () => void app()
-    ));
+    navigation.addEventListener("navigate", event => event.intercept({
+        handler: () => void app()
+    }));
 
     // The below is "simulating" navigation, without watching
     // what effects happen from it, in real apps this would be happening

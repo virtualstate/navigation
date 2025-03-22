@@ -11,7 +11,9 @@ export async function urlPatternExample(navigation: Navigation) {
   navigation.addEventListener(
     "navigate",
     ({ destination, intercept }) => {
-      return intercept(handler());
+      return intercept({
+        handler
+      });
 
       async function handler() {
         const identifiedTest = new URLPattern({
@@ -64,7 +66,9 @@ export async function urlPatternLoadBooksExample(navigation: Navigation) {
     async ({ destination, intercept }) => {
       const match = booksPattern.exec(destination.url);
       if (match) {
-        intercept(transition());
+        intercept({
+          handler: transition
+        });
       }
 
       async function transition() {

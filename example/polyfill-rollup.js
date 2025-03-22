@@ -448,6 +448,36 @@ function like(value) {
     return !!value;
 }
 
+const THIS_WILL_BE_REMOVED = "This will be removed when version 1.0.0 of @virtualstate/navigation is published";
+const WARNINGS = {
+    EVENT_INTERCEPT_HANDLER: `You are using a non standard interface, please update your code to use event.intercept({ async handler() {} })\n${THIS_WILL_BE_REMOVED}`
+};
+let GLOBAL_IS_WARNINGS_IGNORED = false;
+let GLOBAL_IS_WARNINGS_TRACED = true;
+function setIgnoreWarnings(ignore) {
+    GLOBAL_IS_WARNINGS_IGNORED = ignore;
+}
+function setTraceWarnings(ignore) {
+    GLOBAL_IS_WARNINGS_TRACED = ignore;
+}
+function logWarning(warning, ...message) {
+    if (GLOBAL_IS_WARNINGS_IGNORED) {
+        return;
+    }
+    try {
+        if (GLOBAL_IS_WARNINGS_TRACED) {
+            console.trace(WARNINGS[warning], ...message);
+        }
+        else {
+            console.warn(WARNINGS[warning], ...message);
+        }
+    }
+    catch {
+        // We don't want attempts to log causing issues
+        // maybe we don't have a console
+    }
+}
+
 const Rollback = Symbol.for("@virtualstate/navigation/rollback");
 const Unset = Symbol.for("@virtualstate/navigation/unset");
 const NavigationTransitionParentEventTarget = Symbol.for("@virtualstate/navigation/transition/parentEventTarget");
@@ -694,9 +724,11 @@ class NavigationTransition extends EventTarget {
             if (!options)
                 return undefined;
             if (isPromise(options)) {
+                logWarning("EVENT_INTERCEPT_HANDLER");
                 return options;
             }
             if (typeof options === "function") {
+                logWarning("EVENT_INTERCEPT_HANDLER");
                 return options();
             }
             const { handler, commit } = options;
@@ -2666,7 +2698,7 @@ function applyPolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
 }
 function shouldApplyPolyfill(navigation = getNavigation()) {
     return (navigation !== globalNavigation &&
-        !globalNavigation &&
+        !Object.hasOwn(globalThis, 'navigation') &&
         typeof window !== "undefined");
 }
 
@@ -2683,5 +2715,7 @@ if (shouldApplyPolyfill(navigation)) {
     }
 }
 
+exports.setIgnoreWarnings = setIgnoreWarnings;
 exports.setSerializer = setSerializer;
+exports.setTraceWarnings = setTraceWarnings;
 //# sourceMappingURL=polyfill-rollup.js.map

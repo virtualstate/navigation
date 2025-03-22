@@ -94,9 +94,11 @@ import {Event} from "../event-target";
     navigation.addEventListener("navigateerror", resolve, { once: true });
 
     navigation.addEventListener("navigate", event => {
-        event.intercept(async () => {
-            await new Promise<void>(queueMicrotask);
-            event.reportError(new Error(errorMessage))
+        event.intercept({
+            handler: async () => {
+                await new Promise<void>(queueMicrotask);
+                event.reportError(new Error(errorMessage))
+            }
         });
     });
 

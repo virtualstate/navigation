@@ -2,6 +2,9 @@
 // import {run, dispatchEvent, addEventListener} from "@opennetwork/environment";
 import process from "./node-process";
 import { getConfig } from "./config";
+import { setTraceWarnings } from "../util/warnings";
+
+setTraceWarnings(true)
 
 console.log("====== START NEW SET OF TESTS ======");
 

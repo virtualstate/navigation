@@ -103,8 +103,9 @@ export async function * stateGenerator<S>(navigation: Navigation<S> = getNavigat
     function onNavigate(event: NavigateEvent) {
         // Indicate that we have intercepted navigation
         // and are using it as a state tracker
-        event.intercept?.(Promise.resolve());
-        event.transitionWhile?.(Promise.resolve());
+        event.intercept?.({
+            handler: () => Promise.resolve()
+        });
     }
 
     function onNavigateSuccess() {

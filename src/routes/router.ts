@@ -270,7 +270,11 @@ export class Router<
     if (!event.canIntercept) return;
 
     if (isIntercept(event)) {
-      event.intercept(this.#transition(event));
+      event.intercept({
+        handler: () => {
+          return this.#transition(event)
+        }
+      });
     } else if (isTransitionWhile(event)) {
       event.transitionWhile(this.#transition(event));
     } else if (isWaitUntil(event)) {
@@ -281,7 +285,7 @@ export class Router<
       return this.#transition(event);
     }
 
-    function isIntercept(event: E): event is E & { intercept(promise: Promise<unknown>): void } {
+    function isIntercept(event: E): event is E & { intercept(options?: { handler(): Promise<unknown> }): void } {
       return (
           like<{ intercept: unknown }>(event) &&
           typeof event.intercept === "function"

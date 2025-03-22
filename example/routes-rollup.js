@@ -1899,7 +1899,11 @@ class Router {
         if (!event.canIntercept)
             return;
         if (isIntercept(event)) {
-            event.intercept(this.#transition(event));
+            event.intercept({
+                handler: () => {
+                    return this.#transition(event);
+                }
+            });
         }
         else if (isTransitionWhile(event)) {
             event.transitionWhile(this.#transition(event));
@@ -2365,6 +2369,22 @@ if (!GlobalAbortController) {
 }
 const AbortController$1 = GlobalAbortController;
 
+const THIS_WILL_BE_REMOVED = "This will be removed when version 1.0.0 of @virtualstate/navigation is published";
+const WARNINGS = {
+    EVENT_INTERCEPT_HANDLER: `You are using a non standard interface, please update your code to use event.intercept({ async handler() {} })\n${THIS_WILL_BE_REMOVED}`
+};
+function logWarning(warning, ...message) {
+    try {
+        {
+            console.trace(WARNINGS[warning], ...message);
+        }
+    }
+    catch {
+        // We don't want attempts to log causing issues
+        // maybe we don't have a console
+    }
+}
+
 const Rollback = Symbol.for("@virtualstate/navigation/rollback");
 const Unset = Symbol.for("@virtualstate/navigation/unset");
 const NavigationTransitionParentEventTarget = Symbol.for("@virtualstate/navigation/transition/parentEventTarget");
@@ -2611,9 +2631,11 @@ class NavigationTransition extends EventTarget {
             if (!options)
                 return undefined;
             if (isPromise(options)) {
+                logWarning("EVENT_INTERCEPT_HANDLER");
                 return options;
             }
             if (typeof options === "function") {
+                logWarning("EVENT_INTERCEPT_HANDLER");
                 return options();
             }
             const { handler, commit } = options;
