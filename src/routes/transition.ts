@@ -3,10 +3,7 @@ import {isPromise, like} from "../is";
 import {Event} from "../event-target";
 import {NavigationDestination} from "../spec/navigation";
 import {getRouterRoutes, isRouter, Router} from "./router";
-import { compositeKey } from "@virtualstate/composite-key";
-import {exec, patternParts, URLPattern} from "./url-pattern";
-
-
+import {exec} from "./url-pattern";
 
 export async function transitionEvent<E extends Event, R>(router: Router<E, R>, event: E): Promise<void> {
     const promises: Promise<unknown>[] = [];
@@ -147,7 +144,5 @@ export async function transitionEvent<E extends Event, R>(router: Router<E, R>, 
             )
         }
     }
-
-
 
 }

@@ -27,6 +27,7 @@ export const DependenciesHTML = `<script type="importmap">${JSON.stringify(
 export const DependenciesSyncJSON = {
   imports: {
     ...DefaultImportMap,
+    "urlpattern-polyfill": "https://cdn.skypack.dev/urlpattern-polyfill@v8.0.2",
     "deno:std@latest": "https://cdn.skypack.dev/@edwardmx/noop",
     "@virtualstate/nop": "https://cdn.skypack.dev/@edwardmx/noop",
     "@virtualstate/navigation/event-target":
