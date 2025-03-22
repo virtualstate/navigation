@@ -2699,11 +2699,14 @@ function applyPolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
 function shouldApplyPolyfill(navigation = getNavigation()) {
     const globalThat = globalThis;
     return (navigation !== globalNavigation &&
-        (!Object.hasOwn(globalThat, 'navigation') ||
-            ("Element" in globalThat &&
-                "navigation" in globalThat &&
-                globalThat.Element &&
-                globalThat.navigation instanceof globalThis.Element)) &&
+        (!Object.hasOwn(globalThat, 'navigation')
+        // (
+        //     "Element" in globalThat &&
+        //     "navigation" in globalThat &&
+        //     globalThat.Element &&
+        //     globalThat.navigation instanceof globalThis.Element
+        // )
+        ) &&
         typeof window !== "undefined");
 }
 
