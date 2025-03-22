@@ -1,4 +1,4 @@
-const THIS_WILL_BE_REMOVED = "This will be removed when version 1.0.0 of @virtualstate/navigation is published"
+const THIS_WILL_BE_REMOVED = "This will be removed when the first major release of @virtualstate/navigation is published"
 
 const WARNINGS = {
     EVENT_INTERCEPT_HANDLER: `You are using a non standard interface, please update your code to use event.intercept({ async handler() {} })\n${THIS_WILL_BE_REMOVED}`
