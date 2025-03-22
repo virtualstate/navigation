@@ -94,7 +94,7 @@ if (!isWindowNavigation(getNavigation())) {
         return "Default";
     })
 
-    route("/test", () => {
+    route("/test-route", () => {
         return "test"
     })
 
@@ -144,7 +144,7 @@ if (!isWindowNavigation(getNavigation())) {
         ok(changes[2] === "Test 3");
     }
 
-    await navigation.navigate("/test").finished;
+    await navigation.navigate("/test-route").finished;
 
     {
         ok(changes.length === 3);

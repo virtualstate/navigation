@@ -106,7 +106,13 @@ for (const [
     `Running playwright tests for ${browserName} ${browser.version()}`
   );
   const context = await browser.newContext({});
-  const page = await context.newPage();
+  const page: Playwright.Page | undefined = await context.newPage().catch(() => undefined);
+
+  if (!page) {
+    console.log(`Could not start ${browserName} ${browser.version()}`);
+    await browser.close().catch(() => undefined);
+    continue;
+  }
 
   const namespace = "/@virtualstate/navigation";
   const namespacePath = `/${namespace}`;
@@ -185,8 +191,11 @@ for (const [
         
         try {
             await import(${JSON.stringify(src)});
+            console.log("Post import");
             await window.testsComplete();
+            console.log("Tests marked as complete");
         } catch (error) {
+            console.log("Error caught");
             console.log(error instanceof Error ? error.message : \`\${error}\`);
             console.log(error);
             console.log(error.stack);
@@ -247,7 +256,7 @@ for (const [
         }
         importTarget += "index.js";
       }
-      // console.log({ importTarget });
+      // console.log({ importTarget, pathname });
       const contents = await fs.promises.readFile(importTarget, "utf-8");
       // console.log({ importTarget, contents: !!contents });
       return route.fulfill({

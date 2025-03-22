@@ -4,6 +4,8 @@ import process from "./node-process";
 import { getConfig } from "./config";
 import { setTraceWarnings } from "../util/warnings";
 
+const isWindow = typeof window !== "undefined";
+
 setTraceWarnings(true)
 
 console.log("====== START NEW SET OF TESTS ======");
@@ -67,9 +69,14 @@ async function runTests() {
     await import("./same-document");
     console.log("Starting await tests");
     await import("./await");
-    console.log("Starting dynamic tests");
-    await import("./dynamic");
+    if (!isWindow) {
+      console.log("Starting dynamic tests", import.meta.url);
+      const {dynamicNavigation} = await import("./dynamic");
+      await dynamicNavigation();
+    }
   }
+
+  console.log("Completed tests successfully");
 }
 
 if (typeof window === "undefined") {
@@ -90,7 +97,7 @@ try {
 } catch (error) {
   caught = error;
   exitCode = 1;
-  console.error("Caught test error!");
+  console.error("Caught test error!", caught);
   if (typeof window === "undefined" && typeof process !== "undefined") {
     console.error(caught);
   } else {

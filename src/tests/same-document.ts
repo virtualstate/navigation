@@ -9,7 +9,13 @@ import {ok} from "../is";
     const promise = new Promise<NavigateEvent>(
         resolve => navigation.addEventListener(
             "navigate",
-            resolve,
+            (event) => {
+                event.intercept({
+                    async handler() {
+                        resolve(event);
+                    }
+                })
+            },
             { once: true }
         )
     );

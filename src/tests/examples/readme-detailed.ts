@@ -33,7 +33,7 @@ export async function initialNavigateThenBack(navigation: Navigation) {
   navigation.addEventListener("currententrychange", () => {
     currentEntryChangeCalled = true;
   });
-  const { committed, finished } = navigation.navigate("/test", {
+  const { committed, finished } = navigation.navigate("/test-current-entry-change", {
     state: {
       value: 1,
     },
