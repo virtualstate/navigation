@@ -21,7 +21,7 @@ jobs:
         with:
           deno-version: 'v1.x'
       - run: |
-          yarn remove wpt
+          yarn remove wpt || echo "no wpt"
           yarn install
           npx playwright install-deps
       - run: yarn build

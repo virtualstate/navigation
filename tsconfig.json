@@ -8,7 +8,8 @@
             "dom.iterable"
         ],
         "types": [
-          "node"
+          "node",
+          "urlpattern-polyfill"
         ],
         "esModuleInterop": true,
         "target": "esnext",
