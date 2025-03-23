@@ -27,4 +27,3 @@ jobs:
       - run: yarn build
       # yarn coverage === c8 + yarn test
       - run: yarn coverage
-        continue-on-error: true
