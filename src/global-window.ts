@@ -50,6 +50,7 @@ export interface PopStateEventPrototype extends EventPrototype {
 }
 
 export interface WindowLike {
+    name?: string
     history?: NavigationHistory<object>
     location?: {
         href?: string

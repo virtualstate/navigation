@@ -2217,6 +2217,20 @@ function interceptWindowClicks(navigation, window) {
             if (!isAppNavigation(ev))
                 return;
             ok(ev);
+            const target = aEl.getAttribute("target");
+            console.log({ aEl, target });
+            // See target detailed here
+            // https://github.com/WICG/navigation-api/blob/7b2d326b8eeb75680e568dadaa67e3bb54c9ca7f/README.md?plain=1#L1465
+            if (target) {
+                if (target === "_blank") {
+                    // Continue with default, new window
+                    return;
+                }
+                if (target !== window.name) {
+                    // Continue with default, not current window
+                    return;
+                }
+            }
             const options = {
                 history: "auto",
                 [NavigationUserInitiated]: true,
@@ -2242,6 +2256,19 @@ function interceptWindowClicks(navigation, window) {
             const action = ev.submitter && 'formAction' in ev.submitter && ev.submitter.formAction
                 ? ev.submitter.formAction
                 : form.action;
+            const target = form.getAttribute("target");
+            // See target detailed here
+            // https://github.com/WICG/navigation-api/blob/7b2d326b8eeb75680e568dadaa67e3bb54c9ca7f/README.md?plain=1#L1465
+            if (target) {
+                if (target === "_blank") {
+                    // Continue with default, new window
+                    return;
+                }
+                if (target !== window.name) {
+                    // Continue with default, not current window
+                    return;
+                }
+            }
             let formData;
             /* c8 ignore start */
             try {

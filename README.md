@@ -270,5 +270,6 @@ Please [create a new GitHub Issue if you find further limitations](https://githu
 - (1.0.1-alpha.207) Update documentation to match latest spec [Issue #37](https://github.com/virtualstate/navigation/issues/37)
 - (1.0.1-alpha.207) Include warning for old signature usage [Issue #37](https://github.com/virtualstate/navigation/issues/37)
 - (1.0.1-alpha.208) Correct `navigation.transition.from`, now derived from `navigation.currentEntry` at the start of transition [Issue #31](https://github.com/virtualstate/navigation/issues/31)
+- (1.0.1-alpha.208) Ignore anchor elements with `target="otherWindow"` [Issue #38](https://github.com/virtualstate/navigation/issues/38)
 
 </details>
