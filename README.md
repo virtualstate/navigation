@@ -1,6 +1,6 @@
 # `@virtualstate/navigation`
 
-Native JavaScript [navigation](https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api) implementation 
+Native JavaScript [navigation](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) implementation 
 
 [//]: # (badges)
 
@@ -260,16 +260,3 @@ setSerializer({
 - [Normal page navigations are not intercepted (excluding navigation api & history made changes)](https://github.com/virtualstate/navigation/issues/26)
 
 Please [create a new GitHub Issue if you find further limitations](https://github.com/virtualstate/navigation/issues)
-
-## What's Changed
-
-<details><summary>Change Log</summary>
-
-- (1.0.1-alpha.206) Updated default serializer for polyfill to JSON [PR #35](https://github.com/virtualstate/navigation/pull/35)
-- (1.0.1-alpha.207) Use `!Object.hasOwn(globalThis, 'navigation')` for existing global check [PR #36](https://github.com/virtualstate/navigation/pull/36)
-- (1.0.1-alpha.207) Update documentation to match latest spec [Issue #37](https://github.com/virtualstate/navigation/issues/37)
-- (1.0.1-alpha.207) Include warning for old signature usage [Issue #37](https://github.com/virtualstate/navigation/issues/37)
-- (1.0.1-alpha.208) Correct `navigation.transition.from`, now derived from `navigation.currentEntry` at the start of transition [Issue #31](https://github.com/virtualstate/navigation/issues/31)
-- (1.0.1-alpha.208) Ignore anchor elements with `target="otherWindow"` [Issue #38](https://github.com/virtualstate/navigation/issues/38)
-
-</details>
