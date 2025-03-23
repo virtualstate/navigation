@@ -115,11 +115,30 @@ export async function assertNavigationWithWindow(window: Window, navigation: Nav
 
     try {
 
+        let eventReceivedAtLeastOnce = false,
+            interceptReceivedAtLeastOnce = false,
+            interceptAssertedAtLeastOnce = false,
+            error = undefined
+
         // Default intercept to make sure no navigation happens
         // This will by default prevent any anchor clicks from
         // completing by default
         collection.addEventListener("navigate", event => {
-            event.intercept();
+            eventReceivedAtLeastOnce = true;
+            const { currentEntry: { key: currentKey } } = navigation;
+            event.intercept({
+                async handler() {
+                    interceptReceivedAtLeastOnce = true;
+                    try {
+                        ok(currentKey, "Expected current entry key");
+                        ok(navigation.transition.from.key, "Expected from key");
+                        ok(navigation.transition.from.key === currentKey, "Expected current entry to match transition.from.key");
+                        interceptAssertedAtLeastOnce = true;
+                    } catch (caught) {
+                        error = caught;
+                    }
+                }
+            });
         });
 
         // Hopefully our window has a document
@@ -218,6 +237,10 @@ export async function assertNavigationWithWindow(window: Window, navigation: Nav
         console.log("Form event seen:", formEvent.type, formEvent.originalEvent?.type, formEvent.formData, formEvent.destination.url);
 
         document.body.removeChild(form);
+
+        ok(eventReceivedAtLeastOnce, "Expected navigation event");
+        ok(interceptReceivedAtLeastOnce, "Expected navigation event intercept");
+        ok(interceptAssertedAtLeastOnce, error ?? "Expected navigation event intercept to have passed");
     } finally {
 
 

@@ -369,7 +369,7 @@ export class Navigation<S = unknown, R = unknown | void>
     const nextTransition: NavigationTransition<S> =
       transition ??
       new NavigationTransition<S>({
-        from: entry,
+        from: this.currentEntry,
         navigationType:
           typeof givenNavigationType === "string"
             ? givenNavigationType

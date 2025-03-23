@@ -448,7 +448,7 @@ function like(value) {
     return !!value;
 }
 
-const THIS_WILL_BE_REMOVED = "This will be removed when version 1.0.0 of @virtualstate/navigation is published";
+const THIS_WILL_BE_REMOVED = "This will be removed when the first major release of @virtualstate/navigation is published";
 const WARNINGS = {
     EVENT_INTERCEPT_HANDLER: `You are using a non standard interface, please update your code to use event.intercept({ async handler() {} })\n${THIS_WILL_BE_REMOVED}`
 };
@@ -1371,7 +1371,7 @@ class Navigation extends NavigationEventTarget {
     #commitTransition = (givenNavigationType, entry, transition, options) => {
         const nextTransition = transition ??
             new NavigationTransition({
-                from: entry,
+                from: this.currentEntry,
                 navigationType: typeof givenNavigationType === "string"
                     ? givenNavigationType
                     : "replace",
@@ -2699,14 +2699,7 @@ function applyPolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
 function shouldApplyPolyfill(navigation = getNavigation()) {
     const globalThat = globalThis;
     return (navigation !== globalNavigation &&
-        (!Object.hasOwn(globalThat, 'navigation')
-        // (
-        //     "Element" in globalThat &&
-        //     "navigation" in globalThat &&
-        //     globalThat.Element &&
-        //     globalThat.navigation instanceof globalThis.Element
-        // )
-        ) &&
+        !Object.hasOwn(globalThat, 'navigation') &&
         typeof window !== "undefined");
 }
 

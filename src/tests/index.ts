@@ -74,6 +74,8 @@ async function runTests() {
       const {dynamicNavigation} = await import("./dynamic");
       await dynamicNavigation();
     }
+    console.log("Starting destination key tests");
+    await import("./destination-key-from-key");
   }
 
   console.log("Completed tests successfully");
