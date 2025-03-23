@@ -298,7 +298,6 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
       if (!isAppNavigation(ev)) return;
       ok<Event>(ev);
       const target = aEl.getAttribute("target");
-      console.log({ aEl, target });
       // See target detailed here
       // https://github.com/WICG/navigation-api/blob/7b2d326b8eeb75680e568dadaa67e3bb54c9ca7f/README.md?plain=1#L1465
       if (target) {
