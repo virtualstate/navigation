@@ -18,12 +18,14 @@ interface ElementLike {
     matches(query: string): boolean;
     submit?(): void;
     click?(): void;
+    getAttribute(name: string): string
 }
 
 function createElement(type: string) {
     const target: EventTarget & Record<string, unknown> & Partial<ElementLike> = new EventTarget();
     const children = new Set();
     target.ownerDocument = document;
+    target.getAttribute = () => "";
     target.click = () => {
         console.log("Click", type);
         if (type === "a") {
