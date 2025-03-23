@@ -254,6 +254,14 @@ setSerializer({
 
 </details>
 
+### Polyfill Known Limitations 
+
+- [Navigation by setting window.location does not trigger navigate event](https://github.com/virtualstate/navigation/issues/27)
+- [Normal page navigations are not intercepted (excluding navigation api & history made changes)](https://github.com/virtualstate/navigation/issues/26)
+- [`event.downloadRequest` is not yet implemented](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/downloadRequest)
+
+Please [create a new GitHub Issue if you find further limitations](https://github.com/virtualstate/navigation/issues)
+
 ## What's Changed
 
 <details><summary>Change Log</summary>
