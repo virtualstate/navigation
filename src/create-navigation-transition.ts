@@ -44,6 +44,9 @@ export const NavigationUserInitiated = Symbol.for(
 export const NavigationOriginalEvent = Symbol.for(
   "@virtualstate/navigation/originalEvent"
 );
+export const NavigationSourceElement = Symbol.for(
+  "@virtualstate/navigation/sourceElement"
+);
 
 export interface NavigationNavigateOptions<S = unknown>
   extends NavigationNavigateOptionsPrototype<S> {
@@ -52,6 +55,7 @@ export interface NavigationNavigateOptions<S = unknown>
   [NavigationCanIntercept]?: boolean;
   [NavigationUserInitiated]?: boolean;
   [NavigationOriginalEvent]?: PreventDefaultLike;
+  [NavigationSourceElement]?: Element;
 }
 
 export const EventAbortController = Symbol.for(
@@ -234,6 +238,7 @@ export function createNavigationTransition<S = unknown>(
         (typeof navigationType === "string" ? navigationType : "replace"),
     userInitiated: options?.[NavigationUserInitiated] ?? false,
     destination,
+    sourceElement: options?.[NavigationSourceElement]
   })
 
   const originalEvent = options?.[NavigationOriginalEvent];
