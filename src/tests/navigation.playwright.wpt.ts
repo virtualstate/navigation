@@ -10,6 +10,7 @@ import { DependenciesHTML, DependenciesSyncHTML } from "./dependencies";
 import { Browser, Page } from "playwright";
 import {v4} from "../util/uuid-or-random";
 import { createJavaScriptBundle } from "./navigation.server.wpt";
+import {ok} from "../is";
 
 const namespacePath = "/node_modules/wpt/navigation-api";
 const namespaceBundlePath = "/navigation-api";
@@ -29,6 +30,7 @@ const allDependencies = {
 };
 
 const wptDependency = allDependencies.wpt;
+ok(wptDependency, "wpt not included as a dependency");
 const [wptUrl, wptCommit] = wptDependency.split(/\.git#?/);
 
 /*
