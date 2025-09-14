@@ -29,7 +29,6 @@ export interface EventPrototype {
     target: ElementPrototype;
     composedPath?(): ElementPrototype[];
     defaultPrevented: unknown;
-    submitter: Record<string, unknown>;
 }
 
 export interface MouseEventPrototype extends EventPrototype {
@@ -41,7 +40,7 @@ export interface MouseEventPrototype extends EventPrototype {
 }
 
 export interface SubmitEventPrototype extends EventPrototype {
-
+    submitter?: ElementPrototype;
 }
 
 export interface PopStateEventPrototype extends EventPrototype {
