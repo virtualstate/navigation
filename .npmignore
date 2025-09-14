@@ -4,3 +4,4 @@ node_modules
 coverage
 src/tests
 esnext/tests
+*.lock
