@@ -1,6 +1,5 @@
 import {Navigation, NavigationEntriesChangeEvent} from "../navigation";
 import {ok} from "../is";
-import {remove} from "cheerio/lib/api/manipulation";
 
 async function getChanges(navigation: Navigation) {
     return new Promise<NavigationEntriesChangeEvent>(

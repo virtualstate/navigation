@@ -6,7 +6,7 @@ export async function transition<S>(navigation: Navigation<S>) {
     while (navigation.transition && transition !== navigation.transition) {
         transition = navigation.transition;
         finalPromise = transition.finished;
-        await finalPromise.catch(error => void error);
+        await finalPromise.catch((error: unknown): void => void error);
     }
     return finalPromise;
 }

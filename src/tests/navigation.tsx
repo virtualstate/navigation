@@ -136,7 +136,7 @@ export async function assertNavigation(
       await test(localNavigation);
       const finished = localNavigation.transition?.finished;
       if (finished) {
-        await finished.catch((error) => void error);
+        await finished.catch((error: unknown): void => void error);
       }
 
       // Let the events to finish logging

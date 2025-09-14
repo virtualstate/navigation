@@ -681,8 +681,8 @@ export async function singlePageAppRedirectsAndGuards(navigation: Navigation) {
 
   const { committed: redirectCommitted, finished: redirectFinishedErrored } =
     navigation.navigate(targetUrl.toString());
-  redirectFinishedErrored.catch((error) => void error);
-  await redirectCommitted.catch((error) => void error);
+  redirectFinishedErrored.catch((error: unknown): void => void error);
+  await redirectCommitted.catch((error: unknown): void => void error);
 
   const redirectError = await redirectFinishedErrored.catch((error) => error);
 
@@ -1238,10 +1238,10 @@ export async function nextPreviousButtons(navigation: Navigation) {
   assert<string>(currentPhoto.src);
   ok(new URL(currentPhoto.src).pathname === `${contentPhotosPrefix}/7`);
 
-  // console.log({ finalFetchCount, fetchCount });
+  console.log({ finalFetchCount, fetchCount });
 
   if (!isWindowNavigation(navigation)) {
-    ok(finalFetchCount === fetchCount);
+    ok(finalFetchCount === fetchCount, `${fetchCount} should equal ${finalFetchCount}`);
   }
 
   // log: Updated window pathname to /photos/8

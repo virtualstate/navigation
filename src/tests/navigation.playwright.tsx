@@ -106,11 +106,11 @@ for (const [
     `Running playwright tests for ${browserName} ${browser.version()}`
   );
   const context = await browser.newContext({});
-  const page: Playwright.Page | undefined = await context.newPage().catch(() => undefined);
+  const page: Playwright.Page | undefined = await context.newPage().catch((error: unknown): undefined => void error);
 
   if (!page) {
     console.log(`Could not start ${browserName} ${browser.version()}`);
-    await browser.close().catch(() => undefined);
+    await browser.close().catch((error: unknown): void => void error);
     continue;
   }
 

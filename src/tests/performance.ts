@@ -1,4 +1,4 @@
-const { PerformanceObserver } = await import("perf_hooks").catch(() => ({
+const { PerformanceObserver } = await import("perf_hooks").catch((): { PerformanceObserver: undefined } => ({
   PerformanceObserver: undefined,
 }));
 

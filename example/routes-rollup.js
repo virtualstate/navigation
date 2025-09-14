@@ -2884,6 +2884,7 @@ function createNavigationTransition(context) {
     const destination = {
         url: entry.url,
         key: entry.key,
+        id: entry.id,
         index: destinationIndex,
         sameDocument: entry.sameDocument,
         getState() {
@@ -3224,7 +3225,13 @@ class Navigation extends NavigationEventTarget {
         }
         const nextUrl = new URL(url, baseURL).toString();
         let navigationType = "push";
-        if (options?.history === "push" || options?.history === "replace") {
+        if (options?.history === "auto" || !options?.history) {
+            // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-convert-to-replace
+            if (nextUrl === this.currentEntry?.url) {
+                navigationType = "replace";
+            }
+        }
+        else if (options?.history === "push" || options?.history === "replace") {
             navigationType = options?.history;
         }
         const entry = this.#createNavigationHistoryEntry({
@@ -3256,8 +3263,10 @@ class Navigation extends NavigationEventTarget {
         });
     };
     #createNavigationHistoryEntry = (options) => {
+        const key = options.key || (options.navigationType === "replace" ? this.currentEntry?.key : undefined);
         const entry = new NavigationHistoryEntry({
             ...options,
+            key,
             index: options.index ??
                 (() => {
                     return this.#entries.indexOf(entry);
@@ -3622,7 +3631,7 @@ class Navigation extends NavigationEventTarget {
     #dispose = async () => {
         // console.log(JSON.stringify({ known: [...this.#known], entries: this.#entries }));
         for (const known of this.#known) {
-            const index = this.#entries.findIndex((entry) => entry.key === known.key);
+            const index = this.#entries.findIndex((entry) => entry.id === known.id);
             if (index !== -1) {
                 // Still in use
                 continue;

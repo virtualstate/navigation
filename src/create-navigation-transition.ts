@@ -180,6 +180,7 @@ export function createNavigationTransition<S = unknown>(
   const destination: WritableProps<NavigationDestination<S>> = {
     url: entry.url,
     key: entry.key,
+    id: entry.id,
     index: destinationIndex,
     sameDocument: entry.sameDocument,
     getState() {

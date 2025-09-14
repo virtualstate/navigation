@@ -290,8 +290,13 @@ export class Navigation<S = unknown, R = unknown | void>
     }
     const nextUrl = new URL(url, baseURL).toString();
     let navigationType: NavigationNavigationType = "push"
-    if (options?.history === "push" || options?.history === "replace") {
-        navigationType = options?.history;
+    if (options?.history === "auto" || !options?.history) {
+      // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-convert-to-replace
+      if (nextUrl === this.currentEntry?.url) {
+        navigationType = "replace";
+      }
+    } else if (options?.history === "push" || options?.history === "replace") {
+      navigationType = options?.history;
     }
     const entry = this.#createNavigationHistoryEntry({
       getState: this[NavigationGetState],
@@ -313,10 +318,10 @@ export class Navigation<S = unknown, R = unknown | void>
       index: entry?.index ?? undefined,
       state: options?.state ?? entry?.getState<S>(),
       navigationType:
-        entry?.[NavigationHistoryEntryNavigationType] ??
-        (typeof options?.navigationType === "string"
-          ? options.navigationType
-          : "replace"),
+          entry?.[NavigationHistoryEntryNavigationType] ??
+          (typeof options?.navigationType === "string"
+              ? options.navigationType
+              : "replace"),
       ...options,
       get [NavigationHistoryEntryKnownAs]() {
         return entry?.[NavigationHistoryEntryKnownAs];
@@ -331,8 +336,10 @@ export class Navigation<S = unknown, R = unknown | void>
     options: Partial<NavigationHistoryEntryInit<S>> &
       Omit<NavigationHistoryEntryInit<S>, "index">
   ) => {
+    const key = options.key || (options.navigationType === "replace" ? this.currentEntry?.key : undefined);
     const entry: NavigationHistoryEntry<S> = new NavigationHistoryEntry<S>({
       ...options,
+      key,
       index:
         options.index ??
         (() => {
@@ -395,7 +402,7 @@ export class Navigation<S = unknown, R = unknown | void>
     };
     this.#queueTransition(nextTransition);
 
-    void handler().catch((error) => void error);
+    void handler().catch((error: unknown): void => void error);
 
     // let nextPromise;
     // if (!this.#transitionInProgressCount || !this.#activePromise) {
@@ -809,7 +816,7 @@ export class Navigation<S = unknown, R = unknown | void>
     // console.log(JSON.stringify({ known: [...this.#known], entries: this.#entries }));
 
     for (const known of this.#known) {
-      const index = this.#entries.findIndex((entry) => entry.key === known.key);
+      const index = this.#entries.findIndex((entry) => entry.id === known.id);
       if (index !== -1) {
         // Still in use
         continue;

@@ -7,6 +7,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1-alpha.210] - 2025-09-14
+
+### Added
+
+- Set `navigateType` to `"replace"` on `history: "replace"` or `history: "auto"` with same target URL as `currentEntry` [Issue #43](https://github.com/virtualstate/navigation/issues/43)
+- Set `key` to `currentEntry.key` on `"replace"` [Issue #43](https://github.com/virtualstate/navigation/issues/43), [See]()
+
+### Changed
+
+- Include `destination.id` from `entry.id` [See](https://developer.mozilla.org/en-US/docs/Web/API/NavigationDestination/id)
+
+> Note, the `destination` entry `id` and `key` is always known in this implementation ahead of the 
+> navigate event dispatching for this reason the values are always included rather than an empty string
+
 ## [1.0.1-alpha.209] - 2025-03-23
 
 ### Added

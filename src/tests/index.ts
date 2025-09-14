@@ -76,6 +76,8 @@ async function runTests() {
     }
     console.log("Starting destination key tests");
     await import("./destination-key-from-key");
+    console.log("Starting navigation type tests");
+    await import("./navigation-type-auto-replace");
   }
 
   console.log("Completed tests successfully");
