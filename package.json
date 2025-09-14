@@ -131,5 +131,9 @@
     "test:deno:r": "yarn build && deno run -r --allow-import --allow-env --allow-read --allow-net --import-map=import-map-deno.json esnext/tests/index.js",
     "test:inspect": "yarn build && node --enable-source-maps --inspect-brk esnext/tests/index.js",
     "coverage": "yarn build && c8 node esnext/tests/index.js && yarn postbuild"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
   }
 }
