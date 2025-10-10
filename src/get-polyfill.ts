@@ -21,6 +21,11 @@ import {
 import {globalSelf} from "./global-self";
 import {v4} from "./util/uuid-or-random";
 import {NavigationHistoryEntrySerialized} from "./navigation-entry";
+import {
+  NavigationTransition, NavigationTransitionAbort,
+  NavigationTransitionBeforeCommit,
+  NavigationTransitionIsAsync, NavigationTransitionIsOngoing
+} from "./navigation-transition";
 
 export interface NavigationPolyfillOptions {
   /**
@@ -603,6 +608,8 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
   ok(window, "window required when using polyfill with history, this shouldn't be seen");
 
+  const location = window.location;
+
   // Use baseHistory so that we don't initialise entries we didn't intend to
   // if we used a polyfill history
   const historyInitialState = history?.state;
@@ -623,8 +630,8 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
   if (!initialEntries.length) {
     let url: string | undefined = undefined;
 
-    if (window.location?.href) {
-      url = window.location.href;
+    if (location?.href) {
+      url = location.href;
     }
 
     let state = undefined;
@@ -706,6 +713,21 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
         navigation.addEventListener("navigate", event => {
           if (event.destination.sameDocument) {
+            if (navigation.transition instanceof NavigationTransition) {
+              const { transition } = navigation;
+              const { destination } = event;
+              transition.addEventListener(NavigationTransitionBeforeCommit, () => {
+                if (!transition[NavigationTransitionIsOngoing]) {
+                  // TODO do we need to push state here too?
+                  if (transition.navigationType === "push") {
+                    location.href = destination.url;
+                  } else if (transition.navigationType === "reload") {
+                    location.reload();
+                  }
+                  transition[NavigationTransitionAbort]();
+                }
+              }, { once: true });
+            }
             return;
           }
 
@@ -755,7 +777,7 @@ export function getCompletePolyfill(options: NavigationPolyfillOptions = DEFAULT
 
         navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
           // console.log("<-- currententrychange event listener -->");
-          const { currentEntry } = navigation;
+          const { currentEntry, transition } = navigation;
           if (!currentEntry) return;
           const { key, url } = currentEntry;
           if (ignoreCurrentEntryChange.delete(key) || !currentEntry?.sameDocument) return;

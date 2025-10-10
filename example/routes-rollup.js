@@ -2409,6 +2409,7 @@ const NavigationTransitionIsAsync = Symbol.for("@virtualstate/navigation/transit
 const NavigationTransitionWait = Symbol.for("@virtualstate/navigation/transition/wait");
 const NavigationTransitionPromiseResolved = Symbol.for("@virtualstate/navigation/transition/promise/resolved");
 const NavigationTransitionRejected = Symbol.for("@virtualstate/navigation/transition/rejected");
+const NavigationTransitionBeforeCommit = Symbol.for("@virtualstate/navigation/transition/beforeCommit");
 const NavigationTransitionCommit = Symbol.for("@virtualstate/navigation/transition/commit");
 const NavigationTransitionFinish = Symbol.for("@virtualstate/navigation/transition/finish");
 const NavigationTransitionStart = Symbol.for("@virtualstate/navigation/transition/start");
@@ -3418,16 +3419,24 @@ class Navigation extends NavigationEventTarget {
             if (committedCurrentEntryChange) {
                 return;
             }
-            committedCurrentEntryChange = true;
-            syncCommit(commit);
-            const { entriesChange } = commit;
             const promises = [
                 transition.dispatchEvent(createEvent({
-                    type: NavigationTransitionCommit,
+                    type: NavigationTransitionBeforeCommit,
                     transition,
                     entry,
                 }))
             ];
+            if (transition.signal.aborted) {
+                return;
+            }
+            committedCurrentEntryChange = true;
+            syncCommit(commit);
+            const { entriesChange } = commit;
+            promises.push(transition.dispatchEvent(createEvent({
+                type: NavigationTransitionCommit,
+                transition,
+                entry,
+            })));
             if (entriesChange) {
                 promises.push(this.dispatchEvent(createEvent({
                     type: "entrieschange",

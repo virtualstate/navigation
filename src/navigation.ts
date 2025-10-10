@@ -36,6 +36,7 @@ import {
   Unset,
   NavigationIntercept,
   NavigationTransitionStartDeadline,
+  NavigationTransitionBeforeCommit,
   NavigationTransitionCommit,
   NavigationTransitionFinish,
   NavigationTransitionAbort,
@@ -553,19 +554,34 @@ export class Navigation<S = unknown, R = unknown | void>
       if (committedCurrentEntryChange) {
         return;
       }
-      committedCurrentEntryChange = true;
-      syncCommit(commit);
-      const { entriesChange } = commit;
 
       const promises = [
         transition.dispatchEvent(
             createEvent({
-              type: NavigationTransitionCommit,
+              type: NavigationTransitionBeforeCommit,
               transition,
               entry,
             })
         )
       ];
+
+      if (transition.signal.aborted) {
+        return;
+      }
+
+      committedCurrentEntryChange = true;
+      syncCommit(commit);
+      const { entriesChange } = commit;
+
+      promises.push(
+          transition.dispatchEvent(
+              createEvent({
+                type: NavigationTransitionCommit,
+                transition,
+                entry,
+              })
+          )
+      )
 
       if (entriesChange) {
         promises.push(

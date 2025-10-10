@@ -98,8 +98,11 @@ export const NavigationTransitionRejected = Symbol.for(
   "@virtualstate/navigation/transition/rejected"
 );
 
+export const NavigationTransitionBeforeCommit = Symbol.for(
+    "@virtualstate/navigation/transition/beforeCommit"
+);
 export const NavigationTransitionCommit = Symbol.for(
-  "@virtualstate/navigation/transition/commit"
+    "@virtualstate/navigation/transition/commit"
 );
 export const NavigationTransitionFinish = Symbol.for(
   "@virtualstate/navigation/transition/finish"

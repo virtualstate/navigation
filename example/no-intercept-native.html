@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Polyfill Example</title>
+
+</head>
+<body>
+    <script type="module">
+
+        console.log("No polyfill");
+
+        const app = document.getElementById("app");
+        const urlSpan = document.getElementById("url");
+        const button = document.querySelector("#programmatic-navigation");
+
+        if (typeof navigation === "undefined") {
+            app.innerHTML = "Navigation API not available";
+            throw new Error(app.innerHTML);
+        }
+
+        button.addEventListener("click", () => {
+            window.navigation.navigate("/esm.html");
+        });
+
+        let updateCount = 0;
+
+        const onNavigate = (event) => {
+            const url = new URL(event.destination.url);
+
+            console.log(event)
+
+            if (url.pathname === "/esm.html") {
+                return;
+            }
+
+            event.intercept({
+                async handler() {
+                    // Do something client side
+                    app.innerText = `Updated ${updateCount += 1}!`;
+                }
+            });
+        }
+
+        window.navigation.addEventListener("navigate", onNavigate);
+
+        console.log(navigation.currentEntry)
+
+        urlSpan.innerText = new URL(navigation.currentEntry.url).pathname;
+        console.log(navigation.currentEntry.url)
+    </script>
+
+    <p>Current Url <span id="url"></span></p>
+    <button type="button" id="programmatic-navigation">Navigate</button>
+    <a href="/no-intercept-esm.html">Current Page</a>
+    <a href="/some-page">Navigation Page</a>
+
+    <div id="app"></div>
+</body>
+</html>

@@ -501,6 +501,7 @@ const NavigationTransitionIsAsync = Symbol.for("@virtualstate/navigation/transit
 const NavigationTransitionWait = Symbol.for("@virtualstate/navigation/transition/wait");
 const NavigationTransitionPromiseResolved = Symbol.for("@virtualstate/navigation/transition/promise/resolved");
 const NavigationTransitionRejected = Symbol.for("@virtualstate/navigation/transition/rejected");
+const NavigationTransitionBeforeCommit = Symbol.for("@virtualstate/navigation/transition/beforeCommit");
 const NavigationTransitionCommit = Symbol.for("@virtualstate/navigation/transition/commit");
 const NavigationTransitionFinish = Symbol.for("@virtualstate/navigation/transition/finish");
 const NavigationTransitionStart = Symbol.for("@virtualstate/navigation/transition/start");
@@ -1510,16 +1511,24 @@ class Navigation extends NavigationEventTarget {
             if (committedCurrentEntryChange) {
                 return;
             }
-            committedCurrentEntryChange = true;
-            syncCommit(commit);
-            const { entriesChange } = commit;
             const promises = [
                 transition.dispatchEvent(createEvent({
-                    type: NavigationTransitionCommit,
+                    type: NavigationTransitionBeforeCommit,
                     transition,
                     entry,
                 }))
             ];
+            if (transition.signal.aborted) {
+                return;
+            }
+            committedCurrentEntryChange = true;
+            syncCommit(commit);
+            const { entriesChange } = commit;
+            promises.push(transition.dispatchEvent(createEvent({
+                type: NavigationTransitionCommit,
+                transition,
+                entry,
+            })));
             if (entriesChange) {
                 promises.push(this.dispatchEvent(createEvent({
                     type: "entrieschange",
@@ -2500,6 +2509,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
     }
     // console.log("POLYFILL LOADING");
     ok(window, "window required when using polyfill with history, this shouldn't be seen");
+    const location = window.location;
     // Use baseHistory so that we don't initialise entries we didn't intend to
     // if we used a polyfill history
     const historyInitialState = history?.state;
@@ -2517,8 +2527,8 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
     const HISTORY_INTEGRATION = !!((givenWindow || givenHistory) && history);
     if (!initialEntries.length) {
         let url = undefined;
-        if (window.location?.href) {
-            url = window.location.href;
+        if (location?.href) {
+            url = location.href;
         }
         let state = undefined;
         if (!isStateHistoryWithMeta(historyInitialState) && !isStateHistoryMeta(historyInitialState)) {
@@ -2584,6 +2594,17 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                 const ignoreCurrentEntryChange = new Set();
                 navigation.addEventListener("navigate", event => {
                     if (event.destination.sameDocument) {
+                        if (navigation.transition instanceof NavigationTransition) {
+                            const { transition } = navigation;
+                            const { destination } = event;
+                            transition.addEventListener(NavigationTransitionBeforeCommit, () => {
+                                if (transition.navigationType === "push" && !transition[NavigationTransitionIsOngoing]) {
+                                    location.href = destination.url;
+                                    transition[NavigationTransitionAbort]();
+                                    return;
+                                }
+                            }, { once: true });
+                        }
                         return;
                     }
                     // If the destination is not the same document, we are navigating away
@@ -2628,7 +2649,7 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                 });
                 navigation.addEventListener("currententrychange", ({ navigationType, from }) => {
                     // console.log("<-- currententrychange event listener -->");
-                    const { currentEntry } = navigation;
+                    const { currentEntry, transition } = navigation;
                     if (!currentEntry)
                         return;
                     const { key, url } = currentEntry;

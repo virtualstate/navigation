@@ -54,6 +54,7 @@ export interface WindowLike {
     history?: NavigationHistory<object>
     location?: {
         href?: string
+        reload(): void
     }
     PopStateEvent?: {
         prototype: {
