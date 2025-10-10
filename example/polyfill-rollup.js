@@ -2598,10 +2598,15 @@ function getCompletePolyfill(options = DEFAULT_POLYFILL_OPTIONS) {
                             const { transition } = navigation;
                             const { destination } = event;
                             transition.addEventListener(NavigationTransitionBeforeCommit, () => {
-                                if (transition.navigationType === "push" && !transition[NavigationTransitionIsOngoing]) {
-                                    location.href = destination.url;
+                                if (!transition[NavigationTransitionIsOngoing]) {
+                                    // TODO do we need to push state here too?
+                                    if (transition.navigationType === "push") {
+                                        location.href = destination.url;
+                                    }
+                                    else if (transition.navigationType === "reload") {
+                                        location.reload();
+                                    }
                                     transition[NavigationTransitionAbort]();
-                                    return;
                                 }
                             }, { once: true });
                         }

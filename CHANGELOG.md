@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Polyfill uses `location.href` for `push` events for `sameDocument` transitions that do not have an intercept added through the event lifecycle [Issue #42](https://github.com/virtualstate/navigation/issues/42)
+- Polyfill uses `location.href` for same document `push` events that do not have an intercept added through the event lifecycle [Issue #42](https://github.com/virtualstate/navigation/issues/42)
+- Polyfill uses `location.reload()` for same document `reload` events that do not have an intercept added through the event lifecycle [Issue #42](https://github.com/virtualstate/navigation/issues/42)
 
 ## [1.0.1-alpha.211] - 2025-09-14
 
