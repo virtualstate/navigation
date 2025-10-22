@@ -23,6 +23,7 @@ export class NavigateEvent<S = unknown> implements Spec<S> {
     readonly signal: AbortSignal;
     readonly userInitiated: boolean;
     readonly navigationType: NavigationNavigationType;
+    readonly sourceElement?: Element;
 
     constructor(public type: "navigate", init: NavigateEventInit<S>) {
         if (!init) {
@@ -44,6 +45,7 @@ export class NavigateEvent<S = unknown> implements Spec<S> {
         this.signal = init.signal;
         this.userInitiated = init.userInitiated ?? false;
         this.navigationType = init.navigationType ?? "push";
+        this.sourceElement = init.sourceElement;
     }
 
 

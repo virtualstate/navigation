@@ -6,7 +6,7 @@ import {
   NavigationSetEntries, NavigationSetOptions
 } from "./navigation";
 import { InvalidStateError } from "./navigation-errors";
-import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationUserInitiated } from "./create-navigation-transition";
+import { InternalNavigationNavigateOptions, NavigationDownloadRequest, NavigationFormData, NavigationOriginalEvent, NavigationSourceElement, NavigationUserInitiated } from "./create-navigation-transition";
 import { stringify, parse } from './util/serialization';
 import {NavigationHistory} from "./history";
 import {like, ok} from "./is";
@@ -315,11 +315,13 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
           return;
         }
       }
+      const sourceElement = aEl;
       const options: InternalNavigationNavigateOptions = {
         history: "auto",
         [NavigationUserInitiated]: true,
         [NavigationDownloadRequest]: aEl.download,
         [NavigationOriginalEvent]: ev,
+        [NavigationSourceElement]: sourceElement as any as Element,
       };
       navigation.navigate(aEl.href, options);
     }
@@ -352,6 +354,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
           return;
         }
       }
+      const sourceElement = ev.submitter || form;
       let formData;
       /* c8 ignore start */
       try {
@@ -382,6 +385,7 @@ function interceptWindowClicks(navigation: Navigation, window: WindowLike) {
         [NavigationUserInitiated]: true,
         [NavigationFormData]: navFormData,
         [NavigationOriginalEvent]: unknownEvent,
+        [NavigationSourceElement]: sourceElement as any as Element
       };
       navigation.navigate(url.href, options);
     }

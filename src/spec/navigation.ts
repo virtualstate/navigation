@@ -226,6 +226,7 @@ export interface NavigateEvent<S = unknown, R = unknown | void> extends Event<"n
   readonly formData?: FormData;
   readonly downloadRequest?: string;
   readonly info: unknown;
+  readonly sourceElement?: Element;
 
   intercept(options?: NavigationIntercept<R>): void;
   scroll(): void;
@@ -253,6 +254,7 @@ export interface NavigateEventInit<S = unknown> extends EventInit {
   formData?: FormData;
   downloadRequest?: string;
   info?: unknown;
+  sourceElement?: Element;
 }
 
 export interface NavigationDestination<S = unknown> {
